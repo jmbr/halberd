@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.9 2004/03/02 02:12:04 rwx Exp $
+# $Id: GNUmakefile,v 1.10 2004/03/03 12:11:27 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -80,7 +80,7 @@ install: build
 	$(MKDIR) $(tmpdir)
 	$(SETUP) install --root $(tmpdir)
 
-distclean: clobber clean
+distclean: clobber
 	$(RM) $(srcdir)/MANIFEST
 	$(RM) $(srcdir)/ChangeLog
 	$(RM) -r $(docdir) $(srcdir)/dist
