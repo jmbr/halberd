@@ -29,12 +29,14 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.11 2004/03/03 13:05:22 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.12 2004/04/03 15:10:45 rwx Exp $'
 
 
 import time
 import socket
 import urlparse
+
+import hlbd.ScanTask
 
 
 default_timeout = 2
@@ -318,21 +320,26 @@ class HTTPSClient(HTTPClient):
         self._sslsock.write(data)
         
 
-def client(url):
+def clientFactory(scantask):
     """HTTP/HTTPS client factory.
 
-    @param url: URL we want to reach.
-    @type url: C{str}
+    @param scantask: Object describing where the target is and how to reach it.
+    @type scantask: C{instanceof(ScanTask)}
 
     @return: The appropriate client class for the specified URL.
     @rtype: C{class}
     """
-    assert url != ''
+    url = scantask.url
+    keyfile = scantask.keyfile
+    certfile = scantask.certfile
 
     if url.startswith('http://'):
         return HTTPClient()
     elif url.startswith('https://'):
-        return HTTPSClient()
+        httpsclient = HTTPSClient()
+        httpsclient.keyfile = keyfile
+        httpsclient.certfile = certfile
+        return httpsclient
     else:
         raise InvalidURL
 

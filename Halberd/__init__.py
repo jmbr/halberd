@@ -20,20 +20,19 @@
 """http load balancer detector module (hlbd)
 """
 
-__revision__ = '$Id: __init__.py,v 1.4 2004/03/26 00:48:25 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.5 2004/04/03 15:10:45 rwx Exp $'
 
 __all__ = [
     'version',
-    'scanlib',
     'clientlib',
     'clues',
     'reportlib',
-    'rpclib',
-    'proxylib',
+    'RPCServer',
     'conflib',
     'util',
     'shell',
-    'strategy',
+    'crew',
+    'ScanTask',
 ]
 
 

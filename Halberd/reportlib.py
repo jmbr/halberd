@@ -20,33 +20,34 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.11 2004/03/29 09:47:06 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.12 2004/04/03 15:10:45 rwx Exp $'
 
 
 import sys
 
+import ScanTask
 import hlbd.clues.analysis as analysis
 
 
-def report(address, clues, outfile=''):
+def report(scantask):
     """Displays detailed report information to the user.
-
-    @param address: Address of the scanned host.
-    @type address: C{str}
-
-    @param clues: Clues found and (pressumably) processed by an analyzer.
-    @type clues: C{list}
     """
-    out = (outfile and open(outfile, 'a')) or sys.stdout
+    if scantask.out:
+        out = open(scantask.out, 'a')
+    else:
+        out = sys.stdout
 
-    out.write('[ %d ] possibly real server(s) at [ %s ].\n'
-              % (len(clues), address))
-
+    clues = scantask.analyzed
     hits = analysis.hits(clues)
 
-    # XXX This could be passed by the caller in order to avoid recomputation in
+    # xxx This could be passed by the caller in order to avoid recomputation in
     # case the clues needed a re-analysis.
     diff_fields = analysis.diff_fields(clues)
+
+    out.write('*** %s ' % scantask.url)
+    if scantask.addr:
+        out.write('(%s) ' % scantask.addr)
+    out.write('-> %d real server(s)\n'  % len(clues))
 
     for num, clue in enumerate(clues):
         info = clue.info

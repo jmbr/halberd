@@ -23,7 +23,12 @@
 @type table: C{str}
 """
 
-__revision__ = '$Id: util.py,v 1.1 2004/03/03 15:20:03 rwx Exp $'
+__revision__ = '$Id: util.py,v 1.2 2004/04/03 15:10:45 rwx Exp $'
+
+
+import time
+import socket
+import urlparse
 
 
 table = '________________________________________________0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____________________________________________________________________________________________________________________________________'
@@ -37,6 +42,45 @@ def _gen_table():
         tab += (c.isalnum() and c) or '_'
 
     return tab
+
+
+def utctime():
+    return time.mktime(time.gmtime())
+
+
+def hostname(url):
+    """Get the hostname part of an URL.
+
+    @param url: A valid URL (must be preceded by scheme://).
+    @type url: C{str}
+
+    @return: Hostname corresponding to the URL or the empty string in case of
+    failure.
+    @rtype: C{str}
+    """
+    netloc = urlparse.urlparse(url)[1]
+    if netloc == '':
+        return ''
+
+    return netloc.split(':', 1)[0]
+
+def addresses(host):
+    """Get the network addresses to which a given host resolves to.
+
+    @param host: Hostname we want to resolve.
+    @type host: C{str}
+
+    @return: Network addresses.
+    @rtype: C{tuple}
+    """
+    assert host != ''
+
+    try:
+        name, aliases, addrs = socket.gethostbyname_ex(host)
+    except socket.error:
+        return ()
+
+    return addrs
 
 
 if __name__ == '__main__':

@@ -35,7 +35,7 @@ This module takes care of reading and writing configuration files.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.7 2004/03/03 09:38:17 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.8 2004/04/03 15:10:45 rwx Exp $'
 
 
 import os
@@ -68,22 +68,14 @@ servers:
 
 [ssl]
 
-keyfile: halberd.pkey
-certfile: halberd.pem
+keyfile:
+certfile:
 """
 
 
 class InvalidConfFile(Exception):
     """Invalid configuration file.
     """
-
-
-class ConfOptions:
-    """Structure holding information obtained from a configuration file.
-    """
-    proxy_serv_addr = ()
-    rpc_serv_addr = ()
-    rpc_servers = []
 
 
 class ConfReader:
@@ -134,7 +126,8 @@ class ConfReader:
         """
         assert self.__conf, 'The configuration file is not open'
 
-        options = ConfOptions()
+        proxy_serv_addr = ()
+        rpc_serv_addr = ()
 
         # The orthodox way of doing this is via ConfigParser.get*() but those
         # methods lack the convenience of dict.get. While another approach
@@ -146,12 +139,10 @@ class ConfReader:
                 sec.setdefault(name, value)
 
         if self.__dict.has_key('proxy'):
-            options.proxy_serv_addr = self._getAddr('proxy',
-                                                    default_proxy_port)
+            proxy_serv_addr = self._getAddr('proxy', default_proxy_port)
 
         if self.__dict.has_key('rpcserver'):
-            options.rpc_serv_addr = self._getAddr('rpcserver',
-                                                  default_rpc_port)
+            rpc_serv_addr = self._getAddr('rpcserver', default_rpc_port)
 
         try:
             rpc_servers = self.__dict['rpcclient']['servers']
@@ -160,9 +151,15 @@ class ConfReader:
         except KeyError:
             rpc_servers = []
 
-        options.rpc_servers = rpc_servers
+        keyfile = self.__dict['ssl'].get('keyfile', None)
+        certfile = self.__dict['ssl'].get('certfile', None)
 
-        return options
+        if keyfile == '':
+            keyfile = None
+        if certfile == '':
+            certfile = None
+
+        return rpc_servers, rpc_serv_addr, proxy_serv_addr, keyfile, certfile
 
     def writeDefault(self, conf_file):
         """Write a bare-bones configuration file
