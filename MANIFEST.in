@@ -11,6 +11,7 @@ include tests/*.py
 recursive-include tests/data *.clu
 
 recursive-include doc/api *
+include doc/overview.txt
 
 include AUTHORS ChangeLog LICENSE README THANKS MANIFEST.in
 
