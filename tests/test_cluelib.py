@@ -19,18 +19,18 @@
 """Unit test for hlbd.cluelib
 """
 
-__revision__ = '$Id: test_cluelib.py,v 1.4 2004/02/04 04:11:54 rwx Exp $'
+__revision__ = '$Id: test_cluelib.py,v 1.5 2004/02/13 01:17:10 rwx Exp $'
 
 
 import unittest
 
-import hlbd.cluelib as cluelib
+import hlbd.clues.Clue as Clue
 
 
 class TestClue(unittest.TestCase):
 
     def setUp(self):
-        self.clue = cluelib.Clue()
+        self.clue = Clue.Clue()
 
     def tearDown(self):
         pass
@@ -47,15 +47,23 @@ class TestClue(unittest.TestCase):
 
     def testNormalize(self):
         value = '123content-location*23'
-        self.failUnless(cluelib.normalize(value) == 'contentlocation23')
+        self.failUnless(Clue.normalize(value) == 'contentlocation23')
         value = 'content/location'
-        self.failUnless(cluelib.normalize(value) == 'contentlocation')
+        self.failUnless(Clue.normalize(value) == 'contentlocation')
         value = '*content/location123'
-        self.failUnless(cluelib.normalize(value) == 'contentlocation123')
+        self.failUnless(Clue.normalize(value) == 'contentlocation123')
 
 
 if __name__ == '__main__':
     unittest.main()
+
+#   This must be taken into account in a test for filter_proxies
+#    if __debug__:
+#        getcount = lambda x: x.getCount()
+#        total = sum(map(getcount, clues))
+#
+#    if __debug__:
+#        assert total == sum(map(getcount, results))
 
 
 # vim: ts=4 sw=4 et
