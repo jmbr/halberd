@@ -1,9 +1,11 @@
 # -*- coding: iso-8859-1 -*-
 
 """Logger singleton.
+
+This module allows halberd to easily log certain events.
 """
 
-__revision__ = '$Id: logger.py,v 1.2 2004/04/07 11:11:22 rwx Exp $'
+__revision__ = '$Id: logger.py,v 1.3 2004/04/11 11:34:53 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -33,6 +35,11 @@ _logfmt = '%(levelname)s %(message)s'
 
 
 def getLogger():
+    """Get a reference to an instance of a logger object.
+
+    @return: reference to a logger.
+    @rtype: C{object}
+    """
     global _logger
 
     if _logger is None:
@@ -45,10 +52,14 @@ def getLogger():
     return _logger
 
 def setDebug():
+    """Set the logging level to C{debug}.
+    """
     logger = getLogger()
     logger.setLevel(logging.DEBUG)
 
 def setError():
+    """Set the logging level to C{error}.
+    """
     logger = getLogger()
     logger.setLevel(logging.ERROR)
 
