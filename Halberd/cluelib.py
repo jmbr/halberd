@@ -26,16 +26,11 @@ balanced devices.
 @type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.7 2004/02/01 03:50:28 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.8 2004/02/02 07:15:50 rwx Exp $'
 
 
 import time
 import rfc822
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
 try:
     from sha import new as hashfn
@@ -44,6 +39,26 @@ except ImportError:
 
 
 delta = 2
+
+
+def normalize(name):
+    """Normalize string.
+
+    This method takes a string coming out of mime-fields and transforms it
+    into a valid Python identifier. That's done by removing invalid
+    non-alphanumeric characters and also numeric ones placed at the
+    beginning of the string.
+
+    @param name: String to be normalized.
+    @type name: C{str}
+
+    @return: Normalized string.
+    @rtype: C{str}
+    """
+    normal = filter(lambda c: c.isalnum(), list(name.lower()))
+    while normal[0].isdigit():
+        normal = normal[1:]
+    return ''.join(normal)
 
 
 class Clue:
@@ -94,40 +109,22 @@ class Clue:
         @param headers: MIME headers replied by the target.
         @type headers: str
         """
+        def make_list(hdrs):
+            return [tuple(line.split(':', 1)) for line in hdrs.splitlines() \
+                                              if line != '']
 
-        hdrfp = StringIO(headers)
-        hdrs = rfc822.Message(hdrfp)
-        hdrfp.close()
-        self.headers = hdrs.items()         # Save a copy of the headers.
+        self.headers = make_list(headers)
 
         # We examine each MIME field and try to find an appropriate handler. If
         # there is none we simply digest the info it provides.
-        for name, value in hdrs.items():
+        for name, value in self.headers:
+            # XXX Maybe this should go to some kind of ClueProcessor class.
             try:
-                handlerfn = getattr(self, '_get_' + self._normalize(name))
+                handlerfn = getattr(self, '_get_' + normalize(name))
                 handlerfn(value)
             except AttributeError:
                 self.__tmphdrs += '%s: %s ' % (name, value)
         self._updateDigest()
-
-    def _normalize(self, name):
-        """Normalize string.
-
-        This method takes a string coming out of mime-fields and transforms it
-        into a valid Python identifier. That's done by removing invalid
-        non-alphanumeric characters and also numeric ones placed at the
-        beginning of the string.
-
-        @param name: String to be normalized.
-        @type name: C{str}
-
-        @return: Normalized string.
-        @rtype: C{str}
-        """
-        normal = filter(lambda c: c.isalnum(), list(name))
-        while normal[0].isdigit():
-            normal = normal[1:]
-        return ''.join(normal)
 
     def _updateDigest(self):
         """Updates header fingerprint.
@@ -187,11 +184,13 @@ class Clue:
         return not self == other
 
     def __contains__(self, other):
+        # XXX Not needed anymore...
         return (self.__containscmp.compare(self, other) == 0)
 
     def __repr__(self):
         return "<Clue diff=%d found=%d digest='%s'>" \
-                % (self.calcDiff(), self.__count, self.info['digest'])
+                % (self.calcDiff(), self.__count,
+                   self.info['digest'][:4] + '...')
 
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
@@ -200,6 +199,7 @@ class Clue:
     def _get_server(self, field):
         """Server:"""
         self.info['server'] = field
+        self.__tmphdrs += field     # Make sure this gets hashed too.
 
     def _get_date(self, field):
         """Date:"""
@@ -209,7 +209,7 @@ class Clue:
     def _get_contentlocation(self, field):
         """Content-location:"""
         self.info['contloc'] = field
-        self.__tmphdrs += field     # Make sure this gets hashed too.
+        self.__tmphdrs += field
 
     def _get_setcookie(self, field):
         """Set-cookie:"""
@@ -221,6 +221,10 @@ class Clue:
 
     def _get_age(self, field):
         """Age:"""
+        pass
+
+    def _get_contentlength(self, field):
+        """Content-length:"""
         pass
 
 
@@ -265,12 +269,12 @@ def analyze(clues):
             if cluesleft(clues, idx) >= 3:
                 avg = sum([clue.calcDiff() for clue in clues[idx:idx + 3]]) / 3
                 if (avg == clues[idx + 1].calcDiff()):
-                    yield (tuple(clues[idx:idx + 3]))
                     step = 3
+                    yield (tuple(clues[idx:idx + 3]))
             if cluesleft(clues, idx) == 2:
                 if abs(clues[idx].calcDiff() - clues[idx + 1].calcDiff()) <= 1:
-                    yield (clues[idx], clues[idx + 1])
                     step = 2
+                    yield (clues[idx], clues[idx + 1])
             if cluesleft(clues, idx) == 1:
                 yield (clues[idx], )
 
@@ -306,6 +310,8 @@ def analyze(clues):
 # =====================
 # Comparison operators.
 # =====================
+
+# XXX There's no need for most of these
 
 def cmp_diff(one, other):
     """Compares time differences.
