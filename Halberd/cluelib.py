@@ -22,11 +22,11 @@ This module implements a few classes related to creation and and analysis of
 pieces of information returned by a webserver which may help in locating load
 balanced devices.
 
-@var delta: Allowed delta for cmp_delta_diff()
+@var delta: Allowed delta for L{cmp_delta_diff}
 @type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.3 2004/01/27 22:10:02 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.4 2004/01/29 02:14:56 rwx Exp $'
 
 
 import time
@@ -263,6 +263,10 @@ class Analyzer:
 
 def cmp_diff(one, other):
     """Compares time differences.
+
+    @return: 0 if both clues have the time difference, -1 if L{one} less than
+    L{other} and 1 if L{one} is greater than L{other}
+    @rtype: C{int}
     """
     if one.calcDiff() < other.calcDiff():
         return -1
@@ -280,6 +284,9 @@ def cmp_delta_diff(one, other):
 
 def cmp_server(one, other):
     """Compares Server fields.
+
+    @return: 0 if both clues have the same server, a non-zero value otherwise.
+    @rtype: C{int}
     """
     if one._server != other._server:
         return -1
@@ -287,6 +294,9 @@ def cmp_server(one, other):
 
 def cmp_digest(one, other):
     """Compares header digests.
+
+    @return: 0 if both clues have the same digest, a non-zero value otherwise.
+    @rtype: C{int}
     """
     if one._digest < other._digest:
         return -1
@@ -323,8 +333,45 @@ class CmpOperator:
         for comp in self.__operators:
             status = comp(one, other)
             if status != 0:
-                return status
+                break
         return status
+
+
+# =============================
+# Misc. clue-related utilities.
+# =============================
+
+def save_clues(filename, clues):
+    """Save a clues to a file.
+
+    @param filename: Name of the file where the clues will be written to.
+    @type filename: C{str}
+
+    @param clues: Clues to write.
+    @type clues: C{list}
+    """
+    import pickle
+
+    cluefp = open(filename, 'w')
+    pickle.dump(clues, cluefp)
+    cluefp.close()
+
+def load_clues(filename):
+    """Load clues from file.
+
+    @param filename: Name of the files where the clues are stored.
+    @type filename: C{str}
+
+    @return: Clues extracted from the file.
+    @rtype: C{list}
+    """
+    import pickle
+
+    cluefp = open(filename, 'r')
+    clues = pickle.load(cluefp)
+    cluefp.close()
+
+    return clues
     
 
 # vim: ts=4 sw=4 et
