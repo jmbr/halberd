@@ -20,7 +20,7 @@
 """Unit tests for hlbd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.3 2004/03/02 02:07:16 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.4 2004/03/03 11:36:42 rwx Exp $'
 
 
 import unittest
@@ -81,20 +81,29 @@ class TestHTTPClient(unittest.TestCase):
         except clientlib.ConnectionRefused:
             return
 
-        try:
-            reply = self.client._getReply()
-        except clientlib.UnknownReply:
-            pass
-
     def testSendRequestToRemote(self):
         self.client._putRequest('212.204.249.161', 'http://www.synnergy.net')
-        timestamp, reply = self.client._getReply()
-        self.failUnless(reply.splitlines()[0].startswith('HTTP/'))
+        timestamp, headers = self.client._getReply()
+        self.failUnless(headers and headers.startswith('HTTP/'))
 
     def testGetHeaders(self):
-        reply = self.client.getHeaders('212.204.249.161',
-                                       'http://www.synnergy.net')
-        self.failUnless(reply is not None)
+        addr, url = '212.204.249.161', 'http://www.synnergy.net'
+        reply = self.client.getHeaders(addr, url)
+        self.failUnless(reply != (None, None))
+
+    def testIncorrectReading(self):
+        """Check for Issue60
+        Incorrect reading procedure in hlbd.clientlib.HTTPClient._getReply
+        """
+        self.client.bufsize = 1
+        self.client.timeout = 10
+        addr, url = '127.0.0.1', 'http://localhost:8000'
+        self.client._putRequest(addr, url)
+        try:
+            timestamp, headers = self.client._getReply()
+        except clientlib.TimedOut, msg:
+            self.fail('Timed out while trying to read terminator')
+        self.failUnless(headers)
 
 
 class TestHTTPSClient(unittest.TestCase):
@@ -110,7 +119,7 @@ class TestHTTPSClient(unittest.TestCase):
                              ('secure', 777))
 
     def testConnect(self):
-        clientlib.HTTPSClient()._connect(('www.amazon.com', 443))
+        clientlib.HTTPSClient()._connect(('www.sf.net', 443))
 
         self.failUnlessRaises(clientlib.HTTPSError,
                               clientlib.HTTPSClient()._connect,
@@ -119,9 +128,9 @@ class TestHTTPSClient(unittest.TestCase):
         # XXX For better testing a keyfile and a certificate should be used.
 
     def testSendRequestToRemote(self):
-        self.client._putRequest('207.171.182.16', 'https://www.amazon.com')
-        timestamp, reply = self.client._getReply()
-        self.failUnless(reply != None and reply.startswith('HTTP/'))
+        self.client._putRequest('207.171.182.16', 'https://www.sf.net')
+        timestamp, headers = self.client._getReply()
+        self.failUnless(headers != None and headers.startswith('HTTP/'))
 
 
 if __name__ == '__main__':
