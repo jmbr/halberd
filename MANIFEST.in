@@ -1,5 +1,4 @@
 include setup.py
-
 include halberd.py
 
 recursive-include hlbd *.py
@@ -7,10 +6,14 @@ recursive-include hlbd *.py
 include tests/*.py
 recursive-include tests/data *.clu
 
-include doc/*.txt
-include doc/*.html doc/*.css
+include doc/*.txt doc/*.html doc/*.css
 recursive-include doc/api *
 
-include AUTHORS ChangeLog LICENSE README THANKS MANIFEST.in
-
+include AUTHORS
+include ChangeLog
+include LICENSE
+include README
+include THANKS
+include MANIFEST.in
 include GNUmakefile
+include TODO
