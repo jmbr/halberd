@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.8 2004/02/26 04:15:03 rwx Exp $
+# $Id: GNUmakefile,v 1.9 2004/03/02 02:12:04 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -35,6 +35,8 @@ CVS2CL := /usr/local/bin/cvs2cl.pl
 SHTOOLIZE := /usr/local/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
 RM := /bin/rm -f
+MKDIR := /bin/mkdir
+SETUP := $(PYTHON) $(srcdir)/setup.py
 
 
 versionfile := $(hlbddir)/version.py
@@ -49,36 +51,43 @@ ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
 ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
 
+remove = $(RM) $(addsuffix $(strip $(1)), $(2))
+
 
 clean:
 	$(RM) tags
 	$(RM) -r $(srcdir)/build
-	$(RM) $(addsuffix *.pyc, $(ALL_DIRS))
-	$(RM) $(addsuffix *.pyo, $(ALL_DIRS))
+	$(call remove, *.pyc, $(ALL_DIRS))
+	$(call remove, *.pyo, $(ALL_DIRS))
 
-clobber:
+clobber: clean
 	$(RM) *.bak
-	$(RM) $(addsuffix *~, $(ALL_DIRS))
+	$(call remove, *~, $(ALL_DIRS))
 
 build: $(SOURCES)
-	$(PYTHON) setup.py build
+	$(SETUP) build
 
-dist: setversion distclean doc ChangeLog
-	$(PYTHON) setup.py sdist
+dist: setversion doc ChangeLog
+	$(SETUP) sdist
 
 check: $(ALL_SOURCES)
-	$(PYTHON) setup.py test
+	$(SETUP) test
 	$(PYTHON) $(hlbddir)/clues/analysis.py
 
+tmpdir = $(srcdir)/tmp
 install: build
-	$(PYTHON) setup.py install --root $(srcdir)/tmp
+	$(RM) -r $(tmpdir)
+	$(MKDIR) $(tmpdir)
+	$(SETUP) install --root $(tmpdir)
 
 distclean: clobber clean
 	$(RM) $(srcdir)/MANIFEST
 	$(RM) $(srcdir)/ChangeLog
 	$(RM) -r $(docdir) $(srcdir)/dist
 
-doc: $(MODULES)
+doc: $(docdir)/index.html
+
+$(docdir)/index.html: $(SOURCES)
 	$(EPYDOC) -o $(docdir) $^
 
 tags: $(ALL_SOURCES)
@@ -101,7 +110,7 @@ count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
 
 
-.PHONY: clean dist distclean clobber check setversion incversion doc count
+.PHONY: clean clobber distclean dist setversion incversion check count install
 
 
 # vim: noexpandtab
