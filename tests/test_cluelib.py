@@ -19,7 +19,7 @@
 """Unit test for hlbd.cluelib
 """
 
-__revision__ = '$Id: test_cluelib.py,v 1.2 2004/01/29 13:11:33 rwx Exp $'
+__revision__ = '$Id: test_cluelib.py,v 1.3 2004/01/31 13:59:41 rwx Exp $'
 
 
 import unittest
@@ -46,12 +46,12 @@ class TestClue(unittest.TestCase):
         self.failUnlessRaises(ValueError, self.clue.incCount, -7)
 
     def testNormalize(self):
-        id = '123content-location*23'
-        self.failUnless(self.clue._normalize(id) == 'contentlocation23')
-        id = 'content/location'
-        self.failUnless(self.clue._normalize(id) == 'contentlocation')
-        id = '*content/location123'
-        self.failUnless(self.clue._normalize(id) == 'contentlocation123')
+        value = '123content-location*23'
+        self.failUnless(self.clue._normalize(value) == 'contentlocation23')
+        value = 'content/location'
+        self.failUnless(self.clue._normalize(value) == 'contentlocation')
+        value = '*content/location123'
+        self.failUnless(self.clue._normalize(value) == 'contentlocation123')
 
 
 class TestCmpOperators(unittest.TestCase):
