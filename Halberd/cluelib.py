@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.2 2004/01/27 13:15:03 rwx Exp $'
 
 
 import time
@@ -79,6 +79,11 @@ class Clue:
 
         # Original MIME headers. They're useful during analysis and reporting.
         self.headers = None
+
+        self.__equalscmp = CmpOperator([cmp_diff, cmp_timeskew, cmp_server,
+                                        cmp_contloc, cmp_digest])
+        self.__containscmp = CmpOperator([cmp_delta_diff, cmp_timeskew,
+                                          cmp_server, cmp_contloc, cmp_digest])
 
 
     def processHdrs(self, headers):
@@ -141,7 +146,7 @@ class Clue:
         """
         return (int(self._local) - int(self._remote))
 
-
+
     # ===================
     # Comparison methods.
     # ===================
@@ -149,27 +154,7 @@ class Clue:
     def __eq__(self, other):
         """Rich comparison method implementing ==
         """
-        if self._server != other._server:
-            return False
-
-        # Important sanity check for the timestamps:
-        #   Time can't (usually) go backwards.
-        local = (self._local, other._local)
-        remote = (self._remote, other._remote)
-        if ((local[0] < local[1]) and (remote[0] > remote[1]) \
-           or (local[0] > local[1]) and (remote[0] < remote[1])):
-            return False
-
-        if self.calcDiff() != other.calcDiff():
-            return False
-
-        if self._contloc != other._contloc:
-            return False
-
-        if self._fp.digest() != other._fp.digest():
-            return False
-
-        return True
+        return (self.__equalscmp.compare(self, other) == 0)
 
     def __ne__(self, other):
         """Rich comparison method implementing !=
@@ -181,26 +166,7 @@ class Clue:
     # =========
 
     def __contains__(self, other):
-        onediff, otherdiff = self.calcDiff(), other.calcDiff()
-
-        if abs(onediff - otherdiff) > DELTA:
-            return False
-
-        # Important sanity check for the timestamps:
-        #   Time can't (usually) go backwards.
-        local = (self._local, other._local)
-        remote = (self._remote, other._remote)
-        if ((local[0] < local[1]) and (remote[0] > remote[1]) \
-           or (local[0] > local[1]) and (remote[0] < remote[1])):
-            return False
-
-        if self._contloc != other._contloc:
-            return False
-
-        if self._fp.digest() != other._fp.digest():
-            return False
-
-        return True
+        return (self.__containscmp.compare(self, other) == 0)
 
 
     def __repr__(self):
@@ -220,7 +186,7 @@ class Clue:
         self._remote = time.mktime(rfc822.parsedate(field))
 
     def _get_content_location(self, field):
-        """Content-location."""
+        """Content-location:"""
         self._contloc = field
         self.__tmphdrs += field     # Make sure this gets hashed too.
 
@@ -236,23 +202,7 @@ class Clue:
         """Age:"""
         pass
 
-
-def _comp_clues(one, other):
-    """Clue comparison for list sorting purposes.
-
-    We take into account fingerprint and time differences.
-    """
-    if one._fp.digest() < other._fp.digest():
-        return -1
-    elif one._fp.digest() > other._fp.digest():
-        return 1
-
-    if one.calcDiff() < other.calcDiff():
-        return -1
-    elif one.calcDiff() > other.calcDiff():
-        return 1
-
-    return 0
+
 
 class Analyzer:
     """Makes sens of the data gathered during the scanning stage.
@@ -264,6 +214,7 @@ class Analyzer:
         assert pending is not None
         self.__pending = pending
         self.__analyzed = []
+        self.__sortcmp = CmpOperator([cmp_digest, cmp_diff])
 
     def analyze(self):
         """Processes the list of pending clues checking for duplicated entries.
@@ -272,7 +223,7 @@ class Analyzer:
         else) are moved from the list of pending clues to the list of analyzed
         ones.
         """
-        self.__pending.sort(_comp_clues)
+        self.__pending.sort(self.__sortcmp.compare)
 
         while self.__pending:
             cur = self.__pending[0]
@@ -301,5 +252,102 @@ class Analyzer:
         self.__analyzed.append(clue)
         self.__pending.remove(clue)
 
+
+# =====================
+# Comparison operators.
+# =====================
+
+def cmp_diff(one, other):
+    """Compares time differences.
+    """
+    if one.calcDiff() < other.calcDiff():
+        return -1
+    elif one.calcDiff() > other.calcDiff():
+        return 1
+    return 0
+
+def cmp_delta_diff(one, other):
+    """Compares two clues allowing time differences of less than DELTA seconds.
+    """
+    onediff, otherdiff = one.calcDiff(), other.calcDiff()
+    if abs(onediff - otherdiff) > DELTA:
+        return -1
+    return 0
+
+def cmp_server(one, other):
+    """Compares Server fields.
+    """
+    if one._server != other._server:
+        return -1
+    return 0
+
+def cmp_digest(one, other):
+    """Compares header digests.
+    """
+    if one._fp.digest() < other._fp.digest():
+        return -1
+    elif one._fp.digest() > other._fp.digest():
+        return 1
+    return 0
+
+def cmp_timeskew(one, other):
+    """Ensures there are no incoherent timestamps.
+    """
+    local = (one._local, other._local)
+    remote = (one._remote, other._remote)
+    if ((local[0] < local[1]) and (remote[0] > remote[1]) \
+       or (local[0] > local[1]) and (remote[0] < remote[1])):
+        return -1
+    return 0
+
+def cmp_contloc(one, other):
+    """Compares Content-location fields.
+    """
+    if one._contloc != other._contloc:
+        return -1
+    return 0
+
+
+class CmpOperator:
+    """Customizable comparison operator.
+
+    >>> one, other = Clue(), Clue()
+    >>> one.setTimestamp(10)
+    >>> other.setTimestamp(20)
+
+    We set up our custom operator.
+    >>> cluecmp = CmpOperator([cmp_digest, cmp_diff])
+    >>> cluecmp.compare(one, other)
+    -1
+    >>> other.setTimestamp(10)
+    >>> cluecmp.compare(one, other)
+    0
+    >>> one._fp, other._fp = hashfn('blah'), hashfn('blop')
+    >>> cluecmp.compare(one, other) != 0
+    True
+    >>> other._fp = hashfn('blah')
+    >>> cluecmp.compare(one, other) == 0
+    True
+    """
+    def __init__(self, operators=[]):
+        self.__operators = operators
+
+    def compare(self, one, other):
+        """Compares two clues
+        """
+        for comp in self.__operators:
+            status = comp(one, other)
+            if status != 0:
+                return status
+        return status
+
+
+def _test():
+    import doctest, cluelib
+    return doctest.testmod(cluelib)
+
+if __name__ == '__main__':
+    _test()
+    
 
 # vim: ts=4 sw=4 et
