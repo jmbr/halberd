@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.6 2004/03/02 00:52:26 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.7 2004/03/02 02:07:01 rwx Exp $'
 
 
 import time
@@ -39,7 +39,7 @@ import urlparse
 
 default_timeout = 2
 
-default_bufsize = 4096
+default_bufsize = 1024
 
 default_template = """\
 HEAD %(request)s HTTP/1.1\r\n\
@@ -57,16 +57,19 @@ Connection: keep-alive\r\n\r\n\
 """
 
 
-class HTTPException(Exception):
-    """Generic HTTP exception."""
+class HTTPError(Exception):
+    """Generic HTTP exception"""
 
-class InvalidURL(HTTPException):
+class HTTPSError(HTTPError):
+    """Generic HTTPS exception"""
+
+class InvalidURL(HTTPError):
     """Invalid or unsupported URL"""
 
-class TimedOut(HTTPException):
+class TimedOut(HTTPError):
     """Operation timed out"""
 
-class ConnectionRefused(HTTPException):
+class ConnectionRefused(HTTPError):
     """Unable to reach webserver"""
 
     def __init__(self, msg):
@@ -75,7 +78,7 @@ class ConnectionRefused(HTTPException):
     def __str__(self):
         return self.msg
 
-class UnknownReply(HTTPException):
+class UnknownReply(HTTPError):
     """The remote host didn't return an HTTP reply"""
 
     def __init__(self, msg):
@@ -93,15 +96,19 @@ class HTTPClient:
         @param timeout: Timeout for socket operations (expressed in seconds).
         @type timeout: C{float}
         """
-        self.schemes = ['http']        # Supported URL schemes.
+        self.schemes = ['http']
+
         self.default_port = 80
+
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.settimeout(timeout)
 
-    def getHeaders(self, address, urlstr):
-        self.putRequest(address, urlstr)
+        self._recv = self._sock.recv
 
-        timestamp, reply = self.getReply()
+    def getHeaders(self, address, urlstr):
+        self._putRequest(address, urlstr)
+
+        timestamp, reply = self._getReply()
         if not reply:
             return None
 
@@ -111,7 +118,7 @@ class HTTPClient:
 
         return timestamp, reply
 
-    def putRequest(self, address, urlstr):
+    def _putRequest(self, address, urlstr):
         """Sends an HTTP request to the target webserver.
 
         This method connects to the target server, sends the HTTP request and
@@ -135,18 +142,12 @@ class HTTPClient:
         hostname, port = self._getHostAndPort(netloc)
         # NOTE: address and hostname may not be the same. The caller is
         # responsible for checking that.
-
-        try:
-            self._sock.connect((address, port))
-        except socket.error:
-            raise ConnectionRefused, 'connection refused'
             
         req = self._fillTemplate(hostname, url, params, query, fragment)
 
-        try:
-            self._sock.sendall(req)
-        except socket.timeout:
-            raise TimedOut, 'timed out while writing to the network'
+        self._connect((address, port))
+
+        self._sendall(req)
 
     def _getHostAndPort(self, netloc):
         """Determine the hostname and port to connect to from an URL
@@ -194,7 +195,28 @@ class HTTPClient:
 
         return template % values
 
-    def getReply(self):
+    def _connect(self, addr):
+        """Connect to the target address.
+
+        @param addr: The target's address.
+        @type addr: C{tuple}
+
+        @raise ConnectionRefused: If it can't reach the target webserver.
+        """
+        try:
+            self._sock.connect(addr)
+        except socket.error:
+            raise ConnectionRefused, 'Connection refused'
+
+    def _sendall(self, data):
+        """Sends a string to the socket.
+        """
+        try:
+            self._sock.sendall(data)
+        except socket.timeout:
+            raise TimedOut, 'timed out while writing to the network'
+
+    def _getReply(self):
         """Read a reply from the server.
 
         @return: Received data plus the time when it arrived.
@@ -211,14 +233,16 @@ class HTTPClient:
         timestamp = None
         while 1:
             try:
-                chunk = self._sock.recv(default_bufsize)
+                chunk = self._recv(default_bufsize)
                 if not timestamp:
                     timestamp = time.time()
             except:
                 return None, None
     
-            if not chunk:   # chunk == '' when the remote end finishes writing.
+            if not chunk:
+                # The remote end closed the connection.
                 break
+
             try:
                 idx = chunk.index('\r\n\r\n')   # Look for terminator.
                 data += chunk[:idx]
@@ -241,8 +265,54 @@ class HTTPSClient(HTTPClient):
 
     def __init__(self):
         HTTPClient.__init__(self)
+
         self.schemes.append('https')
+
         self.default_port = 443
+
+        self._recv = None
+
+
+    def _connect(self, addr, keyfile=None, certfile=None):
+        """Connect to the target web server.
+
+        @param addr: The target's address.
+        @type addr: C{tuple}
+
+        @param keyfile: Path to an SSL key file.
+        @type keyfile: C{str}
+
+        @param certfile: Path to an SSL certificate for the client.
+        @type certfile: C{str}
+
+        @raise HTTPSError: In case there's some mistake during the SSL
+        negotiation.
+        """
+        HTTPClient._connect(self, addr)
+        try:
+            self._sslsock = socket.ssl(self._sock, keyfile, certfile)
+        except socket.sslerror, msg:
+            raise HTTPSError, msg
+
+        self._recv = self._sslsock.read
+
+    def _sendall(self, data):
+        """Sends a string to the socket.
+        """
+        self._sslsock.write(data)
+        
+
+def client(url):
+    """Factory of clients.
+    """
+    assert url != ''
+
+    if url.startswith('http://'):
+        return HTTPClient()
+    elif url.startswith('https://'):
+        return HTTPSClient()
+    else:
+        raise InvalidURL
 
 
 # vim: ts=4 sw=4 et
