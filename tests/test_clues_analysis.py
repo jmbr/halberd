@@ -20,7 +20,7 @@
 """Unit test for hlbd.clues.analysis
 """
 
-__revision__ = '$Id: test_clues_analysis.py,v 1.3 2004/03/03 11:38:10 rwx Exp $'
+__revision__ = '$Id: test_clues_analysis.py,v 1.4 2004/03/06 10:25:02 rwx Exp $'
 
 
 import os
@@ -92,6 +92,24 @@ class TestAnalysis(unittest.TestCase):
 
     def testPogo(self):
         self.analyze('www.pogo.com', 20, 1)
+
+    def testMacromedia(self):
+        self.analyze('www.macromedia.com', 7, 4)
+
+    def testAsk(self):
+        self.analyze('www.ask.com', 3, 1)
+
+    def testComcast(self):
+        self.analyze('www.comcast.net', 5, 2)
+
+    def testHotwired(self):
+        self.analyze('hotwired.lycos.com', 6, 3)
+
+    def testPassport(self):
+        self.analyze('login.passport.net', 4, 2)
+
+    def testCdrom(self):
+        self.analyze('www.cdrom.com', 4, 2)
 
 
 if __name__ == '__main__':
