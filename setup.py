@@ -18,9 +18,61 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-from distutils.core import setup
+from distutils.core import setup, Command
 
 from hlbd.version import version
+
+
+class test(Command):
+    """Automated testing.
+
+    Based upon:
+    http://mail.python.org/pipermail/distutils-sig/2002-January/002714.html
+    """
+    description  = "test the distribution prior to install"
+    
+    user_options = [
+        ('test-dir=', None, "directory that contains the test definitions"),
+    ]
+                 
+    def initialize_options(self):
+        self.test_dir = 'tests'    
+        
+    def finalize_options(self):
+        build = self.get_finalized_command('build')
+        self.build_purelib = build.build_purelib
+        self.build_platlib = build.build_platlib
+                                                                                           
+    def run(self):
+        import os
+        import sys
+        import unittest
+
+        self.run_command('build')
+        self.run_command('build_ext')
+
+        # remember old sys.path to restore it afterwards
+        old_path = sys.path[:]
+
+        # extend sys.path
+        sys.path.insert(0, self.build_purelib)
+        sys.path.insert(0, self.build_platlib)
+        sys.path.insert(0, os.path.join(os.getcwd(), self.test_dir))
+
+        modules = [test[:-3] for test in os.listdir(self.test_dir) \
+                     if test.startswith('test_') and test.endswith('.py')]
+
+        loader = unittest.TestLoader()
+        runner = unittest.TextTestRunner()
+
+        for module in modules:
+            print "Running tests found in '%s'..." % module
+            TEST = __import__(module, globals(), locals(), [''])
+            suite = loader.loadTestsFromModule(TEST)
+            runner.run(suite)
+        
+        # restore sys.path
+        sys.path = old_path[:]
 
 
 setup(name = 'halberd', version = version.v_short,
@@ -31,6 +83,7 @@ setup(name = 'halberd', version = version.v_short,
       license = 'GNU GENERAL PUBLIC LICENSE',
       package_dir = {'hlbd': 'hlbd'},
       scripts = ['halberd.py'],
+      cmdclass = {'test': test},
 )
 
 

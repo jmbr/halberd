@@ -1,5 +1,5 @@
 # GNUmakefile
-# $Id: GNUmakefile,v 1.5 2004/02/13 01:29:54 rwx Exp $
+# $Id: GNUmakefile,v 1.6 2004/02/15 18:02:00 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -21,7 +21,7 @@
 srcdir := .
 hlbddir := $(srcdir)/hlbd
 docdir := $(srcdir)/doc/api
-testdir := $(srcdir)/test
+testdir := $(srcdir)/tests
 
 
 PYTHON := /usr/local/bin/python
@@ -54,7 +54,7 @@ distclean: clobber clean
 	rm -rf {$(docdir),$(srcdir)/dist}
 
 check: $(TEST_SOURCES)
-	$(PYTHON) -c 'import test'
+	@$(PYTHON) setup.py test
 
 doc: $(filter-out hlbd/version.py, $(MODULES))
 	$(EPYDOC) -o $(docdir) $^

@@ -19,30 +19,7 @@
 """Testing framework.
 """
 
-__revision__ = '$Id: __init__.py,v 1.1 2004/01/29 02:11:41 rwx Exp $'
-
-
-import os
-import unittest
-
-
-curdir = os.path.split(__file__)[0]
-
-istest = lambda x: x.startswith('test_') and x.endswith('.py')
-gettest = lambda t: t[:-3]
-
-modules = map(gettest, filter(istest, os.listdir(curdir)))
-
-suites = []
-loader = unittest.TestLoader()
-for name in modules:
-    module = __import__(name, globals(), locals(), [])
-    # Discover and aggregate all the test suites.
-    suites.append(loader.loadTestsFromModule(module))
-
-suite = unittest.TestSuite(suites)
-runner = unittest.TextTestRunner()
-runner.run(suite)
+__revision__ = '$Id: __init__.py,v 1.2 2004/02/15 18:02:05 rwx Exp $'
 
 
 # vim: ts=4 sw=4 et
