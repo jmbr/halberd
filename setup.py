@@ -106,7 +106,6 @@ setup(
     packages = ['hlbd', 'hlbd.clues'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],
-    data_files = [(hlbd.ScanTask.default_conf_dir, ['halberd.cfg'])],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
