@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.8 2004/02/19 14:59:37 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.9 2004/02/20 09:35:10 rwx Exp $'
 
 
 import sys
@@ -42,7 +42,7 @@ def report(address, clues, outfile=''):
     out.write('\n[ %d ] possibly real server(s) at [ %s ].\n'
               % (len(clues), address))
 
-    hits = sum([clue.getCount() for clue in clues])
+    hits = analysis.hits(clues)
 
     diff_fields = [field for percent, field in analysis.diff_fields(clues)]
 
