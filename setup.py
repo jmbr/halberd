@@ -77,7 +77,7 @@ class test(Command):
 
 
 long_description = """\
-Halberd is a tool for discovering and bypassing HTTP load balancers. It is \
+halberd is a tool for discovering and bypassing HTTP load balancers. It is \
 useful in testing load balancer configurations and \
 auditing web servers and web applications."""
 
