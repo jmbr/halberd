@@ -21,10 +21,13 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.7 2004/02/02 07:04:46 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.8 2004/02/07 13:26:04 rwx Exp $'
 
 
 import sys
+
+import hlbd.version as version
+import hlbd.cluelib as cluelib
 
 
 # Time to spend probing the target expressed in seconds.
@@ -32,64 +35,130 @@ _DEFAULT_SCANTIME = 60
 
 
 class Halberd:
-    """Container for all the information needed to perform a scan.
+    """HTTP load balancer detector.
     """
-    def __init__(self):
-        """Initializes halberd object.
+
+    url = None
+    addr = None
+
+    hits = 0
+    clues = []
+    analyzed = []
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+
+    def setURL(self, url):
+        """Ensures the URL is a valid one.
         """
-        self.address = ''
-        self.url = ''
-        self.clues = []
-        self.hits = 0
-
-        self.scanner = None
-        self.analyzer = None
-
-
-def fatal(msg):
-    """Fatal error notification.
-    """
-    sys.stderr.write(str(msg))
-    sys.stderr.flush()
-    sys.exit(-1)
-
-def get_address(url, address, verbose):
-    """Extract an IP address to scan.
-    """
-    import urlparse
-    import socket
-
-    netloc = urlparse.urlparse(url)[1]
-    hostname = netloc.split(':')[0]
-
-    try:
-        name, aliases, addresses = socket.gethostbyname_ex(hostname)
-    except socket.gaierror, msg:
-        fatal('%s (%s)\n' % (msg[1], hostname))
-
-    if address:
-        if address not in addresses:
-            fatal('%s resolves to a different address than %s\n'
-                  % (hostname, address))
+        if url.startswith('http://') or url.startswith('https://'):
+            self.url = url
         else:
-            return address  # Address found in the valid address list.
+            self.url = 'http://' + url
 
-    # Pick up a valid address from the given list.
-    if len(addresses) > 1:
-        sys.stdout.write('warning: %s resolves to the following addresses:\n'
-                         % hostname)
-        sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
-        for addr in addresses[1:]:
-            sys.stdout.write('  %s\n' % addr)
+        return self
 
-    return addresses[0]
+    def setAddr(self, addr):
+        """Extract an IP address to scan.
+        """
+        import urlparse
+        import socket
+
+        netloc = urlparse.urlparse(self.url)[1]
+        hostname = netloc.split(':')[0]
+
+        self.info('looking up host %s... ' % hostname)
+
+        try:
+            name, aliases, addresses = socket.gethostbyname_ex(hostname)
+        except socket.error, msg:
+            self.fatal('%s (%s)\n' % (msg[1], hostname))
+
+        self.info('done.\n\n')
+
+        if addr:
+            if addr not in addresses:
+                self.fatal('%s resolves to a different address than %s\n'
+                           % (hostname, addr))
+            self.addr = addr  # Address found in the valid address list.
+        else:
+            # Pick up a valid address from the given list.
+            if len(addresses) > 1:
+                sys.stdout.write('warning: %s resolves to:\n'
+                                 % hostname)
+                sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
+                for a in addresses[1:]:
+                    sys.stdout.write('  %s\n' % a)
+
+            self.addr = addresses[0]
+
+
+    def info(self, msg):
+        """Display information to the user.
+        """
+        if self.verbose:
+            sys.stdout.write(str(msg))
+            sys.stdout.flush()
+
+    def fatal(self, msg):
+        """Fatal error notification.
+        """
+        sys.stderr.write(str(msg))
+        sys.stderr.flush()
+        sys.exit(-1)
 
 
-def main(argv):
-    """http load balancer detector's main routine.
+    def load(self, filename):
+        self.clues = cluelib.load_clues(filename)
+
+    def save(self, filename):
+        cluelib.save_clues(filename, self.clues)
+
+
+    def setScantime(self, scantime=_DEFAULT_SCANTIME):
+        self.scantime = scantime
+        return self
+
+    def scan(self, parallelism):
+        import hlbd.scanlib as scanlib
+
+        self.clues, self.hits = scanlib.scan(self.addr, self.url,
+                                             self.scantime, self.verbose,
+                                             parallelism)
+    def analyze(self):
+        """Analyze clues.
+        """
+        self.analyzed = cluelib.analyze(self.clues)
+
+    def report(self, outfile):
+        """Write a report.
+        """
+        import hlbd.reportlib
+
+        hlbd.reportlib.report(self.addr, self.analyzed, self.hits, outfile)
+
+
+    def server(self, addr):
+        """Launch the program as a server.
+        """
+        import hlbd.rpclib
+
+        hlbd.rpclib.server(addr)
+
+    def client(self, serv_url):
+        """Launch the program as a client.
+        """
+        import hlbd.rpclib as rpclib
+
+        self.clues, self.hits = rpclib.client(serv_url, self.addr, self.url,
+                                              self.scantime)
+
+
+def make_parser():
+    """Sets up the command line option parser.
     """
     import optparse
-    from hlbd import version
 
     parser = optparse.OptionParser(usage='%prog [options] url',
                                    version=version.version.v_gnu)
@@ -97,54 +166,79 @@ def main(argv):
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend analyzing the target',
                       metavar='NUM', default=_DEFAULT_SCANTIME)
+
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='explain what is being done', default=False)
-    parser.add_option('-o', '--output', action='store', dest='output',
+
+    parser.add_option('-o', '--out', action='store', dest='output',
                       help='write output to the specified file',
                       metavar='FILE', default='')
-    parser.add_option('-a', '--address', action='store', dest='address',
+
+    parser.add_option('-a', '--addr', action='store', dest='addr',
                       help='specify address to scan',
                       metavar='ADDR', default='')
-    parser.add_option('-r', '--record', action='store', dest='savefile',
-                      help='keeps a record of clues in the specified file',
+
+    parser.add_option('-w', '--write', action='store', dest='savefile',
+                      help='saves clues to the specified file',
                       metavar='FILE', default='')
+    parser.add_option('-r', '--read', action='store', dest='cluefile',
+                      help='loads clues from the specified file',
+                      metavar='FILE', default='')
+
+    parser.add_option('-s', '--server', action='store', type='int',
+                      dest='serv_port', help='run as scan server',
+                      metavar='PORT')
+    parser.add_option('-c', '--client', action='store', dest='serv_url',
+                      help='run as cilent', metavar='URL', default='')
+
+    parser.add_option('-p', '--parallelism', action='store', type='int',
+                      dest='parallelism', help='specifies the degree of parallelism',
+                      metavar='NUM', default=1)
+
+    return parser
+
+
+def main(argv):
+    """http load balancer detector's main routine.
+    """
+    parser = make_parser()
 
     (opts, args) = parser.parse_args(argv)
 
-    if len(args) < 1:
-        # We must have an URL to scan.
-        parser.error('incorrect number of arguments')
+    halberd = Halberd(opts.verbose)
 
-    if opts.verbose:
-        print '%s\nhttp load balancer detector\n' % version.version.v_gnu 
+    halberd.info('%s\nhttp load balancer detector\n\n' % version.version.v_gnu)
 
-    halberd = Halberd()
+    if opts.cluefile:
+        # Load from file
+        halberd.load(opts.cluefile)
+    elif opts.serv_port:
+        halberd.server(('localhost', opts.serv_port))
+        sys.exit(0)
+    else:
+        # Scan target.
+        if len(args) < 1:
+            # We need an URL to scan.
+            parser.error('incorrect number of arguments')
 
-    # Ensures the URL is a valid one.
-    make_url = lambda url: ((url.startswith('http://') \
-                            or url.startswith('https://')) and url) \
-                           or ('http://' + url)
-    halberd.url = make_url(args[0])
+        halberd.setURL(args[0]).setAddr(opts.addr)
+        halberd.setScantime(opts.scantime)
 
-    # Go through the reconnaissance stage.
-    from hlbd import scanlib
-    halberd.address = get_address(halberd.url, opts.address, opts.verbose)
-    
-    scanner = scanlib.Scanner(opts.scantime, opts.verbose)
+        if opts.serv_url:
+            halberd.client(opts.serv_url)
+        else:
+            halberd.scan(opts.parallelism)
 
-    halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
-
-    if len(halberd.clues) > 0:
-        # Analyze results.
-        from hlbd import cluelib, reportlib
+        if not halberd.clues:
+            sys.exit(-1)
 
         if opts.savefile:
-            # Save unprocessed clues to a file if requested.
-            cluelib.save_clues(opts.savefile, halberd.clues)
+            halberd.save(opts.savefile)
 
-        clues = cluelib.analyze(halberd.clues)
-        # Print the report.
-        reportlib.report(halberd.address, clues, halberd.hits, opts.output)
+    halberd.analyze()
+
+    halberd.report(opts.output)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
