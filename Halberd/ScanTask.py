@@ -22,7 +22,7 @@ clue reanalysis.
 @var default_out: Default place where to write reports (None means stdout).
 @type default_out: C{str}
 """
-__revision__ = '$Id: ScanTask.py,v 1.2 2004/04/06 12:02:30 rwx Exp $'
+__revision__ = '$Id: ScanTask.py,v 1.3 2004/04/07 00:22:19 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -146,20 +146,6 @@ class ScanTask:
 
         self.clues = []
         self.analyzed = []
-
-
-    def setURL(self, url):
-        self.url = url
-
-        return self
-
-    def setAddr(self, addr):
-        """Sets the target address.
-        """
-        self.clues = self.analyzed = []
-        self.addr = addr
-
-        return self
 
 
     def readConf(self):

@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.5 2004/04/06 11:58:41 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.6 2004/04/07 00:22:19 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -76,6 +76,10 @@ class BaseStrategy:
     def _scan(self):
         """Allocates a work crew of scanners and launches them on the target.
         """
+        assert self.task.url and self.task.addr
+
+        self.task.clues = []
+        self.task.analyzed = []
         crew = hlbd.crew.WorkCrew(self.task)
         self.task.clues = crew.scan()
 
@@ -123,8 +127,7 @@ class UniScanStrategy(BaseStrategy):
         if self.task.save:
             cluedir = hlbd.clues.file.ClueDir(self.task.save)
 
-        for addr in self.addrs:
-            self.task.setAddr(addr)
+        for self.task.addr in self.addrs:
             self._scan()
 
             self._analyze()
@@ -182,8 +185,8 @@ class MultiScanStrategy(BaseStrategy):
         cluedir = hlbd.clues.file.ClueDir(self.task.save)
 
         for url, addr in self._targets(self.urlfp):
-            self.task.setURL(url)
-            self.task.setAddr(addr)
+            self.task.url = url
+            self.task.addr = addr
             self.info('scanning %s (%s)\n' % (url, addr))
             self._scan()
 
