@@ -21,7 +21,7 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.5 2004/01/31 13:57:48 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.6 2004/02/01 03:48:56 rwx Exp $'
 
 
 import sys
@@ -127,8 +127,10 @@ def main(argv):
     halberd = Halberd()
 
     # Ensures the URL is a valid one.
-    make_url = lambda url, base: (url.startswith(base) and url) or (base + url)
-    halberd.url = make_url(args[0], 'http://')
+    make_url = lambda url: (url.startswith('http://') \
+                            or url.startswith('https://') and url) \
+                           or ('http://' + url)
+    halberd.url = make_url(args[0])
 
     # Go through the reconnaissance stage.
     from hlbd import scanlib
