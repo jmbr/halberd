@@ -19,7 +19,7 @@
 """Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.17 2004/03/03 12:53:32 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.18 2004/03/05 00:31:52 rwx Exp $'
 
 
 import sys
@@ -66,9 +66,9 @@ class State:
         if not self.verbose:
             return
 
-        statusline = """\
-\r%15s | remaining: %3d | clues: %3d | replies: %3d | missed: %3d\
-""" % (self.addr, remaining, len(self.clues), self.replies, self.missed)
+        statusline = '\r' + self.addr.ljust(15) + \
+            ' | remaining: %3d | clues: %3d | replies: %3d | missed: %3d' \
+            % (remaining, len(self.clues), self.replies, self.missed)
 
         sys.stdout.write(statusline)
         sys.stdout.flush()

@@ -21,7 +21,7 @@
 """Massive load balancer scanner.
 """
 
-__revision__ = '$Id: bulkscan.py,v 1.5 2004/03/04 11:55:57 rwx Exp $'
+__revision__ = '$Id: bulkscan.py,v 1.6 2004/03/05 00:31:50 rwx Exp $'
 
 
 import os
@@ -103,6 +103,8 @@ def main():
             hlbd.clues.file.save(clue_file, h.clues)
         except IOError, msg:
             error(msg)
+
+        print
 
 
 if __name__ == '__main__':
