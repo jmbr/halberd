@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.10 2004/02/20 12:55:21 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.11 2004/03/29 09:47:06 rwx Exp $'
 
 
 import sys
@@ -39,7 +39,7 @@ def report(address, clues, outfile=''):
     """
     out = (outfile and open(outfile, 'a')) or sys.stdout
 
-    out.write('\n[ %d ] possibly real server(s) at [ %s ].\n'
+    out.write('[ %d ] possibly real server(s) at [ %s ].\n'
               % (len(clues), address))
 
     hits = analysis.hits(clues)
