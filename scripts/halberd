@@ -3,7 +3,7 @@
 
 """Command line interface.
 """
-__revision__ = '$Id: halberd,v 1.23 2004/03/29 10:36:56 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.24 2004/04/03 15:07:29 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,6 +25,7 @@ __revision__ = '$Id: halberd,v 1.23 2004/03/29 10:36:56 rwx Exp $'
 import sys
 
 import hlbd.shell
+import hlbd.ScanTask
 import hlbd.version as version
 
 
@@ -35,13 +36,23 @@ def make_parser():
 
     parser = optparse.OptionParser(usage='%prog [options] url',
                                    version=version.version.v_gnu)
+    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                      help='explain what is being done', default=True)
+    parser.add_option('-q', '--quiet', action='store_false', dest='verbose',
+                      help='run quietly', default=True)
+
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend scanning the target',
-                      metavar='NUM', default=hlbd.shell.default_scantime)
+                      metavar='NUM', default=hlbd.ScanTask.default_scantime)
 
-    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
-                      help='explain what is being done', default=False)
+    parser.add_option('-p', '--parallelism', action='store', type='int',
+                      dest='parallelism',
+                      help='specifies the degree of parallelism',
+                      metavar='NUM', default=hlbd.ScanTask.default_parallelism)
+
+    parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
+                      help='read URLs from FILE', metavar='FILE')
 
     parser.add_option('-o', '--out', action='store', dest='output',
                       help='write output to the specified file',
@@ -51,11 +62,11 @@ def make_parser():
                       help='specify address to scan',
                       metavar='ADDR', default='')
 
-    parser.add_option('-w', '--write', action='store', dest='savefile',
-                      help='saves clues to the specified file or directory',
-                      metavar='FILE', default='')
     parser.add_option('-r', '--read', action='store', dest='cluefile',
                       help='loads clues from the specified file',
+                      metavar='FILE', default='')
+    parser.add_option('-w', '--write', action='store', dest='save',
+                      help='saves clues to the specified directory',
                       metavar='FILE', default='')
 
     parser.add_option('-s', '--server', action='store_true', dest='rpc_server',
@@ -63,19 +74,27 @@ def make_parser():
     parser.add_option('-c', '--client', action='store_true', dest='rpc_client',
                       help='run as scan cilent')
 
-    parser.add_option('-p', '--parallelism', action='store', type='int',
-                      dest='parallelism',
-                      help='specifies the degree of parallelism',
-                      metavar='NUM', default=hlbd.shell.default_parallelism)
-
     parser.add_option('', '--config', action='store', dest='confname',
                       help='use configuration file', metavar='FILE',
-                      default=hlbd.shell.default_conf_file)
-
-    parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
-                      help='read URLs from FILE', metavar='FILE')
+                      default=hlbd.ScanTask.default_conf_file)
 
     return parser
+
+
+def make_url(url):
+    """Ensures the URL is a valid one.
+
+    Characters aren't escaped, so strings like 'htt%xx://' won't be parsed.
+
+    @param url: An incomplete (or not) URL.
+    @type url: C{str}
+    """
+    if url.startswith('http://') or url.startswith('https://'):
+        newurl = url
+    else:
+        newurl = 'http://' + url
+
+    return newurl
 
 
 def scannerFactory(opts, args):
@@ -84,29 +103,39 @@ def scannerFactory(opts, args):
     It selects which scanning strategy to follow depending on how the user
     invoked the program.
     """
-    scan_options = {
-        'scantime': opts.scantime,
-        'parallelism': opts.parallelism,
-        'verbose': opts.verbose,
-        'conf_file': opts.confname,
-    }
+    scanopts = hlbd.ScanTask.ScanTask()
 
-    if opts.urlfile:
+    scanopts.scantime = opts.scantime
+    scanopts.parallelism = opts.parallelism
+    scanopts.verbose = opts.verbose
+    scanopts.conf_file = opts.confname
+    scanopts.cluefile = opts.cluefile
+    scanopts.save = opts.save
+    scanopts.output = opts.output
+
+    scanopts.readConf()
+    if opts.rpc_client:
+        scanopts.isDist = True
+
+    if opts.cluefile:
+        # Read and analyze clues.
+        scanner = hlbd.shell.ClueReadStrategy
+    elif opts.rpc_server:
+        # Act as a scan server.
+        scanner = hlbd.shell.RPCServerStrategy
+    elif opts.urlfile:
         # MultiScan
-        scan_options.update({'urlfile': opts.urlfile})
-        if opts.rpc_client:
-            scanner = hlbd.shell.DistMultiScan
-        else:
-            scanner = hlbd.shell.MultiScan
-    else:
+        scanopts.urlfile = opts.urlfile
+        scanner = hlbd.shell.MultiScanStrategy
+    elif len(args) > 0:
         # UniScan
-        scan_options.update({'url': args[0], 'addr': opts.addr})
-        if opts.rpc_client:
-            scanner = hlbd.shell.DistUniScan
-        else:
-            scanner = hlbd.shell.UniScan
+        scanopts.url = make_url(args[0])
+        scanopts.addr = opts.addr
+        scanner = hlbd.shell.UniScanStrategy
+    else:
+        return None
 
-    return scanner(**scan_options)
+    return scanner(scanopts)
 
 
 def main(argv):
@@ -114,43 +143,27 @@ def main(argv):
     """
     parser = make_parser()
 
-    (opts, args) = parser.parse_args(argv)
+    (opts, args) = parser.parse_args(argv[1:])
 
-    print version.version.v_gnu
-    print 'http load balancer detector'
-    print
+    if opts.verbose:
+        print version.version.v_gnu
+        print 'http load balancer detector'
+        print
 
-    if opts.cluefile:
-        # Run as reader/analyzer.
-        import hlbd.clues.file
-
-        halberd = hlbd.shell.Halberd()
-        halberd.clues = hlbd.clues.file.load(opts.cluefile)
-        halberd.analyze()
-        halberd.report(opts.output)
-        sys.exit(0)
-    elif opts.rpc_server:
-        # Run as server.
-        import hlbd
-
-        halberd = hlbd.shell.Halberd()
-        halberd.readConf(opts.confname)
-        halberd.server()
-        sys.exit(0)
-    else:
-        # Run as scanner.
-        if opts.urlfile is None and len(args) < 1:
-            # We need an URL to scan.
+    try:
+        scanner = scannerFactory(opts, args)
+        if scanner is None:
             parser.error('incorrect number of arguments')
 
-        scanner = scannerFactory(opts, args)
-        scanner.run(opts.savefile, opts.output)
+        scanner.run()
+    except hlbd.shell.ScanError, msg:
+        sys.stderr.write('\n*** %s ***\n' % msg)
 
 
 if __name__ == '__main__':
-#    import gc
-#    gc.set_debug(gc.DEBUG_LEAK)
-    main(sys.argv[1:])
+    import gc
+    gc.set_debug(gc.DEBUG_LEAK)
+    main(sys.argv)
 
 
 # vim: ts=4 sw=4 et
