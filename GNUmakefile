@@ -1,5 +1,5 @@
 # GNUmakefile
-# $Id: GNUmakefile,v 1.4 2004/02/07 19:08:20 rwx Exp $
+# $Id: GNUmakefile,v 1.5 2004/02/13 01:29:54 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -34,7 +34,7 @@ SHTOOL := $(srcdir)/shtool
 versionfile := $(hlbddir)/version.py
 
 SCRIPTS := halberd.py
-MODULES := $(filter-out $(version-file), $(wildcard $(hlbddir)/*.py))
+MODULES := $(filter-out $(version-file), $(wildcard $(hlbddir)/*.py)) $(wildcard $(hlbddir)/clues/*.py)
 SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES = $(wildcard $(testdir)/*.py)
 
@@ -44,9 +44,9 @@ build: $(SOURCES)
 
 clean:
 	rm -rf $(srcdir)/build
-	rm -f *.py[co] $(hlbddir)/*.py[co] $(testdir)/*.py[co]
+	rm -f *.py[co] $(hlbddir)/*.py[co] $(hlbddir)/clues/*.py[co] $(testdir)/*.py[co]
 
-dist: distclean incversion doc ChangeLog
+dist: distclean doc ChangeLog
 	$(PYTHON) setup.py sdist
 
 distclean: clobber clean
@@ -63,7 +63,7 @@ tags: clobber $(SOURCES)
 	$(CTAGS) -R
 
 clobber:
-	rm -f *.bak $(srcdir)/*~ $(hlbddir)/*~  $(testdir)/*~
+	rm -f *.bak $(srcdir)/*~ $(hlbddir)/*~ $(hlbddir)/clues/*~ $(testdir)/*~
 
 incversion: shtool
 	$(SHTOOL) version -l python -n halberd -i l $(versionfile)
