@@ -1,5 +1,4 @@
-# GNUmakefile
-# $Id: GNUmakefile,v 1.6 2004/02/15 18:02:00 rwx Exp $
+# $Id: GNUmakefile,v 1.7 2004/02/15 18:57:14 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,6 +24,7 @@ testdir := $(srcdir)/tests
 
 
 PYTHON := /usr/local/bin/python
+PYTHON_COUNT := /usr/local/bin/python_count
 EPYDOC := /usr/local/bin/epydoc
 CTAGS := /usr/local/bin/ctags
 CVS2CL := /usr/local/bin/cvs2cl.pl
@@ -36,7 +36,8 @@ versionfile := $(hlbddir)/version.py
 SCRIPTS := halberd.py
 MODULES := $(filter-out $(version-file), $(wildcard $(hlbddir)/*.py)) $(wildcard $(hlbddir)/clues/*.py)
 SOURCES := $(SCRIPTS) $(MODULES)
-TEST_SOURCES = $(wildcard $(testdir)/*.py)
+TEST_SOURCES := $(wildcard $(testdir)/*.py)
+ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
 
 build: $(SOURCES)
@@ -71,8 +72,11 @@ incversion: shtool
 shtool:
 	$(SHTOOLIZE) -o $@ version
 
-ChangeLog: $(SOURCES) $(TEST_SOURCES)
+ChangeLog: $(ALL_SOURCES)
 	$(CVS2CL)
 
+count: $(ALL_SOURCES)
+	@$(PYTHON_COUNT) $^
 
-.PHONY: clean dist distclean clobber check incversion doc
+
+.PHONY: clean dist distclean clobber check incversion doc count
