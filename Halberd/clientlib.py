@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.7 2004/03/02 02:07:01 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.8 2004/03/02 11:57:57 rwx Exp $'
 
 
 import time
@@ -235,8 +235,11 @@ class HTTPClient:
             try:
                 chunk = self._recv(default_bufsize)
                 if not timestamp:
+                    # We are at the first iteration.
+                    if not chunk.startswith('HTTP/'):
+                        raise UnknownReply, 'invalid protocol'
                     timestamp = time.time()
-            except:
+            except: # XXX We cannot afford to have a wildcard except handler.
                 return None, None
     
             if not chunk:
@@ -250,9 +253,6 @@ class HTTPClient:
             except ValueError:
                 pass
             data += chunk
-
-        if not data.startswith('HTTP/'):
-            raise UnknownReply, 'invalid protocol'
 
         return timestamp, data
 
