@@ -1,7 +1,6 @@
 include setup.py
 
 include halberd.py
-include halberd.cfg
 
 recursive-include hlbd *.py
 
