@@ -3,7 +3,7 @@
 
 """Command line interface.
 """
-__revision__ = '$Id: halberd,v 1.24 2004/04/03 15:07:29 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.25 2004/04/04 01:15:22 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -161,8 +161,8 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    import gc
-    gc.set_debug(gc.DEBUG_LEAK)
+#    import gc
+#    gc.set_debug(gc.DEBUG_LEAK)
     main(sys.argv)
 
 
