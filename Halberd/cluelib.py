@@ -21,12 +21,9 @@
 This module implements a few classes related to creation and and analysis of
 pieces of information returned by a webserver which may help in locating load
 balanced devices.
-
-@var delta: Allowed delta for L{cmp_delta_diff}
-@type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.8 2004/02/02 07:15:50 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.9 2004/02/03 19:47:56 rwx Exp $'
 
 
 import time
@@ -36,9 +33,6 @@ try:
     from sha import new as hashfn
 except ImportError:
     from md5 import new as hashfn
-
-
-delta = 2
 
 
 def normalize(name):
@@ -95,12 +89,6 @@ class Clue:
 
         # Original MIME headers. They're useful during analysis and reporting.
         self.headers = None
-
-        self.__equalscmp = CmpOperator([cmp_diff, cmp_timeskew, cmp_server,
-                                        cmp_contloc, cmp_digest])
-        self.__containscmp = CmpOperator([cmp_delta_diff, cmp_timeskew,
-                                          cmp_server, cmp_contloc, cmp_digest])
-
 
     def processHdrs(self, headers):
         """Extracts all relevant information from the MIME headers replied by
@@ -178,14 +166,32 @@ class Clue:
 
 
     def __eq__(self, other):
-        return (self.__equalscmp.compare(self, other) == 0)
+        if self.calcDiff() < other.calcDiff():
+            return False
+        elif self.calcDiff() > other.calcDiff():
+            return False
+
+#        local = (self._local, other._local)
+#        remote = (self._remote, other._remote)
+#        if ((local[0] < local[1]) and (remote[0] > remote[1]) \
+#           or (local[0] > local[1]) and (remote[0] < remote[1])):
+#            return False
+
+        if self.info['server'] != other.info['server']:
+            return False
+
+        if self.info['contloc'] != other.info['contloc']:
+            return False
+
+        if self.info['digest'] < other.info['digest']:
+            return False
+        elif self.info['digest'] > other.info['digest']:
+            return False
+
+        return True
 
     def __ne__(self, other):
         return not self == other
-
-    def __contains__(self, other):
-        # XXX Not needed anymore...
-        return (self.__containscmp.compare(self, other) == 0)
 
     def __repr__(self):
         return "<Clue diff=%d found=%d digest='%s'>" \
@@ -228,6 +234,23 @@ class Clue:
         pass
 
 
+# =======================
+# Clue analysis functions
+# =======================
+def sort(clues):
+    """Perform the schwartzian transform to sort clues by time diff.
+
+    @return: A sorted list by time difference.
+    @rtype: C{list}
+    """
+    # We proceed through the decorate-sort-undecorate steps.
+    decorate = lambda c: (c.calcDiff(), c)
+    decorated = map(decorate, clues)
+    
+    decorated.sort()
+
+    return [diff_clue[1] for diff_clue in decorated]
+
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
     """
@@ -242,25 +265,14 @@ def analyze(clues):
             l.append(clue)
             
         cluedict = {}
+
         # Put all the clues into the dictionary.
-        map(append, [cluedict] * len(clues), clues)
+        [append(cluedict, clue) for clue in clues]
 
         return cluedict
 
-    def sort(clues):
-        """Perform the schwartzian transform to sort clues by time diff.
-        """
-        # We proceed through the decorate-sort-undecorate steps.
-        decorate = lambda c: (c.calcDiff(), c)
-        decorated = map(decorate, clues)
-        
-        decorated.sort()
-
-        return [diff_clue[1] for diff_clue in decorated]
-
     def groups(clues):
         # XXX refactor
-        # maybe turning this into a generator could be nice.
         idx = 0
 
         cluesleft = lambda clues, idx: (len(clues) - idx)
@@ -305,88 +317,6 @@ def analyze(clues):
             results.append(merge(group))
 
     return results
-
-
-# =====================
-# Comparison operators.
-# =====================
-
-# XXX There's no need for most of these
-
-def cmp_diff(one, other):
-    """Compares time differences.
-
-    @return: 0 if both clues have the time difference, -1 if L{one} less than
-    L{other} and 1 if L{one} is greater than L{other}
-    @rtype: C{int}
-    """
-    if one.calcDiff() < other.calcDiff():
-        return -1
-    elif one.calcDiff() > other.calcDiff():
-        return 1
-    return 0
-
-def cmp_delta_diff(one, other):
-    """Compares two clues with a delta.
-    """
-    onediff, otherdiff = one.calcDiff(), other.calcDiff()
-    if abs(onediff - otherdiff) > delta:
-        return -1
-    return 0
-
-def cmp_server(one, other):
-    """Compares Server fields.
-
-    @return: 0 if both clues have the same server, a non-zero value otherwise.
-    @rtype: C{int}
-    """
-    if one.info['server'] != other.info['server']:
-        return -1
-    return 0
-
-def cmp_digest(one, other):
-    """Compares header digests.
-
-    @return: 0 if both clues have the same digest, a non-zero value otherwise.
-    @rtype: C{int}
-    """
-    if one.info['digest'] < other.info['digest']:
-        return -1
-    elif one.info['digest'] > other.info['digest']:
-        return 1
-    return 0
-
-def cmp_timeskew(one, other):
-    """Ensures there are no incoherent timestamps.
-    """
-    local = (one._local, other._local)
-    remote = (one._remote, other._remote)
-    if ((local[0] < local[1]) and (remote[0] > remote[1]) \
-       or (local[0] > local[1]) and (remote[0] < remote[1])):
-        return -1
-    return 0
-
-def cmp_contloc(one, other):
-    """Compares Content-location fields.
-    """
-    if one.info['contloc'] != other.info['contloc']:
-        return -1
-    return 0
-
-class CmpOperator:
-    """Customizable comparison operator.
-    """
-    def __init__(self, operators):
-        self.__operators = operators
-
-    def compare(self, one, other):
-        """Compares two clues
-        """
-        for comp in self.__operators:
-            status = comp(one, other)
-            if status != 0:
-                break
-        return status
 
 
 # =============================
