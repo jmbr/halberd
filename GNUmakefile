@@ -1,5 +1,5 @@
 # GNUmakefile
-# $Id: GNUmakefile,v 1.1 2004/01/26 23:07:31 rwx Exp $
+# $Id: GNUmakefile,v 1.2 2004/01/27 02:28:32 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -27,6 +27,7 @@ testdir := $(srcdir)/test
 PYTHON := /usr/local/bin/python
 EPYDOC := /usr/local/bin/epydoc
 CTAGS := /usr/local/bin/ctags
+CVS2CL := /usr/local/bin/cvs2cl.pl
 SHTOOLIZE := /usr/local/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
 
@@ -45,11 +46,11 @@ clean:
 	rm -rf $(srcdir)/build
 	rm -f *.py[co] $(hlbddir)/*.py[co] $(testdir)/*.py[co]
 
-dist: distclean incversion doc
+dist: distclean incversion doc ChangeLog
 	$(PYTHON) setup.py sdist
 
 distclean: clobber clean
-	rm -f $(srcdir)/{tags,MANIFEST}
+	rm -f $(srcdir)/{tags,MANIFEST,ChangeLog}
 	rm -rf {$(docdir),$(srcdir)/dist}
 
 check: $(TEST_SOURCES)
@@ -66,13 +67,16 @@ tags: $(SOURCES)
 	$(CTAGS) -R
 
 clobber:
-	rm -f $(srcdir)/*~ $(hlbddir)/*~  $(testdir)/*~
+	rm -f *.bak $(srcdir)/*~ $(hlbddir)/*~  $(testdir)/*~
 
 incversion: shtool
 	$(SHTOOL) version -l python -n halberd -i l $(versionfile)
 
 shtool:
 	$(SHTOOLIZE) -o $@ version
+
+ChangeLog: $(SOURCES) $(TEST_SOURCES)
+	$(CVS2CL)
 
 
 .PHONY: clean dist distclean clobber check incversion doc
