@@ -21,14 +21,14 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.3 2004/01/27 22:09:31 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.4 2004/01/29 02:13:58 rwx Exp $'
 
 
 import sys
 
 
 # Time to spend probing the target expressed in seconds.
-_DEFAULT_SCANTIME = 30
+_DEFAULT_SCANTIME = 15
 # Number of sockets to create at each scanning round.
 _DEFAULT_SOCKETS = 3
 
@@ -86,13 +86,6 @@ def get_address(url, address, verbose):
 
     return addresses[0]
 
-def save_clues(savefile, clues):
-    import pickle
-
-    fp = open(savefile, 'w')
-    pickle.dump(clues, fp)
-    fp.close()
-
 
 def main(argv):
     """http load balancer detector's main routine.
@@ -143,10 +136,11 @@ def main(argv):
     
     scanner = scanlib.Scanner(opts.scantime, opts.sockets, opts.verbose)
 
-    try:
-        halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
-    except KeyboardInterrupt:
-        print '\n*** interrupted by the user ***'
+    halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
+#    try:
+#        halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
+#    except KeyboardInterrupt:
+#        print '\n*** interrupted by the user ***'
 
     if len(halberd.clues) > 0:
         # Analyze results.
@@ -160,7 +154,7 @@ def main(argv):
                          opts.output)
 
     if opts.savefile:
-        save_clues(opts.savefile, halberd.clues)
+        cluelib.save_clues(opts.savefile, halberd.clues)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
