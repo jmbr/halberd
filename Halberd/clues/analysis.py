@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.13 2004/03/03 15:44:39 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.14 2004/03/06 10:26:26 rwx Exp $'
 
 
 import copy
@@ -517,7 +517,6 @@ def reanalyze(clues, analyzed, threshold, verbose=False):
 def _test():
     import doctest
 
-    import hlbd.clues
     import hlbd.clues.Clue
     import hlbd.clues.analysis
 
