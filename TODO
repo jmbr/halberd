@@ -8,12 +8,9 @@ The following is a list of things to be done in *halberd*:
 
     - Improve documentation in the code.
 
-    - Write real documentation (following pythonic guidelines!).
+    - Write user documentation.
 
     - Write more test cases... much more!
-
-    - See if there's a way to pickle *tlslist.Session* so it can be stored to
-      disk otherwise see if *m2crypto*'s sessions can be serialized and stored.  
 
     - Use logging module throughout the program from a singleton or borg
       pattern replacing all those small functions warn, error and info
@@ -27,4 +24,4 @@ something and `mail me`_ the results.
 
 .. _mail me: rwx+halberd@synnergy.net
 
-:Version: $Id: TODO,v 1.1 2004/04/06 12:04:15 rwx Exp $
+:Version: $Id: TODO,v 1.2 2004/04/07 00:24:22 rwx Exp $
