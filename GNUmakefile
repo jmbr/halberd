@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.10 2004/03/03 12:11:27 rwx Exp $
+# $Id: GNUmakefile,v 1.11 2004/03/06 10:26:13 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -23,7 +23,8 @@
 
 srcdir := .
 hlbddir := $(srcdir)/hlbd
-docdir := $(srcdir)/doc/api
+docdir := $(srcdir)/doc
+apidocdir := $(srcdir)/doc/api
 testdir := $(srcdir)/tests
 
 
@@ -62,7 +63,7 @@ clean:
 
 clobber: clean
 	$(RM) *.bak
-	$(call remove, *~, $(ALL_DIRS))
+	$(call remove, *~, $(ALL_DIRS) $(docdir))
 
 build: $(SOURCES)
 	$(SETUP) build
@@ -72,6 +73,7 @@ dist: setversion doc ChangeLog
 
 check: $(ALL_SOURCES)
 	$(SETUP) test
+	PYTHONPATH=$(hlbddir):$(hlbddir)/clues:$$PYTHONPATH \
 	$(PYTHON) $(hlbddir)/clues/analysis.py
 
 tmpdir = $(srcdir)/tmp
@@ -83,12 +85,12 @@ install: build
 distclean: clobber
 	$(RM) $(srcdir)/MANIFEST
 	$(RM) $(srcdir)/ChangeLog
-	$(RM) -r $(docdir) $(srcdir)/dist
+	$(RM) -r $(apidocdir) $(srcdir)/dist
 
-doc: $(docdir)/index.html
+doc: $(apidocdir)/index.html
 
-$(docdir)/index.html: $(SOURCES)
-	$(EPYDOC) -o $(docdir) $^
+$(apidocdir)/index.html: $(SOURCES)
+	$(EPYDOC) -o $(apidocdir) $^
 
 tags: $(ALL_SOURCES)
 	$(CTAGS) $^
