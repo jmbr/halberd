@@ -1,8 +1,17 @@
 include setup.py
+
 include halberd.py
-include bulkscan.py
 include halberd.cfg
+
+include bulkscan.py
+
 recursive-include hlbd *.py
+
 include tests/*.py
-recursive-include doc *
+recursive-include tests/data *.clu
+
+recursive-include doc/api *
+
 include AUTHORS ChangeLog LICENSE README THANKS MANIFEST.in
+
+include GNUmakefile

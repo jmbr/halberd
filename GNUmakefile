@@ -1,4 +1,8 @@
-# $Id: GNUmakefile,v 1.7 2004/02/15 18:57:14 rwx Exp $
+# $Id: GNUmakefile,v 1.8 2004/02/26 04:15:03 rwx Exp $
+
+# ============================================================================
+# This makefile is intended for developers. End users should rely on setup.py.
+# ============================================================================
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -30,41 +34,59 @@ CTAGS := /usr/local/bin/ctags
 CVS2CL := /usr/local/bin/cvs2cl.pl
 SHTOOLIZE := /usr/local/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
+RM := /bin/rm -f
+
 
 versionfile := $(hlbddir)/version.py
 
-SCRIPTS := halberd.py
-MODULES := $(filter-out $(version-file), $(wildcard $(hlbddir)/*.py)) $(wildcard $(hlbddir)/clues/*.py)
+SCRIPTS := halberd.py bulkscan.py
+MODULES := $(filter-out $(hlbddir)/version.py, $(wildcard $(hlbddir)/*.py)) \
+		   $(wildcard $(hlbddir)/clues/*.py)
+
 SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES := $(wildcard $(testdir)/*.py)
 ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
+ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
+
+
+clean:
+	$(RM) tags
+	$(RM) -r $(srcdir)/build
+	$(RM) $(addsuffix *.pyc, $(ALL_DIRS))
+	$(RM) $(addsuffix *.pyo, $(ALL_DIRS))
+
+clobber:
+	$(RM) *.bak
+	$(RM) $(addsuffix *~, $(ALL_DIRS))
 
 build: $(SOURCES)
 	$(PYTHON) setup.py build
 
-clean:
-	rm -rf $(srcdir)/build
-	rm -f *.py[co] $(hlbddir)/*.py[co] $(hlbddir)/clues/*.py[co] $(testdir)/*.py[co]
-
-dist: distclean doc ChangeLog
+dist: setversion distclean doc ChangeLog
 	$(PYTHON) setup.py sdist
 
+check: $(ALL_SOURCES)
+	$(PYTHON) setup.py test
+	$(PYTHON) $(hlbddir)/clues/analysis.py
+
+install: build
+	$(PYTHON) setup.py install --root $(srcdir)/tmp
+
 distclean: clobber clean
-	rm -f $(srcdir)/{tags,MANIFEST,ChangeLog}
-	rm -rf {$(docdir),$(srcdir)/dist}
+	$(RM) $(srcdir)/MANIFEST
+	$(RM) $(srcdir)/ChangeLog
+	$(RM) -r $(docdir) $(srcdir)/dist
 
-check: $(TEST_SOURCES)
-	@$(PYTHON) setup.py test
-
-doc: $(filter-out hlbd/version.py, $(MODULES))
+doc: $(MODULES)
 	$(EPYDOC) -o $(docdir) $^
 
-tags: clobber $(SOURCES)
-	$(CTAGS) -R
+tags: $(ALL_SOURCES)
+	$(CTAGS) $^
 
-clobber:
-	rm -f *.bak $(srcdir)/*~ $(hlbddir)/*~ $(hlbddir)/clues/*~ $(testdir)/*~
+setversion: shtool
+	@version=`$(SHTOOL) version -l python $(versionfile)`; \
+	$(SHTOOL) version -l python -n halberd -s $$version $(versionfile)
 
 incversion: shtool
 	$(SHTOOL) version -l python -n halberd -i l $(versionfile)
@@ -79,4 +101,7 @@ count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
 
 
-.PHONY: clean dist distclean clobber check incversion doc count
+.PHONY: clean dist distclean clobber check setversion incversion doc count
+
+
+# vim: noexpandtab
