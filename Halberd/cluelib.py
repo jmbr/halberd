@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.14 2004/02/08 01:55:05 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.15 2004/02/09 12:07:25 rwx Exp $'
 
 
 import time
@@ -98,6 +98,12 @@ class Clue:
         @type headers: str
         """
         def make_list(hdrs):
+            """Create a list of name, value tuples from the server's response.
+
+            We use a list instead of a dictionary because with the list we keep
+            the header's order as sent by the target, which is a relevant piece
+            of information we cannot afford to miss.
+            """
             # We split by ':' instead of ': ' because it's more robust (some
             # webservers may send badly written headers).
             return [tuple(line.split(':', 1)) for line in hdrs.splitlines() \
@@ -183,8 +189,11 @@ class Clue:
         return not self == other
 
     def __repr__(self):
-        return "<Clue diff=%d found=%d digest='%s'>" \
-                % (self.diff, self.__count, self.info['digest'][:4] + '...')
+        if not (self.diff or self.info['digest']):
+            return "<Clue at %x>" % id(self)
+        return "<Clue at %x diff=%d found=%d digest='%s'>" \
+                % (id(self), self.diff, self.__count,
+                   self.info['digest'][:4] + '...')
 
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
@@ -221,18 +230,49 @@ class Clue:
         """Content-length:"""
         pass
 
-    def _get_etag(self, field):
-        """ETag:"""
-        pass
-
     def _get_lastmodified(self, field):
         """Last-modified:"""
+        pass
+
+    def _get_etag(self, field):
+        """ETag:"""
         pass
 
 
 # ========================
 # Clue analysis functions.
 # ========================
+
+
+def diff_fields(clues):
+    """Study differences between fields.
+    """
+    import difflib
+
+    scores = {}
+
+    total = 0
+    for i in range(len(clues)):
+        for j in range(len(clues)):
+            if i == j:
+                continue
+
+            one, other = clues[i].headers, clues[j].headers
+            matcher = difflib.SequenceMatcher(None, one, other)
+            diffs = [opcode for opcode in matcher.get_opcodes() \
+                            if opcode[0] != 'equal']
+
+            for tag, alo, ahi, blo, bhi in diffs:
+                for name, value in one[alo:ahi] + other[blo:bhi]:
+                    total += 1
+                    scores.setdefault(name, 0)
+                    scores[name] += 1
+
+    result = [(count * 100 / total, field) for field, count in scores.items()]
+    result.sort()
+    result.reverse()
+
+    return result
 
 
 class groupby(dict):
@@ -245,7 +285,6 @@ class groupby(dict):
 
     __iter__ = dict.iteritems
 
-
 def sort_by_diff(clues):
     """Perform the schwartzian transform to sort clues by time diff.
 
@@ -256,7 +295,6 @@ def sort_by_diff(clues):
     decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
     return [diff_clue[1] for diff_clue in decorated]
-
 
 def find_clusters(clues):
     """Finds clusters of clues.
@@ -294,7 +332,6 @@ def find_clusters(clues):
                 start = i
                 break
 
-
 def merge_cluster(group):
     """Merges a given cluster into one clue.
     """
@@ -312,9 +349,12 @@ def merge_cluster(group):
     else:
         return group[0]
 
-
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
+
+    First we group all the clues at hand by their digest, second we sort them
+    by time difference and afterwards we try to find groups of at most 3 clues
+    which actually belong to the same real server.
 
     @param clues: Unprocessed clues obtained during the scanning stage.
     @type clues: C{list}
