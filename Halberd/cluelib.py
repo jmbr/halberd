@@ -26,7 +26,7 @@ balanced devices.
 @type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.6 2004/01/31 13:59:21 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.7 2004/02/01 03:50:28 rwx Exp $'
 
 
 import time
@@ -97,7 +97,6 @@ class Clue:
 
         hdrfp = StringIO(headers)
         hdrs = rfc822.Message(hdrfp)
-        #hdrs.readheaders()
         hdrfp.close()
         self.headers = hdrs.items()         # Save a copy of the headers.
 
@@ -207,12 +206,12 @@ class Clue:
         self.info['date'] = field
         self._remote = time.mktime(rfc822.parsedate(field))
 
-    def _get_content_location(self, field):
+    def _get_contentlocation(self, field):
         """Content-location:"""
         self.info['contloc'] = field
         self.__tmphdrs += field     # Make sure this gets hashed too.
 
-    def _get_set_cookie(self, field):
+    def _get_setcookie(self, field):
         """Set-cookie:"""
         self.info['cookie'] = field
 
@@ -257,8 +256,8 @@ def analyze(clues):
 
     def groups(clues):
         # XXX refactor
+        # maybe turning this into a generator could be nice.
         idx = 0
-        groups = []
 
         cluesleft = lambda clues, idx: (len(clues) - idx)
         while cluesleft(clues, idx):
@@ -266,18 +265,16 @@ def analyze(clues):
             if cluesleft(clues, idx) >= 3:
                 avg = sum([clue.calcDiff() for clue in clues[idx:idx + 3]]) / 3
                 if (avg == clues[idx + 1].calcDiff()):
-                    groups.append(tuple(clues[idx:idx + 3]))
+                    yield (tuple(clues[idx:idx + 3]))
                     step = 3
             if cluesleft(clues, idx) == 2:
                 if abs(clues[idx].calcDiff() - clues[idx + 1].calcDiff()) <= 1:
-                    groups.append((clues[idx], clues[idx + 1]))
+                    yield (clues[idx], clues[idx + 1])
                     step = 2
             if cluesleft(clues, idx) == 1:
-                groups.append((clues[idx],))
+                yield (clues[idx], )
 
             idx += step
-
-        return groups
 
     def merge(group):
         # XXX refactor
