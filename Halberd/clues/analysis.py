@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.9 2004/02/25 01:36:48 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.10 2004/02/25 03:52:20 rwx Exp $'
 
 
 import copy
@@ -477,46 +477,30 @@ def analyze(clues):
 
     return results
 
-
-# =============================
-# Misc. clue-related utilities.
-# =============================
-
-def save_clues(filename, clues):
-    """Save a clues to a file.
-
-    @param filename: Name of the file where the clues will be written to.
-    @type filename: C{str}
-
-    @param clues: Clues to write.
-    @type clues: C{list}
+def reanalyze(clues, analyzed, threshold, verbose=False):
     """
-    import pickle
-
-    cluefp = open(filename, 'w')
-    pickle.dump(clues, cluefp)
-    cluefp.close()
-
-def load_clues(filename):
-    """Load clues from file.
-
-    @param filename: Name of the files where the clues are stored.
-    @type filename: C{str}
-
-    @return: Clues extracted from the file.
-    @rtype: C{list}
+    @param clues: Analyzed sequence of clues.
     """
-    import pickle
+    assert len(clues) > 0
 
-    cluefp = open(filename, 'r')
-    clues = pickle.load(cluefp)
-    cluefp.close()
+    ratio = len(analyzed) / float(len(clues))
+    if ratio >= threshold:
+        if verbose:
+            print 'clue-to-realserver ratio is high (%.3f)' % ratio
+            print 'reanalyzing clues... ',
 
-    return clues
+        ignore_changing_fields(clues, verbose)
+        analyzed = analyze(clues)
+
+        if verbose:
+            print 'done.'
+
+    return analyzed
 
 
 def _test():
     import doctest, analysis
+
     return doctest.testmod(analysis)
 
 if __name__ == '__main__':
