@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# -*- coding: iso-8859-1 -*-
+
+# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+"""Command line interface and main driving module.
+"""
+
+__revision__ = '$Id: halberd,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+
+
+import sys
+
+
+# Time to spend probing the target expressed in seconds.
+_DEFAULT_SCANTIME = 30
+# Number of sockets to create at each scanning round.
+_DEFAULT_SOCKETS = 10
+
+
+def main(argv):
+    """http load balancer detector's main routine.
+    """
+    import optparse
+    from hlbd import version
+
+    parser = optparse.OptionParser(usage='%prog [options] url',
+                                   version=version.version.v_gnu)
+    parser.add_option('-t', '--time',
+                      action='store', type='int', dest='scantime',
+                      help='time (in seconds) to spend analyzing the target',
+                      metavar='NUM', default=_DEFAULT_SCANTIME)
+    parser.add_option('-s', '--sockets',
+                      action='store', type='int', dest='sockets',
+                      help='number of sockets to use in parallel',
+                      metavar='NUM', default=_DEFAULT_SOCKETS)
+    parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
+                      help='explain what is being done', default=False)
+    parser.add_option('-o', '--output', action='store', dest='output',
+                      help='write output to the specified file',
+                      metavar='FILE', default='')
+    group = optparse.OptionGroup(parser, 'Example',
+                'halberd.py -vt 10 -s 5 http://example.net   # would scan '
+                'example.net during 10 seconds using 5 sockets in parallel '
+                'while printing progress information.')
+    parser.add_option_group(group)
+
+    (opts, args) = parser.parse_args(argv)
+
+    if len(args) < 1:
+        # We must have an URL to scan.
+        parser.error('incorrect number of arguments')
+
+    if opts.verbose:
+        print '%s\nhttp load balancer detector\n' % version.version.v_gnu 
+
+    # Ensures the URL is a valid one.
+    make_url = lambda url, base: (url.startswith(base) and url) or (base + url)
+
+    # Go through the reconnaissance stage.
+    from hlbd import scanlib
+
+    address, clues, hits = ('', [], 0)
+    scanner = scanlib.Scanner(opts.scantime, opts.sockets, opts.verbose)
+    try:
+        address, clues, hits = scanner.scan(make_url(args[0], 'http://'))
+    except KeyboardInterrupt:
+        print '\n*** interrupted by the user ***'
+
+    if len(clues) > 0:
+        # Analyze results and print report.
+        from hlbd import cluelib, reportlib
+
+        analyzer = cluelib.Analyzer(clues)
+        reportlib.report(address, analyzer.analyze(), hits, opts.output)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+
+
+# vim: ts=4 sw=4 et

@@ -1,0 +1,24 @@
+_h_a_l_b_e_r_d -- HTTP load balancer detection tool
+================================================================================
+
+"The halberd, a weapon based on the spear, was developed by combining the
+merits of the spear and dagger-axe in the Yin and Shang period (1600-1100
+B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
+more powerful weapon than the dagger-axe and spear."
+	       Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
+
+Overview
+--------------------------------------------------------------------------------
+
+	Halberd is a tool aimed at discovering web server load balancing
+devices.
+
+Installation
+--------------------------------------------------------------------------------
+
+	Installing halberd is a very simple task. It suffices to write::
+
+	# python setup.py install
+
+	There are no special requirements other than having Python version 2.3
+or above.
