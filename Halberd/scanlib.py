@@ -19,125 +19,57 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.7 2004/02/07 13:33:30 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.8 2004/02/07 17:15:37 rwx Exp $'
 
 
 import sys
 import time
 
+try:
+    import threading
+except ImportError:
+    import dummy_threading as threading
+
 import hlbd.cluelib as cluelib
 import hlbd.clientlib as clientlib
 
 
-__all__ = ["Scanner"]
-
-
-#_THRESHOLD = 25
+__all__ = ['scan', 'rpcscan']
 
 
 class State:
     """Holds the state of the scanner at the current point in time.
     """
-    def __init__(self, verbose):
-        self.clues = []
+    def __init__(self, addr, url, scantime, verbose):
+        """Initalizes the state object.
+        """
+        self.addr = addr
+        self.url = url
+        self.scantime = scantime
         self.verbose = verbose
+
+        self.clues = []
 
         self.missed = 0
         self.replies = 0
-        self.ratio = 0
         self.errorfound = False
-        self.cluesperreply = 0
 
-    def update(self, remaining):
-        """Updates certain statistics while the scan is happening.
-        """
-        self._show(remaining)
+        self.lock = threading.Lock()
 
-#        if not self.clues or not self.replies:
-#            return
-#        
-#        self.ratio = len(self.clues) / float(self.replies)
-#        if self.replies > _THRESHOLD and self.ratio >= 0.5:
-#            # Start automagick clue inspector...
-#            import hlbd.inspectlib as inspectlib
-#
-#            # XXX Document and refactor heavily!
-#            ignore = inspectlib.get_diff_fields(self.clues, 0)
-#            assert len(ignore) > 0
-#
-#            for field in ignore:
-#                method = '_get_' + cluelib.normalize(field)
-#                if not hasattr(cluelib.Clue, method):
-#                    print '\n*** inspector: ignoring "%s" field ***' % field
-#                    setattr(cluelib.Clue, method, lambda s, f: None)
-#                    self.clues = []
-#                    self.replies = 0
-
-    def _show(self, remaining):
-        """Displays progress information.
+    def show(self, remaining):
+        """Displays certain statistics while the scan is happening.
         """
         if not self.verbose:
             return
 
         sys.stdout.write('\r%3d seconds left, %3d clue(s) so far, ' \
-                '%3d valid replies and %3d missed) [%.02f]' \
-                % (remaining, len(self.clues), self.replies, self.missed,
-                   self.ratio))
+                '%3d valid replies and %3d missed' \
+                % (remaining, len(self.clues), self.replies, self.missed))
         sys.stdout.flush()
 
-
-def insert_clue(clues, timestamp, headers):
-    """Transforms a timestamp-header pair into a clue and appends it to a list
-    if it wasn't seen before.
-    """
-    clue = cluelib.Clue()
-    clue.setTimestamp(timestamp)
-    clue.parse(headers)
-
-    try:
-        i = clues.index(clue)
-        clues[i].incCount()
-    except ValueError:
-        clues.append(clue)
-
-def rpcscan(addr, url, scantime):
-    pass
 
 def scan(addr, url, scantime, verbose=False, parallelism=1):
-    if parallelism <= 1:
-        return _scan_thr(addr, url, scantime, verbose)
-
-    import threading
-
-    threads = []
-    results = [[] for i in range(parallelism)]
-
-    for i in range(parallelism):
-        thread = threading.Thread(None, _scan_thr, None,
-                                  (addr, url, scantime, verbose, results[i]))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
-
-    clues = []
-    replies = 0
-
-    for result in results:
-        for partial_clues, partial_replies in result:
-            replies += partial_replies
-            for clue in partial_clues:
-                if clue not in clues:
-                    clues.append(clue)
-                else:
-                    i = clues.index(clue)
-                    clues[i].incCount(clue.getCount())
-
-    return clues, replies
-
-def _scan_thr(addr, url, scantime, verbose=False, results=None):
-    """Scans a given target looking for load balanced web servers.
+    """Performs a parallel load balancer scanning.
 
     @param addr: Target IP address to scan.
     @type addr: C{str}
@@ -148,16 +80,56 @@ def _scan_thr(addr, url, scantime, verbose=False, results=None):
     @param scantime: Time (in seconds) to spend peforming the analysis.
     @type scantime: C{int}
 
+    @param verbose: Specifies whether status info should be displayed or not.
+    @type verbose: C{bool}
+
     @return: list of clues found and number of replies received from the
     target.
     @rtype: C{tuple}
     """
-    state = State(verbose)
+    assert parallelism > 0
+    assert scantime > 0
 
+    state = State(addr, url, scantime, verbose)
+
+    # This is a very POSIXish idiom but I don't think there's a need for
+    # anything fancier.
+    threads = [threading.Thread(None, scan_thr, None, (state,)) \
+               for i in range(parallelism)]
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    if state.verbose:
+        print
+
+    return state.clues, state.replies
+
+def insert_clue(clues, reply):
+    """Transforms a timestamp-header pair into a clue and appends it to a list
+    if it wasn't seen before.
+    """
+    timestamp, headers = reply
+
+    clue = cluelib.Clue()
+    clue.setTimestamp(timestamp)
+    clue.parse(headers)
+
+    try:
+        i = clues.index(clue)
+        clues[i].incCount()
+    except ValueError:
+        clues.append(clue)
+
+def scan_thr(state):
+    """Scans a given target looking for load balanced web servers.
+    """
     remaining = lambda end: int(end - time.time())
     hasexpired = lambda end: (remaining(end) <= 0)
 
-    stop = time.time() + scantime		# Expiration time for the scan.
+    stop = time.time() + state.scantime		# Expiration time for the scan.
     while 1:
         if hasexpired(stop) or state.errorfound:
             break
@@ -165,28 +137,24 @@ def _scan_thr(addr, url, scantime, verbose=False, results=None):
         client = clientlib.HTTPClient()
 
         try:
-            reply = client.getHeaders(addr, url)
+            reply = client.getHeaders(state.addr, state.url)
         except clientlib.ConnectionRefused:
             sys.stderr.write('\r*** connection refused. aborting. ***\n')
             break
 
+        state.lock.acquire()
         if not reply:
             state.missed += 1
-            state.update(remaining(stop))
+            state.show(remaining(stop))
+            state.lock.release()
             continue
 
-        timestamp, headers = reply
         state.replies += 1
-        insert_clue(state.clues, timestamp, headers)
+        insert_clue(state.clues, reply)
+    
+        state.show(remaining(stop))
 
-        state.update(remaining(stop))
-
-    if state.verbose:
-        print
-
-    if results is not None:
-        results.append((state.clues, state.replies))
-    return state.clues, state.replies
+        state.lock.release()
 
 
 # vim: ts=4 sw=4 et
