@@ -17,10 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Utilities for clue analysis and storage.
+"""Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.8 2004/02/20 12:54:36 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.9 2004/02/25 01:36:48 rwx Exp $'
 
 
 import copy
@@ -93,7 +93,7 @@ def ignore_changing_fields(clues, verbose=False):
             setattr(Clue, method, lambda s, f: None)
 
     for clue in clues:
-        Clue._updateDigest(clue)
+        Clue.parse(clue, clue.headers)
 
     for method in ignored:
         # We want to leave the Clue class as before because a MIME field
