@@ -19,10 +19,11 @@
 
 """Configuration file management module.
 
-Halberd uses configuration files mainly for its proxy support and the
-distributed framework. Configuration files keep the information the program
-needs to act as a proxy server or connect to other peers in order to scan a
-target in parallel.
+Halberd uses configuration files to store relevant information needed for
+certain protocols (SSL) or modes of operation (proxy, distributed
+client/server, etc.).
+
+This module takes care of reading and writing configuration files.
 
 @var default_cfgfile: Path and name of the configuration file used by default.
 @type default_cfgfile: C{str}
@@ -34,7 +35,7 @@ target in parallel.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.5 2004/03/03 00:03:55 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.6 2004/03/03 09:29:28 rwx Exp $'
 
 
 import os
