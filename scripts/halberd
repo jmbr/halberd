@@ -3,7 +3,7 @@
 
 """Command line interface.
 """
-__revision__ = '$Id: halberd,v 1.22 2004/03/29 09:56:04 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.23 2004/03/29 10:36:56 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -24,7 +24,6 @@ __revision__ = '$Id: halberd,v 1.22 2004/03/29 09:56:04 rwx Exp $'
 
 import sys
 
-import hlbd
 import hlbd.shell
 import hlbd.version as version
 
@@ -122,7 +121,7 @@ def main(argv):
     print
 
     if opts.cluefile:
-        # Load from file.
+        # Run as reader/analyzer.
         import hlbd.clues.file
 
         halberd = hlbd.shell.Halberd()
@@ -132,18 +131,20 @@ def main(argv):
         sys.exit(0)
     elif opts.rpc_server:
         # Run as server.
+        import hlbd
+
         halberd = hlbd.shell.Halberd()
         halberd.readConf(opts.confname)
         halberd.server()
         sys.exit(0)
+    else:
+        # Run as scanner.
+        if opts.urlfile is None and len(args) < 1:
+            # We need an URL to scan.
+            parser.error('incorrect number of arguments')
 
-    # Scan target.
-    if opts.urlfile is None and len(args) < 1:
-        # We need an URL to scan.
-        parser.error('incorrect number of arguments')
-
-    scanner = scannerFactory(opts, args)
-    scanner.run(opts.savefile, opts.output)
+        scanner = scannerFactory(opts, args)
+        scanner.run(opts.savefile, opts.output)
 
 
 if __name__ == '__main__':
