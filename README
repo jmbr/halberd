@@ -7,14 +7,12 @@ B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
 more powerful weapon than the dagger-axe and spear."
 	       Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
 
-
 Overview
 --------
 
-	Halberd is a tool for discovering and bypassing HTTP load balancers. It
+	halberd is a tool for discovering and bypassing HTTP load balancers. It
 is useful in testing load balancer configurations as well as auditing web
 servers and web applications.
-
 
 Installation
 ------------
@@ -24,27 +22,41 @@ Installation
 	# python setup.py install
 
 	Python version 2.3 or above is needed plus its threading and MD5 or
-SHA1 modules.
+SHA1 modules. It is advisable to have python's SSL networking capabilities
+enabled, this is needed to scan through HTTPS.
 
 	A configuration file is stored in a directory named .halberd hanging
-from the user's $HOME (in UNIX variants), %HOMEDRIVE%%HOMEPATH%. Its name is
-halberd.cfg and it holds information relevant to halberd's behaviour when
-acting as a distributed client or server. So if you're going to use halberd
-that way you should change the values there.
+from the user's home directory. Its name is halberd.cfg and it holds
+information relevant to halberd's behaviour when acting as a distributed client
+or server, for SSL networking, etc. So if you're going to use some of halberd's
+more advanced features you should change the values there.
+
+Supported platforms
+-------------------
+
+    halberd should work in every machine providing the dependencies specified
+in the Installation section. It has been successfully built on:
+    * Windows 2000 Server
+    * Mac OS X 10.2
+    * RedHat Linux 9.0
 
 Documentation
 -------------
 
-	Full API documentation can be found in doc/api. A user guide and a set
-of slides are being written.
-
+    Full API documentation can be found in doc/api. An overview of what halberd
+does is located at doc/overview.txt. A user guide and a set of slides are being
+written.
 
 Getting started
 ---------------
 
 	You could start by trying:
 
-	halberd.py -v www.sourceforge.net
+	$ halberd.py --help
+
+    And follow with:
+
+    $ halberd.py -v www.macromedia.com
 
 
-$Id: README,v 1.2 2004/03/02 00:55:54 rwx Exp $
+$Id: README,v 1.3 2004/03/06 10:27:23 rwx Exp $
