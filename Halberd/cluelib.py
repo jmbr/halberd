@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.10 2004/02/04 04:11:39 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.11 2004/02/06 16:02:26 rwx Exp $'
 
 
 import time
@@ -70,11 +70,11 @@ class Clue:
 
         # Generic server info (sometimes useful for distinguising servers).
         self.info = {
-            'server': None,
-            'contloc': None,
-            'cookie': None,
-            'date': None,
-            'digest': None
+            'server': '',
+            'contloc': '',
+            'cookie': '',
+            'date': '',
+            'digest': ''
         }
 
         # Local time and remote time (in seconds since the Epoch)
@@ -82,8 +82,6 @@ class Clue:
 
         self.diff = None
 
-        # Fingerprint for the reply.
-        self.__fp = hashfn('')
         # We store the headers we're interested in digesting in a string and
         # calculate its hash _after_ the header processing takes place. This
         # way we incur in less computational overhead.
@@ -120,12 +118,17 @@ class Clue:
     def _updateDigest(self):
         """Updates header fingerprint.
         """
-        self.__fp.update(self.__tmphdrs)
+        fingerprint = hashfn(self.__tmphdrs)
         self.__tmphdrs = ''
-        self.info['digest'] = self.__fp.hexdigest()
-        # MD5 and SHA objects are unpickable, by derreferencing our hashfn
-        # object we work around that problem.
-        self.__fp = None
+        self.info['digest'] = fingerprint.hexdigest()
+
+    def _calcDiff(self):
+        """Compute the time difference between the remote and local clocks.
+
+        @return: Time difference.
+        @rtype: C{int}
+        """
+        self.diff = int(self._local - self._remote)
 
 
     def incCount(self, num=1):
@@ -158,14 +161,6 @@ class Clue:
         """
         self._local = timestamp
 
-    def _calcDiff(self):
-        """Compute the time difference between the remote and local clocks.
-
-        @return: Time difference.
-        @rtype: C{int}
-        """
-        self.diff = int(self._local - self._remote)
-
 
     def __eq__(self, other):
         if self.diff != other.diff:
@@ -177,13 +172,7 @@ class Clue:
 #           or (local[0] > local[1]) and (remote[0] < remote[1])):
 #            return False
 
-        if self.info['server'] != other.info['server']:
-            return False
-
-        if self.info['contloc'] != other.info['contloc']:
-            return False
-
-        if self.info['digest]'] != other.info['digest']:
+        if self.info['digest'] != other.info['digest']:
             return False
 
         return True
@@ -231,9 +220,9 @@ class Clue:
         pass
 
 
-# =======================
-# Clue analysis functions
-# =======================
+# ========================
+# Clue analysis functions.
+# ========================
 
 
 class groupby(dict):
@@ -313,10 +302,17 @@ def merge_cluster(group):
 
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
+
+    @param clues: Unprocessed clues obtained during the scanning stage.
+    @type clues: C{list}
+
+    @return: Coherent list of clues identifying real web servers.
+    @rtype: C{list}
     """
     results = []
+    getdigest = lambda c: c.info['digest']
 
-    for key, clues_by_digest in groupby(clues, lambda c: c.info['digest']):
+    for key, clues_by_digest in groupby(clues, getdigest):
         sorted = sort_by_diff(clues_by_digest)
 
         for cluster in find_clusters(sorted):
@@ -360,6 +356,6 @@ def load_clues(filename):
     cluefp.close()
 
     return clues
-    
+
 
 # vim: ts=4 sw=4 et
