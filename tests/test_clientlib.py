@@ -20,7 +20,7 @@
 """Unit tests for hlbd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.4 2004/03/03 11:36:42 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.5 2004/03/05 00:29:08 rwx Exp $'
 
 
 import unittest
@@ -121,6 +121,7 @@ class TestHTTPSClient(unittest.TestCase):
     def testConnect(self):
         clientlib.HTTPSClient()._connect(('www.sf.net', 443))
 
+    def testInvalidConnect(self):
         self.failUnlessRaises(clientlib.HTTPSError,
                               clientlib.HTTPSClient()._connect,
                               ('localhost', 8000))
