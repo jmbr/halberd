@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.10 2004/02/09 12:05:08 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.11 2004/02/11 10:19:20 rwx Exp $'
 
 
 import sys
@@ -86,9 +86,8 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
     @param verbose: Specifies whether status info should be displayed or not.
     @type verbose: C{bool}
 
-    @return: list of clues found and number of replies received from the
-    target.
-    @rtype: C{tuple}
+    @return: Clues found.
+    @rtype: C{list}
     """
     assert parallelism > 0
     assert scantime > 0
@@ -142,7 +141,7 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
         sys.stdout.write('\n')
 
     signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
-    return state.clues, state.replies
+    return state.clues
 
 
 def insert_clue(clues, reply):
