@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.11 2004/03/06 10:26:13 rwx Exp $
+# $Id: GNUmakefile,v 1.12 2004/03/07 10:29:14 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -26,6 +26,7 @@ hlbddir := $(srcdir)/hlbd
 docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
 testdir := $(srcdir)/tests
+tmpdir := $(srcdir)/tmp
 
 
 PYTHON := /usr/local/bin/python
@@ -52,7 +53,10 @@ ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
 ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
 
+
 remove = $(RM) $(addsuffix $(strip $(1)), $(2))
+rest2html = $(PYTHON) -c "from docutils.core import publish_cmdline; \
+						publish_cmdline(writer_name='html')"
 
 
 clean:
@@ -63,7 +67,7 @@ clean:
 
 clobber: clean
 	$(RM) *.bak
-	$(call remove, *~, $(ALL_DIRS) $(docdir))
+	$(call remove, *~, $(ALL_DIRS) $(docdir)/)
 
 build: $(SOURCES)
 	$(SETUP) build
@@ -76,7 +80,6 @@ check: $(ALL_SOURCES)
 	PYTHONPATH=$(hlbddir):$(hlbddir)/clues:$$PYTHONPATH \
 	$(PYTHON) $(hlbddir)/clues/analysis.py
 
-tmpdir = $(srcdir)/tmp
 install: build
 	$(RM) -r $(tmpdir)
 	$(MKDIR) $(tmpdir)
@@ -85,12 +88,18 @@ install: build
 distclean: clobber
 	$(RM) $(srcdir)/MANIFEST
 	$(RM) $(srcdir)/ChangeLog
-	$(RM) -r $(apidocdir) $(srcdir)/dist
+	$(RM) $(docdir)/*.html
+	$(RM) -r $(apidocdir)
+	$(RM) -r $(srcdir)/dist
 
-doc: $(apidocdir)/index.html
+doc: $(apidocdir)/index.html \
+	$(docdir)/default.css $(docdir)/overview.html
 
 $(apidocdir)/index.html: $(SOURCES)
 	$(EPYDOC) -o $(apidocdir) $^
+
+$(docdir)/overview.html: $(docdir)/overview.txt
+	$(rest2html) $^ $@
 
 tags: $(ALL_SOURCES)
 	$(CTAGS) $^
