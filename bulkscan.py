@@ -21,7 +21,7 @@
 """Massive load balancer scanner.
 """
 
-__revision__ = '$Id: bulkscan.py,v 1.3 2004/02/25 01:30:23 rwx Exp $'
+__revision__ = '$Id: bulkscan.py,v 1.4 2004/03/02 00:54:02 rwx Exp $'
 
 
 import os
@@ -38,21 +38,19 @@ def error(msg):
 
 def targets(urlfile):
     for url in urlfile:
-        if url == '\r\n' or url == '\n':
+        if url == '\n':
             continue
 
-        # Strip CR or CRLF. This is possible due to python converting line
-        # endings to \n
+        # Strip end of line character.
         url = url[:-1]
 
         hostname = halberd.hostname(url)
-        if hostname == None:
+        if not hostname:
             sys.stderr.write('*** unable to extract hostname from %s' \
                              % hostname)
             continue
-        addrs = halberd.addresses(hostname)
 
-        for addr in addrs:
+        for addr in halberd.addresses(hostname):
             yield (url, addr)
 
 def main():

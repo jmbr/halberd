@@ -20,7 +20,7 @@
 """Unit tests for halberd.Halberd
 """
 
-__revision__ = '$Id: test_halberd.py,v 1.1 2004/02/25 11:15:02 rwx Exp $'
+__revision__ = '$Id: test_halberd.py,v 1.2 2004/03/02 00:54:10 rwx Exp $'
 
 
 import unittest
@@ -42,12 +42,12 @@ class testNetutils(unittest.TestCase):
         self.assertEqual(halberd.hostname(url), 'agartha')
 
         url = 'agartha'
-        self.assertEqual(halberd.hostname(url), None)
+        self.assertEqual(halberd.hostname(url), '')
 
 
 #def testAddresses(self):
-#    self.failUnlessEqual(halberd.addresses('abcdefghijk'), None)
-#    self.failUnless(halberd.addresses('agartha') != None)
+#    self.failUnlessEqual(halberd.addresses('abcdefghijk'), ())
+#    self.failUnless(halberd.addresses('agartha') != ())
 
 
 class TestHalberd(unittest.TestCase):
@@ -77,6 +77,9 @@ class TestHalberd(unittest.TestCase):
         self.h.clues = [1, 2, 3]
         self.h.setAddr(('', 0))
         self.failUnlessEqual(self.h.clues, [])
+
+    def testReadConf(self):
+        pass
 
 
 if __name__ == '__main__':
