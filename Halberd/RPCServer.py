@@ -4,7 +4,8 @@
 
 This is the key component for halberd's distributed scanning architecture.
 """
-__revision__ = '$Id: RPCServer.py,v 1.3 2004/04/07 00:35:10 rwx Exp $'
+
+__revision__ = '$Id: RPCServer.py,v 1.4 2004/04/11 11:35:23 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -23,13 +24,15 @@ __revision__ = '$Id: RPCServer.py,v 1.3 2004/04/07 00:35:10 rwx Exp $'
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-import sys
 import base64
+import binascii
 import pickle
+import socket
 import SocketServer
 
 import hlbd.util
 import hlbd.crew
+import hlbd.logger
 
 
 class RPCRequestHandler(SocketServer.StreamRequestHandler):
@@ -38,22 +41,29 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
     Those requests are pickled ScanTask instances encoded in Base64 and
     finished by an extra LF.
     """
+    logger = hlbd.logger.getLogger()
+
     def handle(self):
-        print 'RPCServer: connection from', self.client_address
+        self.logger.info('Connection from %s', self.client_address)
 
-        sys.stdout.flush()
+        try:
+            request = ''
+            for line in self.rfile:
+                if line == '\n':
+                    break
+                request += line
+        except socket.error, err:
+            errno, msg = err
+            self.logger.error('%s: %s', self.client_address, msg)
 
-        request = ''
-        for line in self.rfile:
-            if line == '\n':
-                break
-            request += line
-
-        sys.stdout.flush()
-
-        request = base64.decodestring(request)
-
-        scantask = pickle.loads(request)
+        try:
+            request = base64.decodestring(request)
+            # WARNING: This is totally insecure!
+            scantask = pickle.loads(request)
+        except (binascii.Error, EOFError):
+            self.logger.error('%s: Invalid request', self.client_address)
+            return
+            
         # We remove some information to avoid recursive scans.
         scantask.rpc_servers = None
         scantask.isDistributed = False
