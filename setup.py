@@ -18,8 +18,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+import os
 from distutils.core import setup, Command
 
+import halberd
 from hlbd.version import version
 
 
@@ -44,7 +46,6 @@ class test(Command):
         self.build_platlib = build.build_platlib
                                                                                            
     def run(self):
-        import os
         import sys
         import unittest
 
@@ -67,7 +68,7 @@ class test(Command):
 
         for module in modules:
             print "Running tests found in '%s'..." % module
-            TEST = __import__(module, globals(), locals(), [''])
+            TEST = __import__(module, globals(), locals(), [])
             suite = loader.loadTestsFromModule(TEST)
             runner.run(suite)
         
@@ -75,26 +76,38 @@ class test(Command):
         sys.path = old_path[:]
 
 
+long_description = """\
+Halberd is a tool for discovering and bypassing HTTP load balancers. It is \
+useful in testing load balancer configurations and \
+auditing web servers and web applications."""
+
+# Trove classifiers. The complete list can be grabbed from:
+# http://www.python.org/pypi?:action=list_classifiers
+classifiers = """\
+Development Status :: 4 - Beta
+Environment :: Console
+Intended Audience :: Information Technology
+License :: OSI Approved :: GNU General Public License (GPL)
+Natural Language :: English
+Operating System :: OS Independent
+Programming Language :: Python
+Topic :: Internet :: WWW/HTTP
+Topic :: Security
+"""
+
 setup(
     name = 'halberd', version = version.v_short,
     description = 'HTTP load balancer detector',
+    long_description = long_description,
     author = 'Juan M. Bello Rivas',
     author_email = 'rwx+halberd@synnergy.net',
     url = 'http://www.synnergy.net/~rwx/halberd',
     license = 'GNU GENERAL PUBLIC LICENSE',
+    packages = ['hlbd', 'hlbd.clues'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],
-    classifiers = [
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'Intended Audience :: Information Technology',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Internet :: WWW/HTTP',
-        'Topic :: Security',
-    ],
+    data_files = [(halberd.default_conf_dir, ['halberd.cfg'])],
+    classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
 
