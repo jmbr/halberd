@@ -34,15 +34,13 @@ target in parallel.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.3 2004/03/02 02:12:21 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.4 2004/03/02 11:56:42 rwx Exp $'
 
 
 import os
 import os.path
 import ConfigParser
 
-
-default_cfgfile = '~/.halberd.cfg'
 
 default_proxy_port = 8080
 default_rpc_port = 2323
@@ -67,7 +65,7 @@ class ConfReader:
 
         self.confparser = ConfigParser.RawConfigParser()
 
-    def open(self, fname=default_cfgfile):
+    def open(self, fname):
         """Opens the configuration file.
 
         @param fname: Pathname to the configuration file.
