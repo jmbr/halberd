@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.3 2004/02/15 17:00:39 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.4 2004/02/19 14:57:25 rwx Exp $'
 
 
 import time
@@ -54,6 +54,7 @@ class Clue:
             'server': '',
             'contloc': '',
             'cookie': '',
+            'cookies': [],
             'date': '',
             'digest': ''
         }
@@ -214,6 +215,7 @@ class Clue:
     def _get_setcookie(self, field):
         """Set-cookie:"""
         self.info['cookie'] = field
+        self.info['cookies'].append(field)
 
     def _get_expires(self, field):
         """Expires:"""
@@ -237,6 +239,10 @@ class Clue:
 
     def _get_cacheexpires(self, field):
         """Cache-expires:"""
+        pass
+
+    def _get_contenttype(self, field):
+        """Content-type:"""
         pass
 
 
