@@ -21,7 +21,7 @@
 import os
 from distutils.core import setup, Command
 
-import halberd
+import hlbd.shell
 from hlbd.version import version
 
 
@@ -106,7 +106,7 @@ setup(
     packages = ['hlbd', 'hlbd.clues', 'hlbd.shell'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],
-    data_files = [(halberd.default_conf_dir, ['halberd.cfg'])],
+    data_files = [(hlbd.shell.default_conf_dir, ['halberd.cfg'])],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
