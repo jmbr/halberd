@@ -20,7 +20,7 @@
 """Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.3 2004/02/15 14:03:54 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.4 2004/02/15 17:00:39 rwx Exp $'
 
 
 def diff_fields(clues):
@@ -304,7 +304,7 @@ def deltas(diffs):
     @return: A generator which yields the difference between the consecutive
     elements of L{diffs}. For the first element it yields None as there's no
     previous item available to compute the delta.
-    @rtype: C{generator}
+    @rtype: C{int}
     """
     prev = None
     for diff in diffs:
@@ -334,9 +334,9 @@ def slices(seq, indexes):
     @param seq: Sequence to split in slices.
     @type seq: Any (mutable) sequence which provides de __len__ method.
 
-    @return: A sequence of C{slice} objects suitable for splitting the given
+    @return: A generator of C{slice} objects suitable for splitting the given
     sequence.
-    @rtype: C{tuple}
+    @rtype: C{slice}
     """
     start, end = 0, len(seq)
     for idx in indexes:

@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.2 2004/02/15 14:03:54 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.3 2004/02/15 17:00:39 rwx Exp $'
 
 
 import time
@@ -41,9 +41,9 @@ except ImportError:
 class Clue:
     """A clue is what we use to tell real servers behind a virtual IP. 
 
-    Clues are gathered during several connections to the target and they allow
-    us to try to identify patterns in the HTTP responses. Those patterns could
-    lead us to be able to find out which real servers are behind a VIP
+    Clues are gathered during several connections to a web server and they
+    allow us to try to identify patterns in its responses. Those patterns could
+    allow us to find out which real servers are behind a VIP
     """
     def __init__(self):
         # Number of times this clue has been found.
