@@ -20,10 +20,15 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.16 2004/04/04 01:15:39 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.17 2004/04/07 10:25:58 rwx Exp $'
 
 
 import copy
+
+import hlbd.logger
+
+
+logger = hlbd.logger.getLogger()
 
 
 def diff_fields(clues):
@@ -61,7 +66,7 @@ def diff_fields(clues):
 
     return different
 
-def ignore_changing_fields(clues, verbose=False):
+def ignore_changing_fields(clues):
     """Tries to detect and ignore MIME fields with ever changing content.
 
     Some servers might include fields varying with time, randomly, etc. Those
@@ -72,9 +77,6 @@ def ignore_changing_fields(clues, verbose=False):
 
     @param clues: Sequence of clues.
     @type clues: C{list} or C{tuple}
-
-    @param verbose: Display processing information.
-    @type verbose: C{bool}
     """
     from hlbd.clues.Clue import Clue
 
@@ -85,8 +87,7 @@ def ignore_changing_fields(clues, verbose=False):
     for field in different:
         method = '_get_' + Clue.normalize(field)
         if not hasattr(Clue, method):
-            if verbose:
-                print '+++ ignoring', field,
+            logger.debug('ignoring %s', field)
             ignored.append(method)
             setattr(Clue, method, lambda s, f: None)
 
@@ -472,7 +473,7 @@ def analyze(clues):
 
     return results
 
-def reanalyze(clues, analyzed, threshold, verbose=False):
+def reanalyze(clues, analyzed, threshold):
     """Identify and ignore changing header fields.
 
     After initial analysis one must check that there aren't as many realservers
@@ -489,23 +490,18 @@ def reanalyze(clues, analyzed, threshold, verbose=False):
     @param threshold: Minimum clue-to-realserver ratio in order to trigger
     field inspection.
     @type threshold: C{float}
-
-    @param verbose: Display status information.
-    @type verbose: C{bool}
     """
     assert len(clues) > 0
 
     ratio = len(analyzed) / float(len(clues))
     if ratio >= threshold:
-        if verbose:
-            print 'clue-to-realserver ratio is high (%.3f)' % ratio
-            print 'reanalyzing clues... ',
+        logger.debug('clue-to-realserver ratio is high (%.3f)', ratio)
+        logger.debug('reanalyzing clues')
 
-        ignore_changing_fields(clues, verbose)
+        ignore_changing_fields(clues)
         analyzed = analyze(clues)
 
-        if verbose:
-            print '...done.'
+        logger.debug('clue reanalysis done.')
 
     return analyzed
 

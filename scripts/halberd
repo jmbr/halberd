@@ -3,7 +3,7 @@
 
 """Command line interface.
 """
-__revision__ = '$Id: halberd,v 1.26 2004/04/06 12:02:40 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.27 2004/04/07 10:25:47 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,6 +25,7 @@ __revision__ = '$Id: halberd,v 1.26 2004/04/06 12:02:40 rwx Exp $'
 import sys
 
 import hlbd.shell
+import hlbd.logger
 import hlbd.ScanTask
 import hlbd.version as version
 
@@ -40,6 +41,9 @@ def make_parser():
                       help='explain what is being done', default=True)
     parser.add_option('-q', '--quiet', action='store_false', dest='verbose',
                       help='run quietly', default=True)
+    # xxx - use increment over verbosity level instead of this
+    parser.add_option('-d', '--debug', action='store_true', dest='debug',
+                      help='enable debugging information', default=False)
 
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
@@ -113,6 +117,9 @@ def scannerFactory(opts, args):
     scantask.save = opts.save
     scantask.output = opts.output
 
+    if opts.debug:
+        hlbd.logger.setDebug()
+
     scantask.readConf()
     if opts.rpc_client:
         scantask.isDistributed = True
@@ -155,7 +162,7 @@ def main(argv):
         if scanner is None:
             parser.error('incorrect number of arguments')
 
-        scanner.run()
+        scanner.execute()
     except hlbd.shell.ScanError, msg:
         sys.stderr.write('\n*** %s ***\n' % msg)
 

@@ -62,7 +62,8 @@ RPC protocol
 Our RPC protocol is very simple and designed to avoid hassle on the
 programmer's side.
 """
-__revision__ = '$Id: crew.py,v 1.3 2004/04/06 12:00:08 rwx Exp $'
+
+__revision__ = '$Id: crew.py,v 1.4 2004/04/07 10:25:55 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -91,6 +92,7 @@ import pickle
 import socket
 import threading
 
+import hlbd.logger
 import hlbd.clues.Clue
 import hlbd.clientlib as clientlib
 from hlbd.util import utctime
@@ -311,6 +313,7 @@ class BaseScanner(threading.Thread):
         self.state = state
         self.task = scantask
         self.timeout = 0
+        self.logger = hlbd.logger.getLogger()
 
     def remaining(self, end=None):
         """Seconds left until a given point in time.
@@ -359,24 +362,6 @@ class BaseScanner(threading.Thread):
         """
         pass
 
-    def makeClue(self, timestamp, headers):
-        """Compose a clue object.
-
-        @param timestamp: Time when the reply was received.
-        @type timestamp: C{float}
-
-        @param headers: MIME headers coming from an HTTP response.
-        @type headers: C{str}
-
-        @return: A valid clue
-        @rtype: C{Clue}
-        """
-        clue = hlbd.clues.Clue.Clue()
-        clue.setTimestamp(timestamp)
-        clue.parse(headers)
-
-        return clue
-
 class Scanner(BaseScanner):
     """Scans the target host from the local machine.
     """
@@ -399,6 +384,24 @@ class Scanner(BaseScanner):
             self.state.incMissed()
         else:
             self.state.insertClue(self.makeClue(ts, hdrs))
+
+    def makeClue(self, timestamp, headers):
+        """Compose a clue object.
+
+        @param timestamp: Time when the reply was received.
+        @type timestamp: C{float}
+
+        @param headers: MIME headers coming from an HTTP response.
+        @type headers: C{str}
+
+        @return: A valid clue
+        @rtype: C{Clue}
+        """
+        clue = hlbd.clues.Clue.Clue()
+        clue.setTimestamp(timestamp)
+        clue.parse(headers)
+
+        return clue
 
 class RPCScanner(BaseScanner):
     """Scans the target host through an RPC server.
@@ -462,9 +465,11 @@ class RPCScanner(BaseScanner):
         server's.
         @type delta: C{float}
         """
+        self.logger.debug('normalizing clues...')
         for clue in clues:
             clue._local -= delta
             clue._calcDiff()
+        self.logger.debug('clue normalization finished')
         return clues
 
     def run(self):
@@ -477,17 +482,22 @@ class RPCScanner(BaseScanner):
             self._sendRequest()
             delta, clues = self._getReply()
         except (socket.error, socket.timeout), msg:
-            sys.stderr.write('\nRPCScanner[%s] %s: %s\n' \
-                             % (self.getName(), str(self.rpc_serv_addr), msg))
+            self.error('%s %s' % (str(self.rpc_serv_addr), msg))
             return
         except EOFError:
-            sys.stderr.write('\nRPCScanner[%s] %s: closed connection.\n' \
-                             % (self.getName(), str(self.rpc_serv_addr)))
+            self.error('%s %s' % (str(self.rpc_serv_addr), 'closed connection'))
             return
 
         clues = self._normalizeClues(clues, delta)
         for clue in clues:
             self.state.insertClue(clue)
+
+    def error(self, msg):
+        """Displays an error condition.
+        """
+        method, lineno = self.logger.findCaller()
+        print
+        self.logger.error('%s:%d [%s]: %s', method, lineno, self.getName(), msg)
         
 
 class Manager(BaseScanner):

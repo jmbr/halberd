@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.7 2004/04/07 00:26:44 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.8 2004/04/07 10:25:55 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -29,6 +29,7 @@ __revision__ = '$Id: shell.py,v 1.7 2004/04/07 00:26:44 rwx Exp $'
 import sys
 
 import hlbd.crew
+import hlbd.logger
 import hlbd.reportlib
 import hlbd.clues.file
 import hlbd.clues.analysis as analysis
@@ -53,20 +54,12 @@ class BaseStrategy:
     """
     def __init__(self, scantask):
         self.task = scantask
+        self.logger = hlbd.logger.getLogger()
 
-    def run(self):
+    def execute(self):
         """Executes the strategy.
         """
         pass
-        
-    def info(self, msg):
-        if self.task.verbose:
-            sys.stdout.write(msg)
-            sys.stdout.flush()
-
-    def warn(self, msg):
-        sys.stdout.write('warning: %s' % msg)
-        sys.stdout.flush()
 
     # ---------------------------
     # Higher-level helper methods
@@ -90,8 +83,7 @@ class BaseStrategy:
 
         self.task.analyzed = analysis.analyze(self.task.clues)
         self.task.analyzed = analysis.reanalyze(self.task.clues,
-                                self.task.analyzed, self.task.ratio_threshold,
-                                self.task.verbose)
+                                self.task.analyzed, self.task.ratio_threshold)
 
 class UniScanStrategy(BaseStrategy):
     """Scan a single URL.
@@ -107,7 +99,7 @@ class UniScanStrategy(BaseStrategy):
             self.addrs = [self.task.addr]
         else:
             host = hlbd.util.hostname(self.task.url)
-            self.info('looking up host %s... ' % host)
+            self.logger.info('looking up host %s... ', host)
 
             try:
                 self.addrs = hlbd.util.addresses(host)
@@ -118,9 +110,9 @@ class UniScanStrategy(BaseStrategy):
                 raise ScanError, 'unable to resolve %s' % host
 
             self.addrs.sort()
-            self.info('done.\n\n')
+            self.logger.info('host lookup done.')
 
-    def run(self):
+    def execute(self):
         """Scans, analyzes and presents results coming a single target.
         """
         if self.task.save:
@@ -165,20 +157,20 @@ class MultiScanStrategy(BaseStrategy):
 
             host = hlbd.util.hostname(url)
             if not host:
-                self.warn('unable to extract hostname from %s\n' % host)
+                self.logger.warn('unable to extract hostname from %s', host)
                 continue
 
-            self.info('looking up host %s... ' % host)
+            self.logger.info('looking up host %s... ', host)
             try:
                 addrs = hlbd.util.addresses(host)
             except KeyboardInterrupt:
                 raise ScanError, 'interrupted by the user'
+            self.logger.info('host lookup done.')
 
             for addr in addrs:
-                self.info('done.\n')
                 yield (url, addr)
 
-    def run(self):
+    def execute(self):
         """Launch a multiple URL scan.
         """
         cluedir = hlbd.clues.file.ClueDir(self.task.save)
@@ -186,7 +178,7 @@ class MultiScanStrategy(BaseStrategy):
         for url, addr in self._targets(self.urlfp):
             self.task.url = url
             self.task.addr = addr
-            self.info('scanning %s (%s)\n' % (url, addr))
+            self.logger.info('scanning %s (%s)', url, addr)
             self._scan()
 
             cluedir.save(url, addr, self.task.clues)
@@ -205,7 +197,7 @@ class RPCServerStrategy(BaseStrategy):
 
         self.rpcserver = RPCServer(scantask.rpc_serv_addr)
     
-    def run(self):
+    def execute(self):
         """Listen for scanning requests and serve them.
         """
         return self.rpcserver.serve_forever()
@@ -218,7 +210,7 @@ class ClueReaderStrategy(BaseStrategy):
     def __init__(self, scantask):
         BaseStrategy.__init__(self, scantask)
 
-    def run(self):
+    def execute(self):
         """Reads and interprets clues.
         """
         self.task.clues = hlbd.clues.file.load(self.task.cluefile)
