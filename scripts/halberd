@@ -3,7 +3,7 @@
 
 """Command line interface.
 """
-__revision__ = '$Id: halberd,v 1.27 2004/04/07 10:25:47 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.28 2004/04/07 11:11:20 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -117,8 +117,11 @@ def scannerFactory(opts, args):
     scantask.save = opts.save
     scantask.output = opts.output
 
+    # Set logging level.
     if opts.debug:
         hlbd.logger.setDebug()
+    elif not opts.verbose:
+        hlbd.logger.setError()
 
     scantask.readConf()
     if opts.rpc_client:

@@ -3,7 +3,7 @@
 """Logger singleton.
 """
 
-__revision__ = '$Id: logger.py,v 1.1 2004/04/07 10:25:55 rwx Exp $'
+__revision__ = '$Id: logger.py,v 1.2 2004/04/07 11:11:22 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -47,6 +47,10 @@ def getLogger():
 def setDebug():
     logger = getLogger()
     logger.setLevel(logging.DEBUG)
+
+def setError():
+    logger = getLogger()
+    logger.setLevel(logging.ERROR)
 
 
 # vim: ts=4 sw=4 et

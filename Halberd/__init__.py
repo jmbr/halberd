@@ -20,7 +20,7 @@
 """http load balancer detector module (hlbd)
 """
 
-__revision__ = '$Id: __init__.py,v 1.5 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.6 2004/04/07 11:11:22 rwx Exp $'
 
 __all__ = [
     'version',
@@ -33,6 +33,7 @@ __all__ = [
     'shell',
     'crew',
     'ScanTask',
+    'logger',
 ]
 
 

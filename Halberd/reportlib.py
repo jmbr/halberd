@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.13 2004/04/06 12:07:29 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.14 2004/04/07 11:11:22 rwx Exp $'
 
 
 import sys
@@ -77,7 +77,6 @@ def report(scantask):
                 out.write('  %s:%s\n' % (field, value))
 
         out.write('headers\t\t\t%s\n' % clue.headers)
-        out.write('\n')
 
 
 # vim: ts=4 sw=4 et

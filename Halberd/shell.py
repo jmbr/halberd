@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.8 2004/04/07 10:25:55 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.9 2004/04/07 11:11:22 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -111,6 +111,10 @@ class UniScanStrategy(BaseStrategy):
 
             self.addrs.sort()
             self.logger.info('host lookup done.')
+
+            if len(self.addrs) > 1:
+                for addr in self.addrs:
+                    self.logger.debug('%s resolves to %s', host, addr)
 
     def execute(self):
         """Scans, analyzes and presents results coming a single target.

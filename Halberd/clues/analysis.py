@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.17 2004/04/07 10:25:58 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.18 2004/04/07 11:11:25 rwx Exp $'
 
 
 import copy
@@ -496,7 +496,7 @@ def reanalyze(clues, analyzed, threshold):
     ratio = len(analyzed) / float(len(clues))
     if ratio >= threshold:
         logger.debug('clue-to-realserver ratio is high (%.3f)', ratio)
-        logger.debug('reanalyzing clues')
+        logger.debug('reanalyzing clues...')
 
         ignore_changing_fields(clues)
         analyzed = analyze(clues)
