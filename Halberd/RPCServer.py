@@ -2,7 +2,7 @@
 
 """RPC scan server.
 """
-__revision__ = '$Id: RPCServer.py,v 1.1 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: RPCServer.py,v 1.2 2004/04/06 12:02:30 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -47,11 +47,12 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
 
         request = base64.decodestring(request)
 
-        scanopts = pickle.loads(request)
-        scanopts.rpc_servers = None
-        scanopts.isDist = False
+        scantask = pickle.loads(request)
+        # We remove some information to avoid recursive scans.
+        scantask.rpc_servers = None
+        scantask.isDistributed = False
 
-        workcrew = hlbd.crew.WorkCrew(scanopts)
+        workcrew = hlbd.crew.WorkCrew(scantask)
         clues = workcrew.scan()
 
         # xxx - pickle.dumps(clues) may take a long time to run thus

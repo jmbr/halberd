@@ -22,7 +22,7 @@ clue reanalysis.
 @var default_out: Default place where to write reports (None means stdout).
 @type default_out: C{str}
 """
-__revision__ = '$Id: ScanTask.py,v 1.1 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: ScanTask.py,v 1.2 2004/04/06 12:02:30 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -96,8 +96,8 @@ class ScanTask:
     proxy.
     @type proxy_serv_addr: C{tuple}
 
-    @ivar isDist: Indicates whether the scan should be distributed or not.
-    @type isDist: C{bool}
+    @ivar isDistributed: Indicates whether the scan should be distributed or not.
+    @type isDistributed: C{bool}
 
     @ivar out: File where to write reports. If it's not set, stdout will be
     used.
@@ -135,7 +135,7 @@ class ScanTask:
 
         self.proxy_serv_addr = ()
 
-        self.isDist = False
+        self.isDistributed = False
 
         self.save = ''
 
