@@ -1,5 +1,5 @@
 # GNUmakefile
-# $Id: GNUmakefile,v 1.3 2004/01/29 02:10:47 rwx Exp $
+# $Id: GNUmakefile,v 1.4 2004/02/07 19:08:20 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -59,7 +59,7 @@ check: $(TEST_SOURCES)
 doc: $(filter-out hlbd/version.py, $(MODULES))
 	$(EPYDOC) -o $(docdir) $^
 
-tags: $(SOURCES)
+tags: clobber $(SOURCES)
 	$(CTAGS) -R
 
 clobber:
