@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.9 2004/02/03 19:47:56 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.10 2004/02/04 04:11:39 rwx Exp $'
 
 
 import time
@@ -49,7 +49,7 @@ def normalize(name):
     @return: Normalized string.
     @rtype: C{str}
     """
-    normal = filter(lambda c: c.isalnum(), list(name.lower()))
+    normal = [char for char in list(name.lower()) if char.isalnum()]
     while normal[0].isdigit():
         normal = normal[1:]
     return ''.join(normal)
@@ -80,6 +80,8 @@ class Clue:
         # Local time and remote time (in seconds since the Epoch)
         self._local, self._remote = 0, 0
 
+        self.diff = None
+
         # Fingerprint for the reply.
         self.__fp = hashfn('')
         # We store the headers we're interested in digesting in a string and
@@ -90,7 +92,7 @@ class Clue:
         # Original MIME headers. They're useful during analysis and reporting.
         self.headers = None
 
-    def processHdrs(self, headers):
+    def parse(self, headers):
         """Extracts all relevant information from the MIME headers replied by
         the target.
 
@@ -106,23 +108,23 @@ class Clue:
         # We examine each MIME field and try to find an appropriate handler. If
         # there is none we simply digest the info it provides.
         for name, value in self.headers:
-            # XXX Maybe this should go to some kind of ClueProcessor class.
             try:
                 handlerfn = getattr(self, '_get_' + normalize(name))
                 handlerfn(value)
             except AttributeError:
                 self.__tmphdrs += '%s: %s ' % (name, value)
+
         self._updateDigest()
+        self._calcDiff()
 
     def _updateDigest(self):
         """Updates header fingerprint.
-    
-        Updates self._digest and derreferences the self.__fp object because SHA
-        or MD5 objects are unpickable and this way we get rid of that problem.
         """
         self.__fp.update(self.__tmphdrs)
         self.__tmphdrs = ''
         self.info['digest'] = self.__fp.hexdigest()
+        # MD5 and SHA objects are unpickable, by derreferencing our hashfn
+        # object we work around that problem.
         self.__fp = None
 
 
@@ -156,19 +158,17 @@ class Clue:
         """
         self._local = timestamp
 
-    def calcDiff(self):
+    def _calcDiff(self):
         """Compute the time difference between the remote and local clocks.
 
         @return: Time difference.
         @rtype: C{int}
         """
-        return (int(self._local) - int(self._remote))
+        self.diff = int(self._local - self._remote)
 
 
     def __eq__(self, other):
-        if self.calcDiff() < other.calcDiff():
-            return False
-        elif self.calcDiff() > other.calcDiff():
+        if self.diff != other.diff:
             return False
 
 #        local = (self._local, other._local)
@@ -183,9 +183,7 @@ class Clue:
         if self.info['contloc'] != other.info['contloc']:
             return False
 
-        if self.info['digest'] < other.info['digest']:
-            return False
-        elif self.info['digest'] > other.info['digest']:
+        if self.info['digest]'] != other.info['digest']:
             return False
 
         return True
@@ -195,8 +193,7 @@ class Clue:
 
     def __repr__(self):
         return "<Clue diff=%d found=%d digest='%s'>" \
-                % (self.calcDiff(), self.__count,
-                   self.info['digest'][:4] + '...')
+                % (self.diff, self.__count, self.info['digest'][:4] + '...')
 
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
@@ -237,84 +234,93 @@ class Clue:
 # =======================
 # Clue analysis functions
 # =======================
-def sort(clues):
+
+
+class groupby(dict):
+    """Group-by recipe.
+    """
+    def __init__(self, seq, key=lambda x: x):
+        for value in seq:
+            k = key(value)
+            self.setdefault(k, []).append(value)
+
+    __iter__ = dict.iteritems
+
+
+def sort_by_diff(clues):
     """Perform the schwartzian transform to sort clues by time diff.
 
     @return: A sorted list by time difference.
     @rtype: C{list}
     """
     # We proceed through the decorate-sort-undecorate steps.
-    decorate = lambda c: (c.calcDiff(), c)
-    decorated = map(decorate, clues)
-    
+    decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
-
     return [diff_clue[1] for diff_clue in decorated]
+
+
+def find_clusters(clues):
+    """Finds clusters of clues.
+
+    A cluster is a group of at most 3 clues which only differ in 1 seconds
+    between each other.
+    """
+    def isclusterof(clues, num):
+        """Determines if a list of clues form a cluster of the specified size.
+        """
+        assert len(clues) == num, \
+               'len(clues) == %d / num == %d' % (len(clues), num)
+
+        if abs(clues[0].diff - clues[-1].diff) <= num:
+            return True
+        return False
+
+    idx = 0
+
+    cluesleft = lambda clues, idx: (len(clues) - idx)
+    while cluesleft(clues, idx):
+        step = 1
+        if cluesleft(clues, idx) >= 3 \
+            and isclusterof(clues[idx:idx+3], 3):
+            step = 3
+            yield tuple(clues[idx:idx+3])
+        elif cluesleft(clues, idx) == 2 \
+            and isclusterof(clues[idx:idx+2], 2):
+            step = 2
+            yield tuple(clues[idx:idx+2])
+        elif cluesleft(clues, idx) == 1:
+            yield (clues[idx], )
+
+        idx += step
+
+def merge_cluster(group):
+    """Merges a given cluster into one clue.
+    """
+    assert len(group) <= 3
+
+    aggregate = lambda src, dst: group[dst].incCount(group[src].getCount())
+
+    if len(group) == 3:
+        aggregate(0, 1)
+        aggregate(2, 1)
+        return group[1]
+    elif len(group) == 2:
+        aggregate(1, 0)
+        return group[0]
+    else:
+        return group[0]
+
 
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
     """
-    def makedict(clues):
-        def append(cluedict, clue):
-            digest = clue.info['digest']
-            try:
-                l = cluedict[digest]
-            except KeyError:
-                l = []
-                cluedict[digest] = l
-            l.append(clue)
-            
-        cluedict = {}
-
-        # Put all the clues into the dictionary.
-        [append(cluedict, clue) for clue in clues]
-
-        return cluedict
-
-    def groups(clues):
-        # XXX refactor
-        idx = 0
-
-        cluesleft = lambda clues, idx: (len(clues) - idx)
-        while cluesleft(clues, idx):
-            step = 1
-            if cluesleft(clues, idx) >= 3:
-                avg = sum([clue.calcDiff() for clue in clues[idx:idx + 3]]) / 3
-                if (avg == clues[idx + 1].calcDiff()):
-                    step = 3
-                    yield (tuple(clues[idx:idx + 3]))
-            if cluesleft(clues, idx) == 2:
-                if abs(clues[idx].calcDiff() - clues[idx + 1].calcDiff()) <= 1:
-                    step = 2
-                    yield (clues[idx], clues[idx + 1])
-            if cluesleft(clues, idx) == 1:
-                yield (clues[idx], )
-
-            idx += step
-
-    def merge(group):
-        # XXX refactor
-        assert len(group) <= 3
-
-        if len(group) == 3:
-            group[1].incCount(group[0].getCount())
-            group[1].incCount(group[2].getCount())
-            return group[1]
-        elif len(group) == 2:
-            group[0].incCount(group[1].getCount())
-            return group[0]
-        else:
-            return group[0]
-
     results = []
-    cluedict = makedict(clues)
 
-    for key in cluedict.keys():
-        cluedict[key] = sort(cluedict[key])
+    for key, clues_by_digest in groupby(clues, lambda c: c.info['digest']):
+        sorted = sort_by_diff(clues_by_digest)
 
-    for key in cluedict.keys():
-        for group in groups(cluedict[key]):
-            results.append(merge(group))
+        for cluster in find_clusters(sorted):
+            results.append(merge_cluster(cluster))
 
     return results
 
