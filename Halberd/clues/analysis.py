@@ -20,7 +20,10 @@
 """Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.4 2004/02/15 17:00:39 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.5 2004/02/15 18:56:54 rwx Exp $'
+
+
+import copy
 
 
 def diff_fields(clues):
@@ -177,7 +180,7 @@ def clusters(clues, step=3):
 def merge(clues):
     """Merges a sequence of clues into one.
 
-    The first clue of the sequence will be store the total count of the clues.
+    The first clue of the sequence will store the total count of the clues.
     
     Note that each L{Clue} has a starting count of 1
 
@@ -199,9 +202,10 @@ def merge(clues):
     @return: The result of merging all the passed clues into one.
     @rtype: L{Clue}
     """
+    merged = copy.copy(clues[0])
     for clue in clues[1:]:
-        clues[0].incCount(clue.getCount())
-    return clues[0]
+        merged.incCount(clue.getCount())
+    return merged
 
 def classify(seq, *classifiers):
     """Classify a sequence according to one or several criteria.
@@ -374,9 +378,6 @@ def filter_proxies(clues, maxdelta=3):
                        if delta is not None and abs(delta) > maxdelta]
 
         for sl in slices(cur_clues, indexes):
-            for clue in cur_clues[sl]:
-                clues.remove(clue)
-
             results.append(merge(cur_clues[sl]))
 
     return results
