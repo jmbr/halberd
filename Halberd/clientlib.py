@@ -17,12 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""HTTP client module.
-
-XXX Explain why this module is written as it is.
-
-@var default_port: Default TCP port to connect to.
-@type default_port: C{int}
+"""HTTP/HTTPS client module.
 
 @var default_timeout: Default timeout for socket operations.
 @type default_timeout: C{float}
@@ -34,7 +29,7 @@ XXX Explain why this module is written as it is.
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.5 2004/02/19 14:59:11 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.6 2004/03/02 00:52:26 rwx Exp $'
 
 
 import time
@@ -42,7 +37,6 @@ import socket
 import urlparse
 
 
-default_port = 80
 default_timeout = 2
 
 default_bufsize = 4096
@@ -64,13 +58,13 @@ Connection: keep-alive\r\n\r\n\
 
 
 class HTTPException(Exception):
-    pass
+    """Generic HTTP exception."""
 
-class InvalidScheme(HTTPException):
-    pass
+class InvalidURL(HTTPException):
+    """Invalid or unsupported URL"""
 
 class TimedOut(HTTPException):
-    pass
+    """Operation timed out"""
 
 class ConnectionRefused(HTTPException):
     """Unable to reach webserver"""
@@ -99,7 +93,8 @@ class HTTPClient:
         @param timeout: Timeout for socket operations (expressed in seconds).
         @type timeout: C{float}
         """
-        self.__schemes = ['http']        # Supported URL schemes.
+        self.schemes = ['http']        # Supported URL schemes.
+        self.default_port = 80
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.settimeout(timeout)
 
@@ -128,14 +123,14 @@ class HTTPClient:
         @param urlstr: A valid Unified Resource Locator.
         @type urlstr: C{str}
 
-        @raise InvalidScheme: In case the URL scheme is not HTTP or HTTPS
+        @raise InvalidURL: In case the URL scheme is not HTTP or HTTPS
         @raise ConnectionRefused: If it can't reach the target webserver.
         @raise TimedOut: If we cannot send the data within the specified time.
         """
         scheme, netloc, url, params, query, fragment = urlparse.urlparse(urlstr)
 
-        if scheme not in self.__schemes:
-            raise InvalidScheme, '%s is not a supported protocol' % scheme
+        if scheme not in self.schemes:
+            raise InvalidURL, '%s is not a supported protocol' % scheme
 
         hostname, port = self._getHostAndPort(netloc)
         # NOTE: address and hostname may not be the same. The caller is
@@ -163,10 +158,14 @@ class HTTPClient:
         @rtype: C{tuple}
         """
         try:
-            hostname, portnum = netloc.split(':')
-            port = int(portnum)
+            hostname, portnum = netloc.split(':', 1)
         except ValueError:
-            hostname, port = netloc, default_port
+            hostname, port = netloc, self.default_port
+        else:
+            if portnum.isdigit():
+                port = int(portnum)
+            else:
+                raise InvalidURL, '%s is not a valid port number' % portnum
 
         return hostname, port
 
@@ -191,9 +190,9 @@ class HTTPClient:
         if fragment:
             urlstr += '#' + fragment
 
-        d = {'request': urlstr, 'hostname': hostname}
+        values = {'request': urlstr, 'hostname': hostname}
 
-        return template % d
+        return template % values
 
     def getReply(self):
         """Read a reply from the server.
@@ -233,7 +232,6 @@ class HTTPClient:
 
         return timestamp, data
 
-
     def __del__(self):
         if self._sock:
             self._sock.close()
@@ -243,7 +241,8 @@ class HTTPSClient(HTTPClient):
 
     def __init__(self):
         HTTPClient.__init__(self)
-        self.__schemes.append(['https'])
+        self.schemes.append('https')
+        self.default_port = 443
 
 
 # vim: ts=4 sw=4 et
