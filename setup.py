@@ -103,7 +103,7 @@ setup(
     author_email = 'rwx+halberd@synnergy.net',
     url = 'http://www.synnergy.net/~rwx/halberd',
     license = 'GNU GENERAL PUBLIC LICENSE',
-    packages = ['hlbd', 'hlbd.clues', 'hlbd.shell'],
+    packages = ['hlbd', 'hlbd.clues'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],
     data_files = [(hlbd.ScanTask.default_conf_dir, ['halberd.cfg'])],
