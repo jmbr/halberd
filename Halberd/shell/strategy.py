@@ -5,7 +5,7 @@
 Provides the halberd shell with several scanning strategies to perform its
 task.
 """
-__revision__ = '$Id: strategy.py,v 1.1 2004/03/29 09:49:06 rwx Exp $'
+__revision__ = '$Id: strategy.py,v 1.2 2004/03/29 10:36:22 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -147,6 +147,8 @@ class MultiScan(BaseScan):
             halberd.run()
 
             cluedir.save(url, addr, halberd.clues)
+
+            halberd.analyze()
             halberd.report(output)
 
 class DistUniScan(DistScanMixIn, UniScan):
