@@ -1,8 +1,10 @@
 # -*- coding: iso-8859-1 -*-
 
-"""RPC scan server.
+"""Distributed scan server.
+
+This is the key component for halberd's distributed scanning architecture.
 """
-__revision__ = '$Id: RPCServer.py,v 1.2 2004/04/06 12:02:30 rwx Exp $'
+__revision__ = '$Id: RPCServer.py,v 1.3 2004/04/07 00:35:10 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -31,7 +33,11 @@ import hlbd.crew
 
 
 class RPCRequestHandler(SocketServer.StreamRequestHandler):
-    
+    """Serves scanning requests.
+
+    Those requests are pickled ScanTask instances encoded in Base64 and
+    finished by an extra LF.
+    """
     def handle(self):
         print 'RPCServer: connection from', self.client_address
 
@@ -66,6 +72,8 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
 # A ThreadingTCPServer is not advisable because it would clash with signal
 # handling in the WorkCrew's main thread.
 class RPCServer(SocketServer.TCPServer):
+    """Serves scanning requests, one at a time.
+    """
     allow_reuse_address = True
 
     def __init__(self, server_address=('', 23), RequestHandlerClass=RPCRequestHandler):
