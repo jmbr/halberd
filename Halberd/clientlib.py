@@ -34,7 +34,7 @@ XXX Explain why this module is written as it is.
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.2 2004/01/31 14:03:46 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.3 2004/02/04 04:31:03 rwx Exp $'
 
 
 import time
@@ -178,9 +178,7 @@ class HTTPClient:
         if fragment:
             urlstr += '#' + fragment
 
-        d = {}
-        d['request'] = urlstr
-        d['hostname'] = hostname
+        d = {'request': urlstr, 'hostname': hostname}
 
         return template % d
 
