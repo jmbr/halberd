@@ -21,7 +21,7 @@
 """Massive load balancer scanner.
 """
 
-__revision__ = '$Id: bulkscan.py,v 1.1 2004/02/19 14:55:33 rwx Exp $'
+__revision__ = '$Id: bulkscan.py,v 1.2 2004/02/20 12:50:46 rwx Exp $'
 
 
 import os
@@ -50,10 +50,12 @@ def targets(urlfile):
             yield (url, addr)
 
 def main():
-    if len(sys.argv) < 2:
-        error('usage: %s url-file\n' % sys.argv[0])
+    if len(sys.argv) < 3:
+        error('usage: %s <url-file> <dest-dir>\n' % sys.argv[0])
 
     print 'reading urls from', sys.argv[1]
+
+    folder = sys.argv[2]
 
     urlfile = ''
     try:
@@ -65,8 +67,8 @@ def main():
         url, addr = target
 
         h = halberd.Halberd()
-        h.setScantime(15)
-        h.addr = addr
+        h.scantime = 15
+        h.setAddr(addr)
         h.setURL(url)
         h.verbose = True
 
@@ -74,7 +76,7 @@ def main():
 
         h.scan()
 
-        f = open(os.path.join('data', addr), 'wb')
+        f = open(os.path.join(folder, addr), 'wb')
         pickle.dump((url, h.clues), f)
         f.close()
 
