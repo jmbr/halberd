@@ -1,5 +1,5 @@
 # GNUmakefile
-# $Id: GNUmakefile,v 1.2 2004/01/27 02:28:32 rwx Exp $
+# $Id: GNUmakefile,v 1.3 2004/01/29 02:10:47 rwx Exp $
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -54,11 +54,7 @@ distclean: clobber clean
 	rm -rf {$(docdir),$(srcdir)/dist}
 
 check: $(TEST_SOURCES)
-	PYTHONPATH=$$PYTHONPATH:$(srcdir)/:; export PYTHONPATH
-	@for x in $^; do \
-	    echo "Running "$$x; \
-	    $(PYTHON) $$x; \
-	done
+	$(PYTHON) -c 'import test'
 
 doc: $(filter-out hlbd/version.py, $(MODULES))
 	$(EPYDOC) -o $(docdir) $^
