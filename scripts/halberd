@@ -23,9 +23,11 @@
 @var default_scantime: Time to spend probing the target expressed in seconds.
 @var default_parallelism: Number of parallel threads to launch for the scan.
 @var default_conf_file: Name of the default configuration file for halberd.
+@var default_ratio_threshold: Minimum raw-to-analyzed clues ratio to trigger a
+clue reanalysis.
 """
 
-__revision__ = '$Id: halberd,v 1.14 2004/02/20 09:34:50 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.15 2004/02/25 01:30:23 rwx Exp $'
 
 
 import sys
@@ -42,15 +44,25 @@ default_parallelism = 4
 
 default_conf_file = 'halberd.cfg'
 
+default_ratio_threshold = 0.6
 
 
 def hostname(url):
-    """Returns the hostname part of an URL."""
+    """Obtain hostname part of an URL.
+
+    @param url: A valid URL (must be preceded by scheme://).
+    @return: A string containing the hostname corresponding to the URL or None
+    in case of failure.
+    """
     netloc = urlparse.urlparse(url)[1]
+    if netloc == '':
+        return None
+
     return netloc.split(':', 1)[0]
 
 def addresses(host):
-    """Returns the list of host's network addresses."""
+    """Returns the list of host's network addresses.
+    """
     try:
         name, aliases, addrs = socket.gethostbyname_ex(host)
     except socket.error:
@@ -82,6 +94,9 @@ class Halberd:
 
     def setURL(self, url):
         """Ensures the URL is a valid one.
+
+        @param url: An incomplete (or not) URL. Note that characters are NOT
+        escaped. Thus strings like 'http%xx//' will not to be detected.
         """
         if url.startswith('http://') or url.startswith('https://'):
             self.url = url
@@ -131,7 +146,7 @@ class Halberd:
         assert self.analyzed > 0
         ratio = len(self.analyzed) / float(len(self.clues))
         #self.info('clue-to-realserver ratio: %.3f\n' % ratio)
-        if ratio >= 0.6:
+        if ratio >= default_ratio_threshold:
             self.info('clue-to-realserver ratio is high (%.3f)\n' % ratio)
             self.info('reanalyzing clues... ')
             analysis.ignore_changing_fields(self.clues, self.verbose)
