@@ -25,13 +25,14 @@
 @var default_conf_file: Name of the default configuration file for halberd.
 """
 
-__revision__ = '$Id: halberd,v 1.10 2004/02/12 11:19:51 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.11 2004/02/13 01:29:00 rwx Exp $'
 
 
 import sys
+import time
 
 import hlbd.version as version
-import hlbd.cluelib as cluelib
+import hlbd.clues.analysis as analysis
 
 
 default_scantime = 30
@@ -47,11 +48,16 @@ class Halberd:
 
     url = None
     addr = None
-    rpc_servers = []
-    serv_addr = None
+
+    rpc_servers = None
+    rpc_serv_addr = None
+
+    proxy_serv_addr = None
 
     clues = []
     analyzed = []
+
+    parallelism = default_parallelism
 
     def __init__(self, verbose=False):
         self.verbose = verbose
@@ -118,25 +124,25 @@ class Halberd:
 
 
     def load(self, filename):
-        self.clues = cluelib.load_clues(filename)
+        self.clues = analysis.load_clues(filename)
 
     def save(self, filename):
-        cluelib.save_clues(filename, self.clues)
+        analysis.save_clues(filename, self.clues)
 
 
     def setScantime(self, scantime=default_scantime):
         self.scantime = scantime
         return self
 
-    def scan(self, parallelism):
+    def scan(self):
         import hlbd.scanlib as scanlib
 
-        self.clues = scanlib.scan(self.addr, self.url, self.scantime,
-                                  self.verbose, parallelism)
+        self.clues += scanlib.scan(self.addr, self.url, self.scantime,
+                                  self.verbose, self.parallelism)
     def analyze(self):
         """Analyze clues.
         """
-        self.analyzed = cluelib.analyze(self.clues)
+        self.analyzed = analysis.analyze(self.clues)
 
     def report(self, outfile):
         """Write a report.
@@ -151,17 +157,49 @@ class Halberd:
         """
         import hlbd.rpclib
 
-        hlbd.rpclib.server(self.serv_addr)
+        hlbd.rpclib.server(self.rpc_serv_addr)
 
     def client(self):
         """Launch the program as a client.
         """
+        import socket
+        import threading
         import hlbd.rpclib as rpclib
 
-        for server in self.rpc_servers:
-            print server
-            clues = rpclib.client(server, self.addr, self.url, self.scantime)
-            self.clues.extend(clues)
+        assert self.rpc_servers is not None
+
+        clues = []
+        lock = threading.Lock()
+        threads = []
+        for i, rpc_server in enumerate(self.rpc_servers):
+            addr, port = rpc_server.split(':')
+            port = int(port)
+
+            if self.verbose:
+                print 'scanning through', addr, port
+
+            # XXX All this is a bit hairy. Fix this.
+            thread = threading.Thread(None, rpclib.client, None, \
+                      ((addr, port), self.addr, self.url, self.scantime, self.verbose, self.parallelism, \
+                      (clues, lock))
+                     )
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        for local, rest in clues:
+            remote, seq = rest
+            delta = remote - local
+            print remote, local, delta
+            for clue in seq:
+                before = clue.diff
+                clue._local -= delta
+                clue._calcDiff()
+                print 'BEFORE:', before, '\tAFTER:', clue.diff
+            self.clues.extend(seq)
+        print self.clues
 
     def readConf(self, cfgfile):
         """Read configuration file.
@@ -176,7 +214,9 @@ class Halberd:
             self.fatal('Couldn\'t open configuration file %s\n' % cfgfile)
 
         options = reader.parse()
-        self.serv_addr = options.rpc_serv_addr
+        self.proxy_serv_addr = options.proxy_serv_addr
+
+        self.rpc_serv_addr = options.rpc_serv_addr
         self.rpc_servers = options.rpc_servers
 
         reader.close()
@@ -255,10 +295,11 @@ def main(argv):
 
         halberd.setURL(args[0]).setAddr(opts.addr)
         halberd.setScantime(opts.scantime)
-        halberd.scan(opts.parallelism)
+        halberd.parallelism = opts.parallelism
 
         if opts.rpc_client:
             halberd.client()
+        halberd.scan()
 
         if not halberd.clues:
             sys.exit(-1)
