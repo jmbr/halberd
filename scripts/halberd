@@ -38,7 +38,7 @@ clue reanalysis.
 @type default_ratio_threshold: C{float}
 """
 
-__revision__ = '$Id: halberd,v 1.17 2004/03/02 00:54:02 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.18 2004/03/03 00:04:40 rwx Exp $'
 
 
 import os
@@ -244,17 +244,37 @@ class Halberd:
                 self.clues.extend(result)
 
 
-    def readConf(self, cfgfile):
+    def readConf(self, conf_file):
         """Read configuration file.
+
+        This method tries to read the specified configuration file. If we try
+        to read it at the default path and it's not there we create a
+        bare-bones file and use that one.
+
+        @param conf_file: Path to the configuration file.
+        @type conf_file: C{str}
         """
         import hlbd.conflib as conflib
 
         reader = conflib.ConfReader()
 
         try:
-            reader.open(cfgfile)
-        except (IOError, conflib.InvalidConfFile):
-            self.fatal('couldn\'t open configuration file %s\n' % cfgfile)
+            reader.open(conf_file)
+        except IOError:
+            if conf_file == default_conf_file:
+                try:
+                    os.mkdir(default_conf_dir)
+                    reader.writeDefault(default_conf_file)
+                    self.info('created default configuration at %s\n' \
+                              % conf_file)
+                    reader.open(default_conf_file)
+                except IOError, msg:
+                    self.fatal('unable to open configuration file or to ' \
+                               'create a default one.\n')
+            else:
+                self.fatal('unable to open configuration file %s\n')
+        except conflib.InvalidConfFile:
+            self.fatal('invalid configuration file %s\n' % conf_file)
 
         options = reader.parse()
         self.proxy_serv_addr = options.proxy_serv_addr
