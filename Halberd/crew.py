@@ -44,7 +44,7 @@ of what they do:
     - RPCScanner: Instructs a remote halberd RPC server to scan the
     specified target.
 
-The following is a diagram shows the way it works::
+The following is a diagram showing the way it works::
 
                                       .--> Manager -----.
                                       |                 |
@@ -62,7 +62,7 @@ RPC protocol
 Our RPC protocol is very simple and designed to avoid hassle on the
 programmer's side.
 """
-__revision__ = '$Id: crew.py,v 1.2 2004/04/04 01:18:51 rwx Exp $'
+__revision__ = '$Id: crew.py,v 1.3 2004/04/06 12:00:08 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -84,6 +84,7 @@ __revision__ = '$Id: crew.py,v 1.2 2004/04/04 01:18:51 rwx Exp $'
 import sys
 import time
 import math
+import copy
 import signal
 import base64
 import pickle
@@ -183,7 +184,10 @@ class ScanState:
         """Returns the reason of the error condition.
         """
         self.__mutex.acquire()
-        err = self.__error
+        # Since whe don't know what the nature of __error will be we need to
+        # provide a clean copy of it to the caller so that no possible
+        # references or changes to __error can affect the object we return.
+        err = copy.deepcopy(self.__error)
         self.__mutex.release()
 
         return err
@@ -235,7 +239,7 @@ class WorkCrew:
     def _initRemote(self):
         """Initializes scanners in remote RPC servers.
         """
-        if not self.task.isDist:
+        if not self.task.isDistributed:
             return
 
         for server in self.task.rpc_servers:
@@ -471,14 +475,8 @@ class RPCScanner(BaseScanner):
         """
         try:
             self._sendRequest()
-        except socket.error, msg:
-            sys.stderr.write('\nRPCScanner[%s] %s: %s\n' \
-                             % (self.getName(), str(self.rpc_serv_addr), msg))
-            return
-
-        try:
             delta, clues = self._getReply()
-        except socket.timeout, msg:
+        except (socket.error, socket.timeout), msg:
             sys.stderr.write('\nRPCScanner[%s] %s: %s\n' \
                              % (self.getName(), str(self.rpc_serv_addr), msg))
             return
