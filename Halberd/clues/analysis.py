@@ -20,7 +20,7 @@
 """Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.6 2004/02/19 14:56:23 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.7 2004/02/20 09:30:39 rwx Exp $'
 
 
 import copy
@@ -64,6 +64,48 @@ def diff_fields(clues):
     result.reverse()
 
     return result
+
+def ignore_changing_fields(clues, verbose=False):
+    """Tries to detect and ignore MIME fields with ever changing content.
+
+    Some servers might include fields varying with time, randomly, etc. Those
+    fields are likely to alter the clue's digest and interfer with L{analyze},
+    producing many false positives and making the scan useless. This function
+    detects those fields and recalculates each clue's digest so they can be
+    safely analyzed again.
+
+    @param clues: Sequence of clues.
+    @type clues: C{list} or C{tuple}
+
+    @param verbose: Display processing information.
+    @type verbose: C{bool}
+    """
+    from hlbd.clues.Clue import Clue
+
+    different = diff_fields(clues)
+
+    # First alter Clue to be able to cope with the varying fields.
+    ignored = []
+    if verbose:
+        print
+    for percent, field in different:
+        method = '_get_' + Clue.normalize(field)
+        if not hasattr(Clue, method):
+            if verbose:
+                print '+++ ignoring %s (%2d%%)' % (field, percent)
+            ignored.append(method)
+            setattr(Clue, method, lambda s, f: None)
+
+    for clue in clues:
+        Clue._updateDigest(clue)
+
+    for method in ignored:
+        # We want to leave the Clue class as before because a MIME field
+        # causing trouble for the current scan might be the source of precious
+        # information for another scan.
+        delattr(Clue, method)
+
+    return clues
 
 
 def unzip(seq):
@@ -327,8 +369,8 @@ def slices(seq, indexes):
 
     >>> seq = range(20) 
     >>> indexes = (5, 10, 15)
-    >>> for sl in slices(seq, indexes):
-    ...     print seq[sl]
+    >>> for piece in slices(seq, indexes):
+    ...     print seq[piece]
     [0, 1, 2, 3, 4]
     [5, 6, 7, 8, 9]
     [10, 11, 12, 13, 14]
@@ -376,8 +418,8 @@ def filter_proxies(clues, maxdelta=3):
         indexes = [idx for idx, delta in enumerate(deltas(diffs)) \
                        if delta is not None and abs(delta) > maxdelta]
 
-        for sl in slices(cur_clues, indexes):
-            results.append(merge(cur_clues[sl]))
+        for piece in slices(cur_clues, indexes):
+            results.append(merge(cur_clues[piece]))
 
     return results
 
@@ -404,6 +446,17 @@ def uniq(clues):
         results.append(merge(section))
 
     return results
+
+def hits(clues):
+    """Compute the total number of hits in a sequence of clues.
+
+    @param clues: Sequence of clues.
+    @type clues: C{list}
+
+    @return: Total hits.
+    @rtype: C{int}
+    """
+    return sum([clue.getCount() for clue in clues])
 
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
