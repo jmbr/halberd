@@ -21,16 +21,14 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.6 2004/02/01 03:48:56 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.7 2004/02/02 07:04:46 rwx Exp $'
 
 
 import sys
 
 
 # Time to spend probing the target expressed in seconds.
-_DEFAULT_SCANTIME = 30
-# Number of sockets to create at each scanning round.
-_DEFAULT_SOCKETS = 3
+_DEFAULT_SCANTIME = 60
 
 
 class Halberd:
@@ -77,7 +75,7 @@ def get_address(url, address, verbose):
             return address  # Address found in the valid address list.
 
     # Pick up a valid address from the given list.
-    if len(addresses) > 1 and verbose:
+    if len(addresses) > 1:
         sys.stdout.write('warning: %s resolves to the following addresses:\n'
                          % hostname)
         sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
@@ -99,10 +97,6 @@ def main(argv):
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend analyzing the target',
                       metavar='NUM', default=_DEFAULT_SCANTIME)
-    parser.add_option('-s', '--sockets',
-                      action='store', type='int', dest='sockets',
-                      help='number of sockets to use in parallel',
-                      metavar='NUM', default=_DEFAULT_SOCKETS)
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='explain what is being done', default=False)
     parser.add_option('-o', '--output', action='store', dest='output',
@@ -127,8 +121,8 @@ def main(argv):
     halberd = Halberd()
 
     # Ensures the URL is a valid one.
-    make_url = lambda url: (url.startswith('http://') \
-                            or url.startswith('https://') and url) \
+    make_url = lambda url: ((url.startswith('http://') \
+                            or url.startswith('https://')) and url) \
                            or ('http://' + url)
     halberd.url = make_url(args[0])
 
@@ -136,7 +130,7 @@ def main(argv):
     from hlbd import scanlib
     halberd.address = get_address(halberd.url, opts.address, opts.verbose)
     
-    scanner = scanlib.Scanner(opts.scantime, opts.sockets, opts.verbose)
+    scanner = scanlib.Scanner(opts.scantime, opts.verbose)
 
     halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
 
