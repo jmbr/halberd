@@ -34,7 +34,7 @@ XXX Explain why this module is written as it is.
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.4 2004/02/06 15:59:22 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.5 2004/02/19 14:59:11 rwx Exp $'
 
 
 import time
@@ -75,8 +75,21 @@ class TimedOut(HTTPException):
 class ConnectionRefused(HTTPException):
     """Unable to reach webserver"""
 
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 class UnknownReply(HTTPException):
     """The remote host didn't return an HTTP reply"""
+
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 
 class HTTPClient:
 
@@ -117,6 +130,7 @@ class HTTPClient:
 
         @raise InvalidScheme: In case the URL scheme is not HTTP or HTTPS
         @raise ConnectionRefused: If it can't reach the target webserver.
+        @raise TimedOut: If we cannot send the data within the specified time.
         """
         scheme, netloc, url, params, query, fragment = urlparse.urlparse(urlstr)
 
@@ -130,14 +144,14 @@ class HTTPClient:
         try:
             self._sock.connect((address, port))
         except socket.error:
-            raise ConnectionRefused
+            raise ConnectionRefused, 'connection refused'
             
         req = self._fillTemplate(hostname, url, params, query, fragment)
 
         try:
             self._sock.sendall(req)
         except socket.timeout:
-            raise TimedOut, 'Timed out while writing to the network'
+            raise TimedOut, 'timed out while writing to the network'
 
     def _getHostAndPort(self, netloc):
         """Determine the hostname and port to connect to from an URL
@@ -215,7 +229,7 @@ class HTTPClient:
             data += chunk
 
         if not data.startswith('HTTP/'):
-            raise UnknownReply
+            raise UnknownReply, 'invalid protocol'
 
         return timestamp, data
 
