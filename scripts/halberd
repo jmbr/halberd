@@ -38,7 +38,7 @@ clue reanalysis.
 @type default_ratio_threshold: C{float}
 """
 
-__revision__ = '$Id: halberd,v 1.18 2004/03/03 00:04:40 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.19 2004/03/03 13:31:47 rwx Exp $'
 
 
 import os
@@ -268,9 +268,8 @@ class Halberd:
                     self.info('created default configuration at %s\n' \
                               % conf_file)
                     reader.open(default_conf_file)
-                except IOError, msg:
-                    self.fatal('unable to open configuration file or to ' \
-                               'create a default one.\n')
+                except (OSError, IOError), msg:
+                    self.fatal('unable to create a default conf. file.\n')
             else:
                 self.fatal('unable to open configuration file %s\n')
         except conflib.InvalidConfFile:
