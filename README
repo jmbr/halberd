@@ -5,58 +5,59 @@ halberd -- HTTP load balancer detector
 merits of the spear and dagger-axe in the Yin and Shang period (1600-1100
 B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
 more powerful weapon than the dagger-axe and spear."
-	       Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
+Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
 
 Overview
 --------
 
-	halberd is a tool for discovering and bypassing HTTP load balancers. It
-is useful in testing load balancer configurations as well as auditing web
-servers and web applications.
+halberd is a tool for discovering and bypassing HTTP load balancers. It is
+useful in testing load balancer configurations as well as auditing web servers
+and web applications.
 
 Installation
 ------------
 
-	Installing halberd is a very simple task. It suffices to write::
+Installing halberd is a very simple task. It suffices to write::
 
-	# python setup.py install
+    # python setup.py install
 
-	Python version 2.3 or above is needed plus its threading and MD5 or
+Python version 2.3 or above is needed plus its threading and MD5 or
 SHA1 modules. It is advisable to have python's SSL networking capabilities
 enabled, this is needed to scan through HTTPS.
 
-	A configuration file is stored in a directory named .halberd hanging
-from the user's home directory. Its name is halberd.cfg and it holds
-information relevant to halberd's behavior when acting as a distributed client
-or server, for SSL networking, etc. So if you're going to use some of halberd's
-more advanced features you should change the values there.
+A configuration file is stored in a directory named .halberd hanging from the
+user's home directory. Its name is halberd.cfg and it holds information
+relevant to halberd's behavior when acting as a distributed client or server,
+for SSL networking, etc. So if you're going to use some of halberd's more
+advanced features you should change the values there.
 
 Supported platforms
 -------------------
 
-    halberd should work in every machine providing the dependencies specified
-in the Installation section. It has been successfully built on:
-    * Windows 2000 Server
-    * Mac OS X 10.2
-    * RedHat Linux 9.0
+halberd should work in every machine providing the dependencies specified in
+the Installation section. It has been successfully built on:
+
+* Windows 2000 Server
+* Mac OS X 10.2
+* RedHat Linux 9.0
 
 Documentation
 -------------
 
-    Full API documentation can be found in doc/api. An overview of what halberd
+Full API documentation can be found in doc/api. An overview of what halberd
 does is located at doc/overview.txt. A user guide and a set of slides are being
 written.
 
 Getting started
 ---------------
 
-	You could start by trying:
+You could start by trying::
 
-	$ halberd.py --help
+    $ halberd.py --help
 
-    And follow with:
+And follow with::
 
     $ halberd.py -v www.macromedia.com
 
 
-$Id: README,v 1.4 2004/03/06 10:28:21 rwx Exp $
+:Version: $Id: README,v 1.5 2004/03/07 10:27:51 rwx Exp $
