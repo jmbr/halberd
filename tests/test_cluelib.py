@@ -19,7 +19,7 @@
 """Unit test for hlbd.cluelib
 """
 
-__revision__ = '$Id: test_cluelib.py,v 1.3 2004/01/31 13:59:41 rwx Exp $'
+__revision__ = '$Id: test_cluelib.py,v 1.4 2004/02/04 04:11:54 rwx Exp $'
 
 
 import unittest
@@ -47,50 +47,11 @@ class TestClue(unittest.TestCase):
 
     def testNormalize(self):
         value = '123content-location*23'
-        self.failUnless(self.clue._normalize(value) == 'contentlocation23')
+        self.failUnless(cluelib.normalize(value) == 'contentlocation23')
         value = 'content/location'
-        self.failUnless(self.clue._normalize(value) == 'contentlocation')
+        self.failUnless(cluelib.normalize(value) == 'contentlocation')
         value = '*content/location123'
-        self.failUnless(self.clue._normalize(value) == 'contentlocation123')
-
-
-class TestCmpOperators(unittest.TestCase):
-    
-    def setUp(self):
-        self.clue1 = cluelib.Clue()
-        self.clue2 = cluelib.Clue()
-
-    def test_cmp_diff(self):
-        diff = cluelib.CmpOperator([cluelib.cmp_diff])
-
-        self.clue1._local, self.clue1._remote = 0, 10
-        self.clue2._local, self.clue2._remote = 10, 12
-        self.failIfEqual(diff.compare(self.clue1, self.clue2), 0)
-
-        self.clue1._local, self.clue1._remote = 0, 10
-        self.clue2._local, self.clue2._remote = 10, 20
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), 0)
-
-    def test_cmp_delta_diff(self):
-        diff = cluelib.CmpOperator([cluelib.cmp_delta_diff])
-        cluelib.delta = 0
-
-        self.clue1._local, self.clue1._remote = 0, 10
-        self.clue2._local, self.clue2._remote = 10, 20
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), 0)
-
-        cluelib.delta = 1
-        self.clue1._local, self.clue1._remote = 0, 11
-        self.clue2._local, self.clue2._remote = 10, 20
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), 0)
-
-        self.clue1._local, self.clue1._remote = 0, 12
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), -1)
-
-        cluelib.delta = 2
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), 0)
-        self.clue1._local, self.clue1._remote = 0, 13
-        self.failUnlessEqual(diff.compare(self.clue1, self.clue2), -1)
+        self.failUnless(cluelib.normalize(value) == 'contentlocation123')
 
 
 if __name__ == '__main__':
