@@ -20,7 +20,7 @@
 """Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.5 2004/02/15 18:56:54 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.6 2004/02/19 14:56:23 rwx Exp $'
 
 
 import copy
@@ -117,13 +117,12 @@ def decorate_and_sort(clues):
     return decorated
 
 def undecorate(decorated):
-    """Undecorate a list of decorated clues.
+    """Undecorate a list.
 
-    @param decorated: A decorated sequence of clues in which the clues are at
-    the last position in each element.
+    @param decorated: A decorated sequence
     @type decorated: C{list} or C{tuple}
 
-    @return: A sequence of clues (without decoration).
+    @return: A sequence without decorative fields.
     @rtype: C{list}
     """
     return unzip(decorated)[-1]
@@ -180,7 +179,7 @@ def clusters(clues, step=3):
 def merge(clues):
     """Merges a sequence of clues into one.
 
-    The first clue of the sequence will store the total count of the clues.
+    A new clue will store the total count of the clues.
     
     Note that each L{Clue} has a starting count of 1
 
