@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.7 2004/02/13 01:16:55 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.8 2004/02/19 14:59:37 rwx Exp $'
 
 
 import sys
@@ -37,7 +37,7 @@ def report(address, clues, outfile=''):
     @param clues: Clues found and (pressumably) processed by an analyzer.
     @type clues: C{list}
     """
-    out = (outfile and open(outfile, 'w')) or sys.stdout
+    out = (outfile and open(outfile, 'a')) or sys.stdout
 
     out.write('\n[ %d ] possibly real server(s) at [ %s ].\n'
               % (len(clues), address))
@@ -64,12 +64,19 @@ def report(address, clues, outfile=''):
         if info['contloc']:
             out.write('content-location\t[ %s ]\n' % info['contloc'].lstrip())
 
+        if info['cookies']:
+            for cookie in info['cookies']:
+                out.write('cookie\t\t\t[ %s ]\n' % cookie.lstrip())
+
         out.write('header fingerprint\t[ %s ]\n' % info['digest'])
 
         if different:
             out.write('different headers:\n')
             for field, value in different:
                 out.write('  %s:%s\n' % (field, value))
+
+        out.write('headers\t\t\t%s\n' % clue.headers)
+        out.write('\n')
 
 
 # vim: ts=4 sw=4 et
