@@ -2,6 +2,6 @@ include setup.py
 include halberd.py
 include halberd.cfg
 recursive-include hlbd *.py
-include test/test_*.py
+include tests/*.py
 recursive-include doc *
 include AUTHORS ChangeLog LICENSE README THANKS
