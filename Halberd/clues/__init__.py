@@ -23,9 +23,9 @@ This module implements functionality related to creation, analysis and storage
 of clues.
 """
 
-__revision__ = '$Id: __init__.py,v 1.2 2004/02/15 14:03:54 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.3 2004/03/02 02:08:38 rwx Exp $'
 
-__all__ = ['Clue', 'analysis']
+__all__ = ['Clue', 'analysis', 'file']
 
 
 # vim: ts=4 sw=4 et
