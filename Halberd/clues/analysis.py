@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.14 2004/03/06 10:26:26 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.15 2004/04/03 15:11:02 rwx Exp $'
 
 
 import copy
@@ -475,14 +475,12 @@ def analyze(clues):
     return results
 
 def reanalyze(clues, analyzed, threshold, verbose=False):
-    """Implements the second phase in clue analysis.
+    """Identify and ignore changing header fields.
 
     After initial analysis one must check that there aren't as many realservers
     as obtained clues. If there were it could be a sign of something wrong
     happening: each clue is different from the others due to one or more MIME
     header fields which change unexpectedly.
-    Our mission in this phase is to identify those fields and to recompute the
-    clues ignoring the offending fields.
 
     @param clues: Raw sequence of clues.
     @type clues: C{list}
