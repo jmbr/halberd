@@ -1,5 +1,11 @@
 # -*- coding: iso-8859-1 -*-
 
+"""Utilities for clue storage.
+
+Provides functionality needed to store clues on disk.
+"""
+__revision__ = '$Id: file.py,v 1.2 2004/03/29 09:46:15 rwx Exp $'
+
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,15 +23,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Utilities for clue storage.
-"""
-
-__revision__ = '$Id: file.py,v 1.1 2004/02/25 04:01:15 rwx Exp $'
-
-
+import os
 import csv
 import types
+import shutil
 
+import hlbd.util
 from hlbd.clues.Clue import Clue
 
 
@@ -100,6 +103,80 @@ def load(filename):
 
     cluefp.close()
     return clues
+
+
+class ClueDir:
+    """Stores clues hierarchically using the underlying filesystem.
+
+    ClueDir tries to be as portable as possible but requires the host operating
+    system to be able to create long filenames (and directories, of course).
+
+    This is an example layout::
+
+        http___www_microsoft_com/
+        http___www_microsoft_com/207.46.134.221
+        http___www_microsoft_com/207.46.156.220
+        http___www_microsoft_com/207.46.156.252
+                .
+                .
+                .
+    """
+    def __init__(self, root=None):
+        """Initializes ClueDir object.
+
+        @param root: Root folder where to start creating sub-folders.
+        @type root: C{str}
+        """
+        self.ext = 'clu'
+        if not root:
+            self.root = os.getcwd()
+        else:
+            self.root = root
+            self._mkdir(self.root)
+
+    def _sanitize(self, url):
+        """Filter out potentially dangerous chars.
+        """
+        return url.translate(hlbd.util.table)
+
+    def _mkdir(self, dest):
+        """Creates a directory to store clues.
+
+        If the directory already exists it won't complain about that.
+        """
+        try:
+            st = os.stat(dest)
+        except OSError:
+            os.mkdir(dest)
+        else:
+            if not shutil.stat.S_ISDIR(st.st_mode):
+                raise InvalidFile, \
+                      '%s already exist and is not a directory' % dest
+
+        return dest
+
+    def save(self, url, addr, clues):
+        """Hierarchically write clues.
+
+        @param url: URL scanned (will be used as a directory name).
+        @type url: C{url}
+
+        @param addr: Address of the target.
+        @type addr: C{str}
+
+        @param clues: Clues to be stored.
+        @type clues: C{list}
+
+        @raise OSError: If the directories can't be created.
+        @raise IOError: If the file can't be stored successfully.
+        """
+        assert url and addr and clues
+        
+        urldir = self._mkdir(os.path.join(self.root, self._sanitize(url)))
+        filename = self._sanitize(addr) + os.extsep + self.ext
+        cluefile = os.path.join(urldir, filename)
+
+        hlbd.clues.file.save(cluefile, clues)
 
 
 # vim: ts=4 sw=4 et
