@@ -19,11 +19,13 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.8 2004/02/07 17:15:37 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.9 2004/02/07 21:15:53 rwx Exp $'
 
 
 import sys
 import time
+import signal
+import bisect
 
 try:
     import threading
@@ -52,7 +54,7 @@ class State:
 
         self.missed = 0
         self.replies = 0
-        self.errorfound = False
+        self.shouldstop = False
 
         self.lock = threading.Lock()
 
@@ -92,6 +94,12 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
 
     state = State(addr, url, scantime, verbose)
 
+    # Set up interrupt handler to let the user stop the scan when he wishes.
+    def interrupt(signum, frame):
+        state.shouldstop = True
+
+    prev = signal.signal(signal.SIGINT, interrupt)
+
     # This is a very POSIXish idiom but I don't think there's a need for
     # anything fancier.
     threads = [threading.Thread(None, scan_thr, None, (state,)) \
@@ -99,13 +107,33 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
     for thread in threads:
         thread.start()
 
+    remaining = lambda end: int(end - time.time())
+    hasexpired = lambda end: (remaining(end) <= 0)
+    stop = time.time() + state.scantime		# Expiration time for the scan.
+    while True:
+        state.show(remaining(stop))
+
+        if state.shouldstop:
+            break
+        if hasexpired(stop):
+            state.shouldstop = True         # Tell the threads to stop.
+            break
+
+        time.sleep(0.50)
+
     for thread in threads:
         thread.join()
 
-    if state.verbose:
-        print
+    # Show the last update.
+    state.show(remaining(stop))
+    if verbose:
+        sys.stdout.write('\n')
 
+    state.clues = [clue for digest, diff, clue in state.clues]
+
+    signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
     return state.clues, state.replies
+
 
 def insert_clue(clues, reply):
     """Transforms a timestamp-header pair into a clue and appends it to a list
@@ -126,12 +154,8 @@ def insert_clue(clues, reply):
 def scan_thr(state):
     """Scans a given target looking for load balanced web servers.
     """
-    remaining = lambda end: int(end - time.time())
-    hasexpired = lambda end: (remaining(end) <= 0)
-
-    stop = time.time() + state.scantime		# Expiration time for the scan.
-    while 1:
-        if hasexpired(stop) or state.errorfound:
+    while True:
+        if state.shouldstop:
             break
 
         client = clientlib.HTTPClient()
@@ -145,15 +169,11 @@ def scan_thr(state):
         state.lock.acquire()
         if not reply:
             state.missed += 1
-            state.show(remaining(stop))
             state.lock.release()
             continue
 
         state.replies += 1
         insert_clue(state.clues, reply)
-    
-        state.show(remaining(stop))
-
         state.lock.release()
 
 
