@@ -34,16 +34,43 @@ target in parallel.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.4 2004/03/02 11:56:42 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.5 2004/03/03 00:03:55 rwx Exp $'
 
 
 import os
-import os.path
+import types
 import ConfigParser
 
 
 default_proxy_port = 8080
 default_rpc_port = 2323
+
+default_conf = r"""
+# ============================================================================
+# halberd configuration file.
+# ============================================================================
+
+[proxy]
+
+address:
+port: 8080
+
+[rpcserver]
+
+address:
+port: 2323
+
+[rpcclient]
+
+# Example:
+#   servers: 10.10.10.1:2323, 10.10.10.2:2323, 172.26.0.77:2323
+servers:
+
+[ssl]
+
+keyfile: halberd.pkey
+certfile: halberd.pem
+"""
 
 
 class InvalidConfFile(Exception):
@@ -73,7 +100,7 @@ class ConfReader:
 
         @raise InvalidConfFile: In case the passed file is not a valid one.
         """
-        self.__conf = open(os.path.expanduser(fname))
+        self.__conf = open(os.path.expanduser(fname), 'r')
         try:
             self.confparser.readfp(self.__conf, fname)
         except ConfigParser.MissingSectionHeaderError, msg:
@@ -130,6 +157,18 @@ class ConfReader:
         options.rpc_servers = rpc_servers
 
         return options
+
+    def writeDefault(self, conf_file):
+        """Write a bare-bones configuration file
+
+        @param conf_file: Target file where the default conf. will be written.
+        @type conf_file: C{str}
+        """
+        assert conf_file and isinstance(conf_file, basestring).
+
+        fp = open(conf_file, 'w')
+        fp.write(default_conf)
+        fp.close()
 
 
     def __del__(self):
