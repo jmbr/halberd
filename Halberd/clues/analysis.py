@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.11 2004/02/25 11:08:22 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.12 2004/03/03 15:21:23 rwx Exp $'
 
 
 import copy
@@ -137,8 +137,7 @@ def decorate_and_sort(clues):
 
     See also L{undecorate}
 
-    >>> import Clue
-    >>> a, b, c = Clue.Clue(), Clue.Clue(), Clue.Clue()
+    >>> a, b, c = Clue(), Clue(), Clue()
     >>> a.diff, b.diff, c.diff = range(1, 4)
     >>> clues = undecorate(decorate_and_sort([c, b, a]))
     >>> (clues[0] == a, clues[1] == b, clues[2] == c)
@@ -221,7 +220,6 @@ def merge(clues):
     
     Note that each L{Clue} has a starting count of 1
 
-    >>> from Clue import Clue
     >>> a, b, c = Clue(), Clue(), Clue()
     >>> sum([x.getCount() for x in [a, b, c]])
     3
@@ -253,7 +251,6 @@ def classify(seq, *classifiers):
     In the following example we classify a list of clues according to their
     digest and their time difference.
 
-    >>> from Clue import Clue
     >>> a, b, c = Clue(), Clue(), Clue()
     >>> a.diff, b.diff, c.diff = 1, 2, 2
     >>> a.info['digest'] = 'x'
@@ -518,9 +515,15 @@ def reanalyze(clues, analyzed, threshold, verbose=False):
 
 
 def _test():
-    import doctest, analysis
+    import doctest
 
-    return doctest.testmod(analysis)
+    import hlbd.clues.Clue
+    import hlbd.clues.analysis
+
+    globs = hlbd.clues.analysis.__dict__
+    globs.update(hlbd.clues.Clue.__dict__)
+
+    return doctest.testmod(m=hlbd.clues.analysis, name='analysis', globs=globs)
 
 if __name__ == '__main__':
     _test()

@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.8 2004/03/03 12:10:20 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.9 2004/03/03 15:21:23 rwx Exp $'
 
 
 import time
@@ -36,6 +36,8 @@ try:
     from sha import new as hashfn
 except ImportError:
     from md5 import new as hashfn
+
+import hlbd.util
 
 
 class Clue:
@@ -122,7 +124,8 @@ class Clue:
         @return: Normalized string.
         @rtype: C{str}
         """
-        normal = [char for char in list(name.lower()) if char.isalnum()]
+        import hlbd.util
+        normal = name.translate(hlbd.util.table).lower()
         while normal[0].isdigit():
             normal = normal[1:]
         return ''.join(normal)
@@ -210,12 +213,12 @@ class Clue:
         self.info['date'] = field
         self._remote = time.mktime(rfc822.parsedate(field))
 
-    def _get_contentlocation(self, field):
+    def _get_content_location(self, field):
         """Content-location:"""
         self.info['contloc'] = field
         self.__tmphdrs += field
 
-    def _get_setcookie(self, field):
+    def _get_set_cookie(self, field):
         """Set-cookie:"""
         self.info['cookies'].append(field)
 
@@ -231,11 +234,11 @@ class Clue:
         """Age:"""
         pass
 
-    def _get_contentlength(self, field):
+    def _get_content_length(self, field):
         """Content-length:"""
         pass
 
-    def _get_lastmodified(self, field):
+    def _get_last_modified(self, field):
         """Last-modified:"""
         pass
 
@@ -243,11 +246,11 @@ class Clue:
         """ETag:"""
         pass
 
-    def _get_cacheexpires(self, field):
+    def _get_cache_expires(self, field):
         """Cache-expires:"""
         pass
 
-    def _get_contenttype(self, field):
+    def _get_content_type(self, field):
         """Content-type:"""
         pass
 
