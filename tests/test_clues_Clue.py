@@ -19,7 +19,7 @@
 """Unit test for hlbd.clues.Clue
 """
 
-__revision__ = '$Id: test_clues_Clue.py,v 1.1 2004/02/25 01:36:16 rwx Exp $'
+__revision__ = '$Id: test_clues_Clue.py,v 1.2 2004/03/03 15:22:02 rwx Exp $'
 
 
 import unittest
@@ -47,11 +47,11 @@ class TestClue(unittest.TestCase):
 
     def testNormalize(self):
         value = '123content-location*23'
-        self.failUnless(Clue.normalize(value) == 'contentlocation23')
+        self.failUnless(Clue.normalize(value) == 'content_location_23')
         value = 'content/location'
-        self.failUnless(Clue.normalize(value) == 'contentlocation')
+        self.failUnless(Clue.normalize(value) == 'content_location')
         value = '*content/location123'
-        self.failUnless(Clue.normalize(value) == 'contentlocation123')
+        self.failUnless(Clue.normalize(value) == '_content_location123')
 
     def testRecompute(self):
         # Check for invalid digest computations.
