@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.8 2004/03/02 11:57:57 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.9 2004/03/03 11:33:52 rwx Exp $'
 
 
 import time
@@ -60,6 +60,12 @@ Connection: keep-alive\r\n\r\n\
 class HTTPError(Exception):
     """Generic HTTP exception"""
 
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return str(self.msg)
+
 class HTTPSError(HTTPError):
     """Generic HTTPS exception"""
 
@@ -72,23 +78,13 @@ class TimedOut(HTTPError):
 class ConnectionRefused(HTTPError):
     """Unable to reach webserver"""
 
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
 class UnknownReply(HTTPError):
     """The remote host didn't return an HTTP reply"""
 
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.msg
-
 
 class HTTPClient:
+    """Special-purpose HTTP client.
+    """
 
     def __init__(self, timeout=default_timeout):
         """Initializes the object.
@@ -100,23 +96,40 @@ class HTTPClient:
 
         self.default_port = 80
 
+        self.bufsize = default_bufsize
+
+        self.timeout = timeout
+
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._sock.settimeout(timeout)
+        self._sock.settimeout(self.timeout)
 
         self._recv = self._sock.recv
 
     def getHeaders(self, address, urlstr):
+        """Talk to the target webserver and fetch MIME headers.
+
+        @param address: The target's network address.
+        @type address: C{tuple}
+
+        @param urlstr: URL to use.
+        @type urlstr: C{str}
+
+        @return: The time when the client started reading the server's response
+        and the MIME headers that were sent.
+        @rtype: C{tuple}
+        """
         self._putRequest(address, urlstr)
 
-        timestamp, reply = self._getReply()
-        if not reply:
+        timestamp, headers = self._getReply()
+        if not headers:
             return None
 
-        reply = reply.splitlines()[1:]
-        reply.append('\r\n')
-        reply = '\r\n'.join(reply)
+        # Remove HTTP response and leave only the MIME headers.
+        headers = headers.splitlines()[1:]
+        headers.append('\r\n')
+        headers = '\r\n'.join(headers)
 
-        return timestamp, reply
+        return timestamp, headers
 
     def _putRequest(self, address, urlstr):
         """Sends an HTTP request to the target webserver.
@@ -219,40 +232,40 @@ class HTTPClient:
     def _getReply(self):
         """Read a reply from the server.
 
-        @return: Received data plus the time when it arrived.
+        @return: Time when the data started arriving plus the received data.
         @rtype: C{tuple}
 
         @raise UnknownReply: If the remote server doesn't return a valid HTTP
         reply.
+        @raise TimedOut: In case reading from the network takes too much time.
         """
-        # XXX Implement a real timeout for the case:
-        # $ cat /dev/urandom | nc -lp 8080
-        # In such situation it would read endlessly. That's bad.
-
         data = ''
         timestamp = None
-        while 1:
+        stoptime = time.time() + self.timeout
+        while time.time() < stoptime:
             try:
-                chunk = self._recv(default_bufsize)
-                if not timestamp:
-                    # We are at the first iteration.
-                    if not chunk.startswith('HTTP/'):
-                        raise UnknownReply, 'invalid protocol'
-                    timestamp = time.time()
-            except: # XXX We cannot afford to have a wildcard except handler.
-                return None, None
+                chunk = self._recv(self.bufsize)
+            except socket.timeout, msg:
+                raise TimedOut, msg
     
             if not chunk:
                 # The remote end closed the connection.
                 break
 
+            if not timestamp:
+                timestamp = time.time()
+
+            data += chunk
             try:
-                idx = chunk.index('\r\n\r\n')   # Look for terminator.
-                data += chunk[:idx]
+                # Find terminator.
+                idx = data.index('\r\n\r\n')
+                data = data[:idx]
                 break
             except ValueError:
                 pass
-            data += chunk
+
+        if not data.startswith('HTTP/'):
+            raise UnknownReply, 'Invalid protocol'
 
         return timestamp, data
 
@@ -262,6 +275,8 @@ class HTTPClient:
 
 
 class HTTPSClient(HTTPClient):
+    """Special-purpose HTTPS client.
+    """
 
     def __init__(self):
         HTTPClient.__init__(self)
@@ -271,6 +286,8 @@ class HTTPSClient(HTTPClient):
         self.default_port = 443
 
         self._recv = None
+
+        self._sslsock = None
 
 
     def _connect(self, addr, keyfile=None, certfile=None):
@@ -303,7 +320,13 @@ class HTTPSClient(HTTPClient):
         
 
 def client(url):
-    """Factory of clients.
+    """HTTP/HTTPS client factory.
+
+    @param url: URL we want to reach.
+    @type url: C{str}
+
+    @return: The appropriate client class for the specified URL.
+    @rtype: C{class}
     """
     assert url != ''
 

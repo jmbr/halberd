@@ -19,7 +19,7 @@
 """Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.15 2004/03/02 02:10:30 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.16 2004/03/03 11:33:52 rwx Exp $'
 
 
 import sys
@@ -192,21 +192,19 @@ def scan_thr(state):
         try:
             reply = client.getHeaders(state.addr, state.url)
         except (clientlib.ConnectionRefused, clientlib.UnknownReply), msg:
-            sys.stderr.write('\n*** %s. aborting. ***\n' % msg)
             state.lock.acquire()
+            sys.stderr.write('\n*** %s. aborting. ***\n' % msg)
             state.shouldstop = True
             state.lock.release()
-            break
-
-        state.lock.acquire()
-        if not reply:
+        except clientlib.TimedOut, msg:
+            state.lock.acquire()
             state.missed += 1
             state.lock.release()
-            continue
-
-        state.replies += 1
-        insert_clue(state.clues, reply)
-        state.lock.release()
+        else:
+            state.lock.acquire()
+            state.replies += 1
+            insert_clue(state.clues, reply)
+            state.lock.release()
 
 
 # vim: ts=4 sw=4 et
