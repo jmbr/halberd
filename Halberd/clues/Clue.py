@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.7 2004/03/03 01:14:48 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.8 2004/03/03 12:10:20 rwx Exp $'
 
 
 import time
@@ -89,7 +89,7 @@ class Clue:
             # piece of information we can't afford to miss.
             self.headers = [tuple(line.split(':', 1)) \
                             for line in headers.splitlines() if line != '']
-        elif isinstance(headers, types.ListType) \
+        elif isinstance(headers, types.ListType):
             self.headers = headers
         else:
             raise TypeError, 'Unable to parse headers of type %s' \
