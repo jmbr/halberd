@@ -25,17 +25,17 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.4 2004/02/19 14:57:25 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.5 2004/02/25 01:35:33 rwx Exp $'
 
 
 import time
+import types
 import rfc822
 
 try:
     from sha import new as hashfn
 except ImportError:
     from md5 import new as hashfn
-
 
 
 class Clue:
@@ -53,7 +53,6 @@ class Clue:
         self.info = {
             'server': '',
             'contloc': '',
-            'cookie': '',
             'cookies': [],
             'date': '',
             'digest': ''
@@ -77,22 +76,25 @@ class Clue:
         """Extracts all relevant information from the MIME headers replied by
         the target.
 
-        @param headers: MIME headers replied by the target.
-        @type headers: str
+        @param headers: A set of MIME headers (a string as replied by the
+        webserver or a previously parsed sequence of name, value tuples).
+        @type headers: C{str}, C{list} or C{tuple}
+
+        @raise TypeError: If headers is neither a string nor a sequence.
         """
-        def make_list(hdrs):
-            """Create a list of name, value tuples from the server's response.
-
-            We use a list instead of a dictionary because with the list we keep
-            the header's order as sent by the target, which is a relevant piece
-            of information we cannot afford to miss.
-            """
-            # We split by ':' instead of ': ' because it's more robust (some
-            # webservers may send badly written headers).
-            return [tuple(line.split(':', 1)) for line in hdrs.splitlines() \
-                                              if line != '']
-
-        self.headers = make_list(headers)
+        if isinstance(headers, types.StringType):
+            # We parse the server's response into a sequence of name, value
+            # tuples instead of a dictionary because with this approach we keep
+            # the header's order as sent by the target, This is a relevant
+            # piece of information we can't afford to miss.
+            self.headers = [tuple(line.split(':', 1)) \
+                            for line in headers.splitlines() if line != '']
+        elif isinstance(headers, types.ListType) \
+             or isinstance(headers, types.TupleType):
+            self.headers = headers
+        else:
+            raise TypeError, 'Unable to parse headers of type %s' \
+                             % type(headers).__name__
 
         # We examine each MIME field and try to find an appropriate handler. If
         # there is none we simply digest the info it provides.
@@ -130,8 +132,9 @@ class Clue:
     def _updateDigest(self):
         """Updates header fingerprint.
         """
+        assert self.__tmphdrs != None
         fingerprint = hashfn(self.__tmphdrs)
-        self.__tmphdrs = ''
+        self.__tmphdrs = None
         self.info['digest'] = fingerprint.hexdigest()
 
     def _calcDiff(self):
@@ -214,7 +217,6 @@ class Clue:
 
     def _get_setcookie(self, field):
         """Set-cookie:"""
-        self.info['cookie'] = field
         self.info['cookies'].append(field)
 
     def _get_expires(self, field):
