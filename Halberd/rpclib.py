@@ -23,7 +23,7 @@ This module implements client and server functionality to enable halberd to
 work as a distributed application.
 """
 
-__revision__ = '$Id: rpclib.py,v 1.3 2004/02/15 17:03:20 rwx Exp $'
+__revision__ = '$Id: rpclib.py,v 1.4 2004/02/19 14:58:39 rwx Exp $'
 
 
 import time
@@ -48,7 +48,8 @@ def server(addr, verbose=True):
     serv.bind(addr)
 
     if verbose:
-        print 'rpcserver: listening on %s:%d' % (addr[0], addr[1])
+        print 'rpcserver: listening on %s:%d' \
+              % (addr[0] or '0.0.0.0', addr[1])
         print
 
     serv.listen(1)
