@@ -25,9 +25,6 @@ client/server, etc.).
 
 This module takes care of reading and writing configuration files.
 
-@var default_cfgfile: Path and name of the configuration file used by default.
-@type default_cfgfile: C{str}
-
 @var default_proxy_port: Default TCP port to listen when acting as a proxy.
 @type default_proxy_port: C{int}
 
@@ -35,7 +32,7 @@ This module takes care of reading and writing configuration files.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.8 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.9 2004/04/11 11:35:47 rwx Exp $'
 
 
 import os
