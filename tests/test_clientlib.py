@@ -20,7 +20,7 @@
 """Unit tests for hlbd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.2 2004/02/07 16:59:18 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.3 2004/03/02 02:07:16 rwx Exp $'
 
 
 import unittest
@@ -34,17 +34,15 @@ class TestHTTPClient(unittest.TestCase):
     def setUp(self):
         self.client = clientlib.HTTPClient()
 
-    def tearDown(self):
-        del self.client
-
     def testGetHostAndPort(self):
-        hostname, port = self.client._getHostAndPort('localhost:8080')
-        self.failUnless(hostname == 'localhost' and port == 8080)
-        hostname, port = self.client._getHostAndPort('localhost')
-        self.failUnless(hostname == 'localhost' \
-                        and port == clientlib.default_port)
-        hostname, port = self.client._getHostAndPort('localhost:abc')
-        self.failUnless(port == clientlib.default_port)
+        self.failUnlessEqual(self.client._getHostAndPort('localhost:8080'),
+                             ('localhost', 8080))
+
+        self.failUnlessEqual(self.client._getHostAndPort('localhost'),
+                             ('localhost', self.client.default_port))
+
+        self.assertRaises(clientlib.InvalidURL,
+                          self.client._getHostAndPort, 'localhost:abc')
 
     def testFillTemplate(self):
         def get_request(url):
@@ -64,7 +62,7 @@ class TestHTTPClient(unittest.TestCase):
                         ['HEAD /~rwx/test;blop?q=something HTTP/1.1',
                          'Host: www.synnergy.net'])
 
-        req = get_request('http://agartha:8080')
+        req = get_request('http://localhost:8080')
         self.failUnless(req.splitlines()[0] == 'HEAD / HTTP/1.1')
 
     def testAntiCache(self):
@@ -73,34 +71,58 @@ class TestHTTPClient(unittest.TestCase):
                         ['Pragma: no-cache', 'Cache-control: no-cache'])
 
     def testSendRequestSanityCheck(self):
-        self.failUnlessRaises(clientlib.InvalidScheme,
-                              self.client.putRequest, '127.0.0.1',
+        self.failUnlessRaises(clientlib.InvalidURL,
+                              self.client._putRequest, '127.0.0.1',
                                                        'gopher://blop')
 
     def testSendRequestToLocal(self):
         try:
-            self.client.putRequest('127.0.0.1', 'http://agartha:8000')
+            self.client._putRequest('127.0.0.1', 'http://localhost:8000')
         except clientlib.ConnectionRefused:
             return
 
         try:
-            reply = self.client.getReply()
+            reply = self.client._getReply()
         except clientlib.UnknownReply:
             pass
 
-#        if reply:
-#            print len(reply)
-
     def testSendRequestToRemote(self):
-        self.client.putRequest('212.204.249.161', 'http://www.synnergy.net')
-        timestamp, reply = self.client.getReply()
+        self.client._putRequest('212.204.249.161', 'http://www.synnergy.net')
+        timestamp, reply = self.client._getReply()
         self.failUnless(reply.splitlines()[0].startswith('HTTP/'))
 
     def testGetHeaders(self):
         reply = self.client.getHeaders('212.204.249.161',
                                        'http://www.synnergy.net')
         self.failUnless(reply is not None)
+
+
+class TestHTTPSClient(unittest.TestCase):
+
+    def setUp(self):
+        self.client = clientlib.HTTPSClient()
         
+    def testGetHostAndPort(self):
+        self.failUnlessEqual(self.client._getHostAndPort('secure'),
+                             ('secure', self.client.default_port))
+
+        self.failUnlessEqual(self.client._getHostAndPort('secure:777'),
+                             ('secure', 777))
+
+    def testConnect(self):
+        clientlib.HTTPSClient()._connect(('www.amazon.com', 443))
+
+        self.failUnlessRaises(clientlib.HTTPSError,
+                              clientlib.HTTPSClient()._connect,
+                              ('localhost', 8000))
+
+        # XXX For better testing a keyfile and a certificate should be used.
+
+    def testSendRequestToRemote(self):
+        self.client._putRequest('207.171.182.16', 'https://www.amazon.com')
+        timestamp, reply = self.client._getReply()
+        self.failUnless(reply != None and reply.startswith('HTTP/'))
+
 
 if __name__ == '__main__':
     unittest.main()
