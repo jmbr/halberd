@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.4 2004/02/01 03:48:39 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.5 2004/02/02 07:21:08 rwx Exp $'
 
 
 import sys
@@ -32,12 +32,14 @@ import hlbd.clientlib as clientlib
 __all__ = ["Scanner"]
 
 
+_THRESHOLD = 10
+
+
 class State:
     """Holds the state of the scanner at the current point in time.
     """
-    def __init__(self, sockets, verbose):
+    def __init__(self, verbose):
         self.clues = []
-        self.sockets = sockets
         self.verbose = verbose
 
         self.round = 0
@@ -53,10 +55,27 @@ class State:
         """
         self.round += 1
 
-#        if len(self.clues) > 0:
-#            self.cluesperround = len(self.clues) / float(self.round)
-#            print '%d, %.3f' % (self.round, self.cluesperround *
-#                   float(self.sockets))
+        ratio = self.ratio = len(self.clues) / float(self.replies)
+        if self.replies > _THRESHOLD and ratio >= 0.7:
+            # Start automagick clue inspector...
+            import hlbd.inspectlib as inspectlib
+            print '\r*** inspector started ***' + ' ' * 60
+
+            # XXX Document and refactor heavily!
+            ignore = inspectlib.get_diff_fields(self.clues, 80)
+            print ignore
+            assert len(ignore) > 0
+
+            for field in ignore:
+                method = '_get_' + cluelib._normalize(field)
+                try:
+                    getattr(cluelib.Clue, method)
+                except AttributeError:
+                    print '*** ignoring %s field ***' % field
+                    setattr(cluelib.Clue, method, lambda s, f: None)
+                    self.clues = []
+                    self.replies = 0
+            
 
         if self.verbose:
             self._show(remaining)
@@ -65,8 +84,8 @@ class State:
         """Displays progress information.
         """
         sys.stdout.write('\r%3d seconds left, %3d clue(s) so far, ' \
-                '%3d valid replies and %3d missed)' \
-                % (remaining, len(self.clues), self.replies, self.missed))
+                '%3d valid replies and %3d missed) [%f]' \
+                % (remaining, len(self.clues), self.replies, self.missed, self.ratio))
         sys.stdout.flush()
 
 
@@ -74,21 +93,18 @@ class Scanner:
     """Load-balancer scanner.
     """
 
-    def __init__(self, scantime, sockets, verbose):
+    def __init__(self, scantime, verbose):
         """Initializes scanner object.
 
         @param scantime: Time (in seconds) to spend peforming the analysis.
         @type scantime: C{int}
-
-        @param sockets: Number of sockets to use in parallel to probe the target.
-        @type sockets: C{int}
 
         @param verbose: Specifies whether progress information should be printed or
         not.
         @type verbose: C{bool}
         """
         self.__scantime = scantime
-        self.__state = State(sockets, verbose)
+        self.__state = State(verbose)
 
     def _makeClue(self, timestamp, headers):
         """Transforms timestamp-header pairs into clues.
@@ -98,6 +114,7 @@ class Scanner:
         clue = cluelib.Clue()
         clue.setTimestamp(timestamp)
         clue.processHdrs(headers)
+#        print clue.info['server']
 
         try:
             i = self.__state.clues.index(clue)
@@ -127,13 +144,14 @@ class Scanner:
         # Start with the scanning loop
         stop = time.time() + self.__scantime		# Expiration time for the scan.
         while 1:
-            client = clientlib.HTTPClient(3)
+            client = clientlib.HTTPClient()
 
             try:
                 reply = client.getHeaders(address, url)
             except clientlib.ConnectionRefused:
                 sys.stderr.write('\r*** connection refused. aborting. ***\n')
                 break
+
             if not reply:
                 state.missed += 1
                 continue
@@ -149,6 +167,7 @@ class Scanner:
 
         if state.verbose:
             print
+
 
         return state.clues, state.replies
 
