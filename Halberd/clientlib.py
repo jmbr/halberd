@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.10 2004/03/03 12:52:08 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.11 2004/03/03 13:05:22 rwx Exp $'
 
 
 import time
@@ -259,13 +259,10 @@ class HTTPClient:
                 timestamp = time.time()
 
             data += chunk
-            try:
-                # Find terminator.
-                idx = data.index('\r\n\r\n')
+            idx = data.find('\r\n\r\n')
+            if idx != -1:
                 data = data[:idx]
                 break
-            except ValueError:
-                pass
 
         if not data.startswith('HTTP/'):
             raise UnknownReply, 'Invalid protocol'
@@ -294,25 +291,22 @@ class HTTPSClient(HTTPClient):
 
         self._timeout_exceptions.append(socket.sslerror)
 
+        # Path to an SSL key file and certificate.
+        self.keyfile = None
+        self.certfile = None
 
-    def _connect(self, addr, keyfile=None, certfile=None):
+    def _connect(self, addr):
         """Connect to the target web server.
 
         @param addr: The target's address.
         @type addr: C{tuple}
-
-        @param keyfile: Path to an SSL key file.
-        @type keyfile: C{str}
-
-        @param certfile: Path to an SSL certificate for the client.
-        @type certfile: C{str}
 
         @raise HTTPSError: In case there's some mistake during the SSL
         negotiation.
         """
         HTTPClient._connect(self, addr)
         try:
-            self._sslsock = socket.ssl(self._sock, keyfile, certfile)
+            self._sslsock = socket.ssl(self._sock, self.keyfile, self.certfile)
         except socket.sslerror, msg:
             raise HTTPSError, msg
 
