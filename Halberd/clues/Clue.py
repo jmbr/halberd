@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.5 2004/02/25 01:35:33 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.6 2004/02/25 03:51:18 rwx Exp $'
 
 
 import time
@@ -47,7 +47,7 @@ class Clue:
     """
     def __init__(self):
         # Number of times this clue has been found.
-        self.__count = 1
+        self._count = 1
 
         # Generic server info (sometimes useful for distinguising servers).
         self.info = {
@@ -98,6 +98,7 @@ class Clue:
 
         # We examine each MIME field and try to find an appropriate handler. If
         # there is none we simply digest the info it provides.
+        self.__tmphdrs = ''
         for name, value in self.headers:
             try:
                 handlerfn = getattr(self, '_get_' + Clue.normalize(name))
@@ -156,7 +157,7 @@ class Clue:
         """
         if num <= 0:
             raise ValueError
-        self.__count += num
+        self._count += num
 
     def getCount(self):
         """Retrieve the number of times the clue has been found
@@ -164,7 +165,7 @@ class Clue:
         @return: Number of hits.
         @rtype: C{int}.
         """
-        return self.__count
+        return self._count
 
 
     def setTimestamp(self, timestamp):
@@ -193,7 +194,7 @@ class Clue:
         if not (self.diff or self.info['digest']):
             return "<Clue at %x>" % id(self)
         return "<Clue at %x diff=%d found=%d digest='%s'>" \
-                % (id(self), self.diff, self.__count,
+                % (id(self), self.diff, self._count,
                    self.info['digest'][:4] + '...')
 
     # ==================================================================
