@@ -32,7 +32,7 @@ This module takes care of reading and writing configuration files.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.9 2004/04/11 11:35:47 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.10 2004/08/21 06:42:42 rwx Exp $'
 
 
 import os
@@ -83,7 +83,7 @@ class ConfReader:
         self.__dict = {}
         self.__conf = None
 
-        self.confparser = ConfigParser.RawConfigParser()
+        self.confparser = ConfigParser.SafeConfigParser()
 
     def open(self, fname):
         """Opens the configuration file.

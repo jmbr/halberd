@@ -22,7 +22,8 @@ clue reanalysis.
 @var default_out: Default place where to write reports (None means stdout).
 @type default_out: C{str}
 """
-__revision__ = '$Id: ScanTask.py,v 1.4 2004/04/07 12:16:02 rwx Exp $'
+
+__revision__ = '$Id: ScanTask.py,v 1.5 2004/08/21 06:42:42 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -51,7 +52,7 @@ default_scantime = 30
 
 default_parallelism = 4
 
-default_conf_dir = os.path.join(os.path.expanduser('~'), 'halberd')
+default_conf_dir = os.path.join(os.path.expanduser('~'), '.halberd')
 default_conf_file = os.path.join(default_conf_dir,
                                  'halberd' + os.extsep + 'cfg')
 

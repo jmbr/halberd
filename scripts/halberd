@@ -4,7 +4,7 @@
 """Command line interface.
 """
 
-__revision__ = '$Id: halberd,v 1.30 2004/04/11 11:34:29 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.31 2004/08/21 06:42:40 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -53,7 +53,7 @@ def make_parser():
 
     parser.add_option('-p', '--parallelism', action='store', type='int',
                       dest='parallelism',
-                      help='specifies the degree of parallelism',
+                      help='specify the number of parallel threads to use',
                       metavar='NUM', default=hlbd.ScanTask.default_parallelism)
 
     parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
@@ -63,15 +63,15 @@ def make_parser():
                       help='write output to the specified file',
                       metavar='FILE', default='')
 
-    parser.add_option('-a', '--addr', action='store', dest='addr',
+    parser.add_option('-a', '--address', action='store', dest='addr',
                       help='specify address to scan',
                       metavar='ADDR', default='')
 
     parser.add_option('-r', '--read', action='store', dest='cluefile',
-                      help='loads clues from the specified file',
+                      help='load clues from the specified file',
                       metavar='FILE', default='')
     parser.add_option('-w', '--write', action='store', dest='save',
-                      help='saves clues to the specified directory',
+                      help='save clues to the specified directory',
                       metavar='FILE', default='')
 
     parser.add_option('-s', '--server', action='store_true', dest='rpc_server',

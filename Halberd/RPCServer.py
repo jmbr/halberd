@@ -5,7 +5,7 @@
 This is the key component for halberd's distributed scanning architecture.
 """
 
-__revision__ = '$Id: RPCServer.py,v 1.4 2004/04/11 11:35:23 rwx Exp $'
+__revision__ = '$Id: RPCServer.py,v 1.5 2004/08/21 06:42:42 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -70,9 +70,6 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
 
         workcrew = hlbd.crew.WorkCrew(scantask)
         clues = workcrew.scan()
-
-        # xxx - pickle.dumps(clues) may take a long time to run thus
-        # invalidating the timestamp. Find a way to avoid this problem.
         
         timestamp = hlbd.util.utctime()
         response = pickle.dumps((timestamp, clues))

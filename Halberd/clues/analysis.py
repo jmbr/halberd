@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.18 2004/04/07 11:11:25 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.19 2004/08/21 06:42:44 rwx Exp $'
 
 
 import copy
@@ -286,6 +286,7 @@ def classify(seq, *classifiers):
     applying the classifiers to the items in the specified sequence.
     @rtype: C{dict}
     """
+    # XXX Printing a dictionary in a doctest string is a very bad idea.
     classified = {}
 
     for item in seq:
