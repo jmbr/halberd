@@ -21,13 +21,16 @@
 """Command line interface and main driving module.
 
 @var default_scantime: Time to spend probing the target expressed in seconds.
+
 @var default_parallelism: Number of parallel threads to launch for the scan.
+
 @var default_conf_file: Name of the default configuration file for halberd.
-@var default_ratio_threshold: Minimum raw-to-analyzed clues ratio to trigger a
+
+@var default_ratio_threshold: Minimum clues-to-realservers ratio to trigger a
 clue reanalysis.
 """
 
-__revision__ = '$Id: halberd,v 1.15 2004/02/25 01:30:23 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.16 2004/02/25 11:10:00 rwx Exp $'
 
 
 import sys
@@ -36,6 +39,7 @@ import urlparse
 
 import hlbd.version as version
 import hlbd.clues.analysis as analysis
+import hlbd.clues.file
 
 
 default_scantime = 30
@@ -143,15 +147,11 @@ class Halberd:
             return
 
         self.analyzed = analysis.analyze(self.clues)
-        assert self.analyzed > 0
-        ratio = len(self.analyzed) / float(len(self.clues))
-        #self.info('clue-to-realserver ratio: %.3f\n' % ratio)
-        if ratio >= default_ratio_threshold:
-            self.info('clue-to-realserver ratio is high (%.3f)\n' % ratio)
-            self.info('reanalyzing clues... ')
-            analysis.ignore_changing_fields(self.clues, self.verbose)
-            self.analyzed = analysis.analyze(self.clues)
-            self.info('done.\n')
+
+        self.analyzed = analysis.reanalyze(self.clues,
+                                           self.analyzed,
+                                           default_ratio_threshold,
+                                           self.verbose)
 
     def report(self, outfile):
         """Write a report.
@@ -304,7 +304,7 @@ def main(argv):
 
     if opts.cluefile:
         # Load from file
-        halberd.clues = analysis.load_clues(opts.cluefile)
+        halberd.clues = hlbd.clues.file.load(opts.cluefile)
         halberd.analyze()
         halberd.report(opts.output)
         sys.exit(0)
@@ -349,7 +349,7 @@ def main(argv):
     if opts.savefile:
         if len(addrs) > 1:
             halberd.info('warning: only the last clues will be stored\n')
-        analysis.save_clues(opts.savefile, halberd.clues)
+        hlbd.clues.file.save(opts.savefile, halberd.clues)
 
 
 if __name__ == '__main__':
