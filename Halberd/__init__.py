@@ -20,9 +20,18 @@
 """http load balancer detector module (hlbd)
 """
 
-__revision__ = '$Id: __init__.py,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.2 2004/02/13 01:23:29 rwx Exp $'
 
-__all__ = ['version', 'scanlib', 'clientlib', 'cluelib', 'reportlib']
+__all__ = [
+    'version',
+    'scanlib',
+    'clientlib',
+    'clues',
+    'reportlib',
+    'rpclib',
+    'proxylib',
+    'conflib',
+]
 
 
 # vim: ts=4 sw=4 et
