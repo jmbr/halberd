@@ -19,7 +19,7 @@
 """Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.13 2004/02/15 17:02:06 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.14 2004/02/19 14:58:14 rwx Exp $'
 
 
 import sys
@@ -65,9 +65,11 @@ class State:
         if not self.verbose:
             return
 
-        sys.stdout.write('\r%3d seconds left, %3d clue(s) so far, ' \
-                '%3d valid replies and %3d missed' \
-                % (remaining, len(self.clues), self.replies, self.missed))
+        statusline = """\
+\r%15s | remaining time: %3d  | clues: %3d | replies: %3d | missed: %3d\
+""" % (self.addr, remaining, len(self.clues), self.replies, self.missed)
+
+        sys.stdout.write(statusline)
         sys.stdout.flush()
 
 
@@ -187,8 +189,8 @@ def scan_thr(state):
 
         try:
             reply = client.getHeaders(state.addr, state.url)
-        except clientlib.ConnectionRefused:
-            sys.stderr.write('\n*** connection refused. aborting. ***\n')
+        except (clientlib.ConnectionRefused, clientlib.UnknownReply), msg:
+            sys.stderr.write('\n*** %s. aborting. ***\n' % msg)
             state.lock.acquire()
             state.shouldstop = True
             state.lock.release()
