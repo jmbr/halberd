@@ -17,211 +17,219 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Minimalistic asynchronous HTTP/HTTPS clients for halberd.
+"""HTTP client module.
 
-We need a custom client class because urllib2 and httplib don't really solve
-our problems.
+XXX Explain why this module is written as it is.
 
-L{HTTPClient} and L{HTTPSClient} connect asynchronously to the specified target
-and record a timestamp B{after} the connection is completed.  They also impose
-a timeout so halberd doesn't wait forever if connected to a rogue HTTP server.
+@var default_port: Default TCP port to connect to.
+@type default_port: C{int}
+
+@var default_timeout: Default timeout for socket operations.
+@type default_timeout: C{float}
+
+@var default_bufsize: Default number of bytes to try to read from the network.
+@type default_bufsize: C{int}
+
+@var default_template: Request template, must be filled by L{HTTPClient}
+@type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.2 2004/01/31 14:03:46 rwx Exp $'
 
 
 import time
 import socket
 import urlparse
-import asynchat
 
 
-DEFAULT_HTTP_PORT = 80
+default_port = 80
+default_timeout = 2
 
-DEFAULT_HDRS = """HEAD / HTTP/1.0\r\n\
-Connection: Keep-Alive\r\n\
-Accept-Encoding: gzip\r\n\
-Accept-Language: en\r\n\
-Accept-Charset: iso-8859-1,*,utf-8\r\n\r\n"""
+default_bufsize = 4096
+
+default_template = """\
+HEAD %(request)s HTTP/1.1\r\n\
+Host: %(hostname)s\r\n\
+Pragma: no-cache\r\n\
+Cache-control: no-cache\r\n\
+User-Agent: Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)\r\n\
+Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg,\
+ application/x-shockwave-flash, */*\r\n\
+Accept-Language: en-us, en;q=0.50\r\n\
+Accept-Encoding: gzip, deflate, compress;q=0.9\r\n\
+Accept-Charset: ISO-8859-1, utf-8;q=0.66, *;q=0.66\r\n\
+Keep-Alive: 300\r\n\
+Connection: keep-alive\r\n\r\n\
+"""
 
 
 class HTTPException(Exception):
-    """Unspecified HTTP error.
-    """
     pass
 
-class InvalidURL(HTTPException):
-    """Invalid URL.
-    """
+class InvalidScheme(HTTPException):
     pass
 
-class UnknownProtocol(HTTPException):
-    """Protocol not supported.
-    """
+class TimedOut(HTTPException):
     pass
 
+class ConnectionRefused(HTTPException):
+    """Unable to reach webserver"""
 
-class HTTPClient(asynchat.async_chat):
-    """Minimalistic asynchronous HTTP client.
-    """
+class UnknownReply(HTTPException):
+    """The remote host didn't return an HTTP reply"""
 
-    def __init__(self, callback, errback, callbackarg=None, hdrs=DEFAULT_HDRS):
-        """Initializes the HTTPClient object.
+class HTTPClient:
+
+    def __init__(self, timeout=default_timeout):
+        """Initializes the object.
+
+        @param timeout: Timeout for socket operations (expressed in seconds).
+        @type timeout: C{float}
         """
-        asynchat.async_chat.__init__(self)
+        self.__schemes = ['http']        # Supported URL schemes.
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.settimeout(timeout)
 
-        # Supported protocols.
-        self._schemes = ['http']
+    def getHeaders(self, address, urlstr):
+        self.putRequest(address, urlstr)
+        timestamp = time.time()
 
-        # We store the URL as (scheme, netloc, path, params, query, fragment)
-        self.__url = ()
+        reply = self.getReply()
+        if not reply:
+            return None
 
-        # Remote host address, name and port number.
-        self.__address, self.__host, self.__port = '', '', 0
+        reply = reply.splitlines()[1:]
+        reply.append('\r\n')
+        reply = '\r\n'.join(reply)
 
-        # Local time when the connection to the server is established.
-        self.__timestamp = 0
+        return timestamp, reply
 
-        # String containing the MIME headers returned by the server.
-        self.__headers = ''
+    def putRequest(self, address, urlstr):
+        """Sends an HTTP request to the target webserver.
 
-        self.__inbuf, self.__outbuf = '', hdrs
+        This method connects to the target server, sends the HTTP request and
+        records a timestamp.
 
-        # Function to call when a (time, headers) tuple is ready.
-        self.__cb = callback
-        # Callback argument.
-        self.__cbarg = callbackarg
-        # Function to call whenever an exception is captured.
-        self.__eb = errback
+        @param address: Target address.
+        @type address: C{str}
 
-        self.set_terminator('\r\n\r\n')
+        @param urlstr: A valid Unified Resource Locator.
+        @type urlstr: C{str}
 
-    def open(self):
-        """Starts the HTTP transaction.
+        @raise InvalidScheme: In case the URL scheme is not HTTP or HTTPS
+        @raise ConnectionRefused: If it can't reach the target webserver.
         """
-        assert self.__host and self.__port
+        scheme, netloc, url, params, query, fragment = urlparse.urlparse(urlstr)
 
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((self.__address, self.__port))
-        self.push(self.__outbuf)
+        if scheme not in self.__schemes:
+            raise InvalidScheme, '%s is not a supported protocol' % scheme
 
-    def setURL(self, address, url):
-        """URL attribute accessor.
+        hostname, port = self._getHostAndPort(netloc)
+        # NOTE: address and hostname may not be the same. The caller is
+        # responsible for checking that.
 
-        @param address: Target IP address.
-        @type address: str
-        @param url: A valid URL.
-        @type url: str
-        """
-        # XXX Change the query string according to the URL (right now it only
-        # asks for /).
-        self.__url = urlparse.urlparse(url)
-        if self.__url[0] and self.__url[0] not in self._schemes:
-            raise UnknownProtocol, 'Protocol not supported'
-
-        # Get a valid host and port number
-        if (self.__url[1].find(':') != -1):
-            try:
-                self.__host, port = self.__url[1].split(':')
-            except ValueError:
-                raise InvalidURL
-
-            try:
-                self.__port = int(port)
-            except ValueError:
-                raise InvalidURL
-        else:
-            self.__address = address
-            self.__host = self.__url[1]
-            self.__port = DEFAULT_HTTP_PORT
-
-        return self
-
-    def getURL(self):
-        """URL attribute accessor.
-
-        @return: Target URL.
-        @rtype: str
-        """
-        return urlparse.urlunparse(self.__url)
-
-    def getHost(self):
-        """Host accessor.
-
-        @return: Host name
-        @rtype: str
-        """
-        return self.__host
-
-    def getPort(self):
-        """Port accessor.
-
-        @return: Port number.
-        @rtype: int
-        """
-        return self.__port
-
-    def getTimestamp(self):
-        """Timestamp accessor.
-
-        @return: Local time at connection establishment.
-        @rtype: int
-        """
-        return self.__timestamp
-
-    def getHeaders(self):
-        """Headers accessor.
-
-        @return: Headers replied by the target server. It is the caller's
-            responsibility to convert this into a proper rfc822.Message.
-        @rtype: str
-        """
-        return self.__headers
-        
-
-    # ==========================
-    # Extensions for async_chat.
-    # ==========================
-
-    def collect_incoming_data(self, data):
-        self.__inbuf += str(data)
-
-    def found_terminator(self):
-        if self.__inbuf.startswith('HTTP/'):
-            self.__headers = self.__inbuf[self.__inbuf.find('\r\n'):]
-            self.close()
-            self.__cb(self.__cbarg, self.__timestamp, self.__headers)
-
-    def handle_connect(self):
-        pass
-
-    def handle_write(self):
         try:
-            asynchat.async_chat.handle_write(self)
-        except:
-            self.__eb(self.__cbarg)
+            self._sock.connect((address, port))
+        except socket.error:
+            raise ConnectionRefused
+            
+        req = self._fillTemplate(hostname, url, params, query, fragment)
 
-        self.__timestamp = time.time()
-
-    def handle_read(self):
         try:
-            asynchat.async_chat.handle_read(self)
-        except:
-            self.__eb(self.__cbarg)
+            self._sock.sendall(req)
+        except socket.timeout:
+            raise TimedOut, 'Timed out while writing to the network'
 
-    def handle_close(self):
-        self.close()
+    def _getHostAndPort(self, netloc):
+        """Determine the hostname and port to connect to from an URL
+
+        @param netloc: Relevant part of the parsed URL.
+        @type netloc: C{str}
+
+        @return: Hostname (C{str}) and port (C{int})
+        @rtype: C{tuple}
+        """
+        try:
+            hostname, portnum = netloc.split(':')
+            port = int(portnum)
+        except ValueError:
+            hostname, port = netloc, default_port
+
+        return hostname, port
+
+    def _fillTemplate(self, hostname, url, params='', query='', fragment='',
+                      template=default_template):
+        """Fills the request template with relevant information.
+
+        @param hostname: Target host to reach.
+        @type hostname: C{str}
+
+        @param url: URL to use as source.
+        @type url: C{str}
+
+        @return: A request ready to be sent
+        @rtype: C{str}
+        """
+        urlstr = url or '/'
+        if params:
+            urlstr += ';' + params
+        if query:
+            urlstr += '?' + query
+        if fragment:
+            urlstr += '#' + fragment
+
+        d = {}
+        d['request'] = urlstr
+        d['hostname'] = hostname
+
+        return template % d
+
+    def getReply(self):
+        """Read a reply from the server.
+
+        XXX Implement a real timeout for the case:
+        $ cat /dev/urandom | nc -lp 8080
+        In such situation it would read endlessly. That's bad.
+
+        @return: Received data, if .
+        @rtype: C{str}
+
+        @raise UnknownReply: If the remote server doesn't return a valid HTTP
+        reply.
+        """
+        data = ''
+        while 1:
+            try:
+                chunk = self._sock.recv(default_bufsize)
+            except:
+                return None
+    
+            if not chunk:   # chunk == '' when the remote end finishes writing.
+                break
+            try:
+                idx = chunk.index('\r\n\r\n')   # Look for terminator.
+                data += chunk[:idx]
+                break
+            except ValueError:
+                pass
+            data += chunk
+
+        if not data.startswith('HTTP/'):
+            raise UnknownReply
+
+        return data
+
+
+    def __del__(self):
+        if self._sock:
+            self._sock.close()
 
 
 class HTTPSClient(HTTPClient):
-    """Minimalistic asynchronous HTTPS client.
-    """
 
     def __init__(self):
-        """Initializes the HTTPSClient object.
-        """
         HTTPClient.__init__(self)
-        self._schemes.append('https')
+        self.__schemes.append(['https'])
 
 
 # vim: ts=4 sw=4 et
