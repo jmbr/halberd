@@ -38,7 +38,7 @@ clue reanalysis.
 @type default_ratio_threshold: C{float}
 """
 
-__revision__ = '$Id: halberd,v 1.19 2004/03/03 13:31:47 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.20 2004/03/05 00:30:55 rwx Exp $'
 
 
 import os
@@ -293,7 +293,7 @@ def make_parser():
                                    version=version.version.v_gnu)
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
-                      help='time (in seconds) to spend analyzing the target',
+                      help='time (in seconds) to spend scanning the target',
                       metavar='NUM', default=default_scantime)
 
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
