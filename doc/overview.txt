@@ -7,21 +7,21 @@ Introduction.
     In order to cope with heavy loads, web site administrators often install
 load balancer devices. These machines hide several web servers behind a virtual
 IP taking HTTP requests and redirecting them to the real web servers according
-to several criteria in order to share the load between all the real servers.
+to several criteria in order to share the traffic between all the real servers.
     There are a few ways to map the servers behind the VIP and to reach them
-individually. halberd, a tool performing this tasks, will be introduced.
+individually. halberd, a tool performing these tasks, will be introduced.
 
 Motivation.
 -----------
 
-    Identifying and being able to reach the servers individually (bypassing the
-load balancer) is very important for an attacker trying to break into the site
-because it is often the case that configuration differences ranging from slight
-(different revision of the server software, different server modules, ...) to
-the extreme (completely different platforms and server software). For an
-attacker this information is crucial because he might vulnerable configurations
-that otherwise (without mapping the real servers) could have gone unnoticed.
-For example:
+    Identifying and being able to reach all real servers individually
+(effectively bypassing the load balancer) is very important for an attacker
+trying to break into a site because it is often the case that there are
+configuration differences ranging from slight (different revision of the server
+software, different server modules, ...) to the extreme (completely different
+platforms and server software). For an attacker this information is crucial
+because he might find vulnerable configurations that otherwise (without mapping
+the real servers) could have gone unnoticed. For example:
 
     http://www.rr.com
         Apache/1.3.28 (Unix) JRun/4.0 mod_perl/1.29
@@ -32,11 +32,11 @@ For example:
         Server: Apache/1.3.29 (Unix) mod_ssl/2.8.16 OpenSSL/0.9.7c
         Server: Apache/1.3.28 (Unix) mod_ssl/2.8.15 OpenSSL/0.9.7c
 
-    http://www.taobao.com (218.108.247.208): 4 -> 2
+    http://www.taobao.com (218.108.247.208):
         Server: IIS/5.20.48 (Win32)
         Server: Apache/2.0.46 (Unix)
 
-    http://www.washingtonpost.com (12.129.147.10): 8 -> 4
+    http://www.washingtonpost.com (12.129.147.10):
         Server: Sun-ONE-Web-Server/6.1
         Server: Netscape-Enterprise/6.0
 
@@ -44,7 +44,9 @@ For example:
 its only target. He will try to subvert dynamic server pages in several ways.
 By identifying all the real servers and scanning them individually for
 vulnerabilities he might find bugs affecting only one or a few of the web
-servers.
+servers. Even if all machines are running the same server software halberd can
+detect them and this can lead to more through vulnerability scans on the
+application level.
 
 Detecting and sticking to real servers.
 ---------------------------------------
@@ -54,9 +56,9 @@ outstanding differences. halberd tries to perform this task in many ways:
 
     1. Clock comparison.
 
-       HTTP responses reveal the internal clock of the machine serving it. By
-       tracking how many different clocks we can have some insight into the
-       number of real servers.
+       HTTP responses reveal the internal clock of the machine serving them. By
+       tracking how many different clocks appear we can have some insight into
+       the number of real servers.
 
     2. MIME header field names, values and their order.
 
@@ -65,9 +67,11 @@ outstanding differences. halberd tries to perform this task in many ways:
 
     3. Special cookie usage.
 
-       Some HTTP load balancers generate a cookie which will be used to send
+       Some HTTP load balancers generate a cookie which will be used to direct
        future requests to a certain server. Administrators can also set up
-       cookies that will be taken into account for routing requests.
+       cookies that will be taken into account for deciding where to send
+       requests. By selecting which cookies to send, the program attempts to
+       force the load balancer to route requests to a server of our choice.
 
     4. Generating high amounts of traffic.
 
@@ -77,7 +81,7 @@ outstanding differences. halberd tries to perform this task in many ways:
        this event to happen.
 
        halberd can be used in a distributed fashion to generate heavy traffic
-       loads. Running the program in RPC client mode in computers located at
+       loads. Running the program in RPC server mode in computers located at
        several networks lets the user launch distributed scans against a web
        site, forcing the idle web servers to reveal themselves.
 
@@ -90,9 +94,9 @@ outstanding differences. halberd tries to perform this task in many ways:
 
     6. Reusing SSL sessions.
 
-       HTTPS sessions are expensive to set up and hard for the load balancer to
-       track. Usually web servers maintain a cache of previous sessions so an
-       user willing to resume can do so without a big latency penalty. This
+       HTTPS sessions are expensive to set up and hard to track for a load
+       balancer. Usually web servers maintain a cache of previous sessions so
+       an user willing to resume can do so without a big latency penalty. This
        same ability can be exploited to identify the real web servers behind
        the VIP.
 
@@ -107,9 +111,10 @@ outstanding differences. halberd tries to perform this task in many ways:
 
        Sometimes cookies or special MIME fields can reveal IP addresses or
        host names. In some cases these can be reached directly from the
-       Internet with no more hassle to direct requests to each of them individually.
+       Internet with no more hassle to direct requests to each of them
+       individually.
 
-    Some of this techniques can also be used for sticking to a real server.
+    Most of this techniques can also be used for sticking to a real server.
 That means setting up a special HTTP proxy which will ensure all the traffic
 will go to a certain machine behind the VIP. This allows the user to launch his
 favorite vulnerability scanning tools and exploits to each of the servers
@@ -119,9 +124,12 @@ Conclusion.
 -----------
 
     The top 500 most popular web sites (according to www.alexa.com) have been
-scanned with the program and the results are going to be used during the
+scanned with the program and the report is going to be used during the
 presentation to show real world examples and scenarios where the results of a
-penetration test without load balancing scanning would be wrong.
+penetration test without load balancing scanning would fail to spot critical
+vulnerabilities.
     The common use cases and the inner workings of the tool will be explained.
-Attendees will learn how use all of halberd's features as well as its inner
+Attendees will learn how to use all of halberd's features as well as its inner
 workings.
+
+$Id: overview.txt,v 1.2 2004/03/04 16:09:25 rwx Exp $
