@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.6 2004/04/07 00:22:19 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.7 2004/04/07 00:26:44 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -29,7 +29,6 @@ __revision__ = '$Id: shell.py,v 1.6 2004/04/07 00:22:19 rwx Exp $'
 import sys
 
 import hlbd.crew
-import hlbd.shell
 import hlbd.reportlib
 import hlbd.clues.file
 import hlbd.clues.analysis as analysis
