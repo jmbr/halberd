@@ -16,18 +16,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""Scanning engine for halberd.
+"""Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.2 2004/01/29 02:15:42 rwx Exp $'
 
 
 import sys
-import time
 
 
 def report(address, clues, hits, outfile=''):
     """Displays detailed report information to the user.
+
+    @param address: Address of the scanned host.
+    @type address: C{str}
+
+    @param clues: Clues found and (pressumably) processed by an analyzer.
+    @type clues: C{list}
+
+    @param hits: Total number of replies received from the target.
+    @type hits: C{int}
     """
     out = (outfile and open(outfile, 'w')) or sys.stdout
 
@@ -38,13 +46,13 @@ def report(address, clues, hits, outfile=''):
         out.write('  received %.2f%% of the traffic\n' \
                   % (clue.getCount() * 100 / float(hits)))
         out.write('  time information:\n')
-        out.write('    remote clock: %s\n' % clue.headers['date'])
+        out.write('    remote clock: %s\n' % clue._date)
         out.write('    difference: %d seconds\n' % (clue.calcDiff() - 3600))
         if clue._contloc:
             out.write('  content-location: %s\n' % clue._contloc)
         if clue._cookie:
             out.write('  cookie: %s\n' % clue._cookie)
-        out.write('  header fingerprint: %s\n' % clue._fp.hexdigest())
+        out.write('  header fingerprint: %s\n' % clue._digest)
 
 
 # vim: ts=4 sw=4 et
