@@ -19,18 +19,18 @@
 """Unit test for hlbd.cluelib
 """
 
-__revision__ = '$Id: test_cluelib.py,v 1.5 2004/02/13 01:17:10 rwx Exp $'
+__revision__ = '$Id: test_cluelib.py,v 1.6 2004/02/15 18:01:25 rwx Exp $'
 
 
 import unittest
 
-import hlbd.clues.Clue as Clue
+from hlbd.clues.Clue import Clue
 
 
 class TestClue(unittest.TestCase):
 
     def setUp(self):
-        self.clue = Clue.Clue()
+        self.clue = Clue()
 
     def tearDown(self):
         pass
