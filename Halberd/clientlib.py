@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.9 2004/03/03 11:33:52 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.10 2004/03/03 12:52:08 rwx Exp $'
 
 
 import time
@@ -99,6 +99,9 @@ class HTTPClient:
         self.bufsize = default_bufsize
 
         self.timeout = timeout
+        # _timeout_exceptions MUST be converted to a tuple before using it with
+        # except.
+        self._timeout_exceptions = [socket.timeout]
 
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.settimeout(self.timeout)
@@ -245,7 +248,7 @@ class HTTPClient:
         while time.time() < stoptime:
             try:
                 chunk = self._recv(self.bufsize)
-            except socket.timeout, msg:
+            except tuple(self._timeout_exceptions), msg:
                 raise TimedOut, msg
     
             if not chunk:
@@ -288,6 +291,8 @@ class HTTPSClient(HTTPClient):
         self._recv = None
 
         self._sslsock = None
+
+        self._timeout_exceptions.append(socket.sslerror)
 
 
     def _connect(self, addr, keyfile=None, certfile=None):
