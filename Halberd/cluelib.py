@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.13 2004/02/07 17:01:09 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.14 2004/02/08 01:55:05 rwx Exp $'
 
 
 import time
@@ -98,7 +98,9 @@ class Clue:
         @type headers: str
         """
         def make_list(hdrs):
-            return [tuple(line.split(': ', 1)) for line in hdrs.splitlines() \
+            # We split by ':' instead of ': ' because it's more robust (some
+            # webservers may send badly written headers).
+            return [tuple(line.split(':', 1)) for line in hdrs.splitlines() \
                                               if line != '']
 
         self.headers = make_list(headers)
