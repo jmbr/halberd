@@ -25,11 +25,12 @@
 @var default_conf_file: Name of the default configuration file for halberd.
 """
 
-__revision__ = '$Id: halberd,v 1.12 2004/02/15 17:01:46 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.13 2004/02/19 15:00:29 rwx Exp $'
 
 
 import sys
-import time
+import socket
+import urlparse
 
 import hlbd.version as version
 import hlbd.clues.analysis as analysis
@@ -42,25 +43,41 @@ default_parallelism = 4
 default_conf_file = 'halberd.cfg'
 
 
+
+def hostname(url):
+    """Returns the hostname part of an URL."""
+    netloc = urlparse.urlparse(url)[1]
+    return netloc.split(':', 1)[0]
+
+def addresses(host):
+    """Returns the list of host's network addresses."""
+    try:
+        name, aliases, addrs = socket.gethostbyname_ex(host)
+    except socket.error, msg:
+        return None
+
+    return addrs
+
 class Halberd:
     """HTTP load balancer detector.
     """
 
-    url = None
-    addr = None
-
-    rpc_servers = None
-    rpc_serv_addr = None
-
-    proxy_serv_addr = None
-
-    clues = []
-    analyzed = []
-
-    parallelism = default_parallelism
-
     def __init__(self, verbose=False):
         self.verbose = verbose
+
+        self.url = None
+        self.addr = None
+
+        self.clues = []
+        self.analyzed = []
+
+        self.parallelism = default_parallelism
+        self.scantime = default_scantime
+
+        self.rpc_servers = None
+        self.rpc_serv_addr = None
+
+        self.proxy_serv_addr = None
 
 
     def setURL(self, url):
@@ -73,40 +90,6 @@ class Halberd:
 
         return self
 
-    def setAddr(self, addr):
-        """Extract an IP address to scan.
-        """
-        import urlparse
-        import socket
-
-        netloc = urlparse.urlparse(self.url)[1]
-        hostname = netloc.split(':')[0]
-
-        self.info('looking up host %s... ' % hostname)
-
-        try:
-            name, aliases, addresses = socket.gethostbyname_ex(hostname)
-        except socket.error, msg:
-            self.fatal('%s (%s)\n' % (msg[1], hostname))
-
-        self.info('done.\n\n')
-
-        if addr:
-            if addr not in addresses:
-                self.fatal('%s resolves to a different address than %s\n'
-                           % (hostname, addr))
-            self.addr = addr  # Address found in the valid address list.
-        else:
-            # Pick up a valid address from the given list.
-            if len(addresses) > 1:
-                sys.stdout.write('warning: %s resolves to:\n'
-                                 % hostname)
-                sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
-                for a in addresses[1:]:
-                    sys.stdout.write('  %s\n' % a)
-
-            self.addr = addresses[0]
-
 
     def info(self, msg):
         """Display information to the user.
@@ -115,24 +98,15 @@ class Halberd:
             sys.stdout.write(str(msg))
             sys.stdout.flush()
 
-    def fatal(self, msg):
+    def fatal(msg):
         """Fatal error notification.
         """
         sys.stderr.write(str(msg))
         sys.stderr.flush()
         sys.exit(-1)
 
+    fatal = staticmethod(fatal)
 
-    def load(self, filename):
-        self.clues = analysis.load_clues(filename)
-
-    def save(self, filename):
-        analysis.save_clues(filename, self.clues)
-
-
-    def setScantime(self, scantime=default_scantime):
-        self.scantime = scantime
-        return self
 
     def scan(self):
         import hlbd.scanlib as scanlib
@@ -222,7 +196,7 @@ class Halberd:
         try:
             reader.open(cfgfile)
         except (IOError, conflib.InvalidConfFile):
-            self.fatal('Couldn\'t open configuration file %s\n' % cfgfile)
+            self.fatal('couldn\'t open configuration file %s\n' % cfgfile)
 
         options = reader.parse()
         self.proxy_serv_addr = options.proxy_serv_addr
@@ -269,7 +243,8 @@ def make_parser():
                       help='run as scan cilent')
 
     parser.add_option('-p', '--parallelism', action='store', type='int',
-                      dest='parallelism', help='specifies the degree of parallelism',
+                      dest='parallelism',
+                      help='specifies the degree of parallelism',
                       metavar='NUM', default=default_parallelism)
 
     parser.add_option('-f', '--config', action='store', dest='confname',
@@ -294,7 +269,7 @@ def main(argv):
 
     if opts.cluefile:
         # Load from file
-        halberd.load(opts.cluefile)
+        analysis.load_clues(opts.cluefile)
         halberd.analyze()
         halberd.report(opts.output)
         sys.exit(0)
@@ -307,26 +282,44 @@ def main(argv):
         # We need an URL to scan.
         parser.error('incorrect number of arguments')
 
-    halberd.setURL(args[0]).setAddr(opts.addr)
-    halberd.setScantime(opts.scantime)
+    halberd.setURL(args[0])
+    halberd.scantime = opts.scantime
     halberd.parallelism = opts.parallelism
 
-    if opts.rpc_client:
-        halberd.client()
+    # Get network addresses.
+    if opts.addr:
+        # The user passed a specific address as a parameter.
+        addrs = [opts.addr]
     else:
-        halberd.scan()
+        host = hostname(halberd.url)
+        halberd.info('looking up host %s... ' % host)
+        addrs = addresses(host)
+        if addrs is None:
+            Halberd.fatal('unable to resolve %s\n' % host)
+        halberd.info('done.\n\n')
+        addrs.sort()
 
-    if not halberd.clues:
-        sys.exit(-1)
+    for addr in addrs:
+        halberd.addr = addr
+
+        if opts.rpc_client:
+            halberd.client()
+        else:
+            halberd.scan()
+
+        halberd.analyze()
+
+        halberd.report(opts.output)
 
     if opts.savefile:
-        halberd.save(opts.savefile)
-
-    halberd.analyze()
-    halberd.report(opts.output)
+        if len(addrs) > 1:
+            halberd.info('warning: only the last clues will be stored\n')
+        analysis.save_clues(opts.savefile)
 
 
 if __name__ == '__main__':
+#    import gc
+#    gc.set_debug(gc.DEBUG_LEAK)
     main(sys.argv[1:])
 
 
