@@ -16,16 +16,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.5 2004/02/09 12:05:37 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.6 2004/02/12 11:15:39 rwx Exp $'
 
 
 import sys
 
+import hlbd.cluelib as cluelib
 
-def report(address, clues, hits, outfile=''):
+
+def report(address, clues, outfile=''):
     """Displays detailed report information to the user.
 
     @param address: Address of the scanned host.
@@ -33,35 +36,40 @@ def report(address, clues, hits, outfile=''):
 
     @param clues: Clues found and (pressumably) processed by an analyzer.
     @type clues: C{list}
-
-    @param hits: Total number of replies received from the target.
-    @type hits: C{int}
     """
     out = (outfile and open(outfile, 'w')) or sys.stdout
 
     out.write('\n[ %d ] possibly real server(s) at [ %s ].\n'
               % (len(clues), address))
 
-    import cluelib
-    fields = [field for percent, field in cluelib.diff_fields(clues)]
+    hits = sum([clue.getCount() for clue in clues])
+
+    diff_fields = [field for percent, field in cluelib.diff_fields(clues)]
 
     for num, clue in enumerate(clues):
         info = clue.info
         different = [(field, value) for field, value in clue.headers \
-                                    if field in fields]
+                                    if field in diff_fields]
+
         out.write('\n')
         out.write('server [ %d ]\t\t[ %s ]\n' % (num, info['server'].lstrip()))
+
         out.write('successful requests\t[ %2d ]\n' % clue.getCount())
         if hits:
             out.write('traffic\t\t\t[ %.2f%% ]\n' \
                       % (clue.getCount() * 100 / float(hits)))
+
         out.write('difference\t\t[ %d ]\n' % clue.diff)
+
         if info['contloc']:
             out.write('content-location\t[ %s ]\n' % info['contloc'].lstrip())
+
         out.write('header fingerprint\t[ %s ]\n' % info['digest'])
+
         if different:
             out.write('different headers:\n')
             for field, value in different:
                 out.write('  %s:%s\n' % (field, value))
+
 
 # vim: ts=4 sw=4 et
