@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.5 2004/02/02 07:21:08 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.6 2004/02/02 07:32:08 rwx Exp $'
 
 
 import sys
@@ -67,7 +67,7 @@ class State:
             assert len(ignore) > 0
 
             for field in ignore:
-                method = '_get_' + cluelib._normalize(field)
+                method = '_get_' + cluelib.normalize(field)
                 try:
                     getattr(cluelib.Clue, method)
                 except AttributeError:
