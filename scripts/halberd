@@ -25,7 +25,7 @@
 @var default_conf_file: Name of the default configuration file for halberd.
 """
 
-__revision__ = '$Id: halberd,v 1.13 2004/02/19 15:00:29 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.14 2004/02/20 09:34:50 rwx Exp $'
 
 
 import sys
@@ -53,7 +53,7 @@ def addresses(host):
     """Returns the list of host's network addresses."""
     try:
         name, aliases, addrs = socket.gethostbyname_ex(host)
-    except socket.error, msg:
+    except socket.error:
         return None
 
     return addrs
@@ -79,7 +79,7 @@ class Halberd:
 
         self.proxy_serv_addr = None
 
-
+
     def setURL(self, url):
         """Ensures the URL is a valid one.
         """
@@ -90,7 +90,15 @@ class Halberd:
 
         return self
 
-
+    def setAddr(self, addr):
+        """Sets the target address.
+        """
+        self.clues = self.analyzed = []
+        self.addr = addr
+
+        return self
+
+
     def info(self, msg):
         """Display information to the user.
         """
@@ -116,7 +124,19 @@ class Halberd:
     def analyze(self):
         """Analyze clues.
         """
+        if len(self.clues) == 0:
+            return
+
         self.analyzed = analysis.analyze(self.clues)
+        assert self.analyzed > 0
+        ratio = len(self.analyzed) / float(len(self.clues))
+        #self.info('clue-to-realserver ratio: %.3f\n' % ratio)
+        if ratio >= 0.6:
+            self.info('clue-to-realserver ratio is high (%.3f)\n' % ratio)
+            self.info('reanalyzing clues... ')
+            analysis.ignore_changing_fields(self.clues, self.verbose)
+            self.analyzed = analysis.analyze(self.clues)
+            self.info('done.\n')
 
     def report(self, outfile):
         """Write a report.
@@ -269,7 +289,7 @@ def main(argv):
 
     if opts.cluefile:
         # Load from file
-        analysis.load_clues(opts.cluefile)
+        halberd.clues = analysis.load_clues(opts.cluefile)
         halberd.analyze()
         halberd.report(opts.output)
         sys.exit(0)
@@ -300,7 +320,7 @@ def main(argv):
         addrs.sort()
 
     for addr in addrs:
-        halberd.addr = addr
+        halberd.setAddr(addr)
 
         if opts.rpc_client:
             halberd.client()
@@ -314,7 +334,7 @@ def main(argv):
     if opts.savefile:
         if len(addrs) > 1:
             halberd.info('warning: only the last clues will be stored\n')
-        analysis.save_clues(opts.savefile)
+        analysis.save_clues(opts.savefile, halberd.clues)
 
 
 if __name__ == '__main__':
