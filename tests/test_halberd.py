@@ -17,15 +17,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Unit tests for halberd.Halberd
+"""Unit tests for the Halberd class
 """
 
-__revision__ = '$Id: test_halberd.py,v 1.2 2004/03/02 00:54:10 rwx Exp $'
+__revision__ = '$Id: test_halberd.py,v 1.3 2004/03/29 09:54:33 rwx Exp $'
 
 
 import unittest
 
-import halberd
+import hlbd.shell.core
 import hlbd.clues.analysis as analysis
 
 
@@ -33,27 +33,27 @@ class testNetutils(unittest.TestCase):
 
     def testHostname(self):
         url = 'http://agartha/'
-        self.assertEqual(halberd.hostname(url), 'agartha')
+        self.assertEqual(hlbd.shell.core.hostname(url), 'agartha')
 
         url = 'http://agartha:777'
-        self.assertEqual(halberd.hostname(url), 'agartha')
+        self.assertEqual(hlbd.shell.core.hostname(url), 'agartha')
 
         url = 'http://agartha:777:1:2/'
-        self.assertEqual(halberd.hostname(url), 'agartha')
+        self.assertEqual(hlbd.shell.core.hostname(url), 'agartha')
 
         url = 'agartha'
-        self.assertEqual(halberd.hostname(url), '')
+        self.assertEqual(hlbd.shell.core.hostname(url), '')
 
 
 #def testAddresses(self):
-#    self.failUnlessEqual(halberd.addresses('abcdefghijk'), ())
-#    self.failUnless(halberd.addresses('agartha') != ())
+#    self.failUnlessEqual(hlbd.shell.core.addresses('abcdefghijk'), ())
+#    self.failUnless(hlbd.shell.core.addresses('agartha') != ())
 
 
 class TestHalberd(unittest.TestCase):
 
     def setUp(self):
-        self.h = halberd.Halberd()
+        self.h = hlbd.shell.core.Halberd()
 
     def tearDown(self):
         pass
