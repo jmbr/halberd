@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.15 2004/02/09 12:07:25 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.16 2004/02/11 10:18:36 rwx Exp $'
 
 
 import time
@@ -174,14 +174,15 @@ class Clue:
         if self.diff != other.diff:
             return False
 
+        if self.info['digest'] != other.info['digest']:
+            return False
+
+# WARNING: Re-enabling this might break the analysis functions.
 #        local = (self._local, other._local)
 #        remote = (self._remote, other._remote)
 #        if ((local[0] < local[1]) and (remote[0] > remote[1]) \
 #           or (local[0] > local[1]) and (remote[0] < remote[1])):
 #            return False
-
-        if self.info['digest'] != other.info['digest']:
-            return False
 
         return True
 
@@ -246,12 +247,17 @@ class Clue:
 
 def diff_fields(clues):
     """Study differences between fields.
+
+    @param clues: Clues to analyze.
+    @type clues: C{list}
+
+    @return: Fields which were found to be different among the analyzed clues.
+    @rtype: C{list}
     """
     import difflib
 
     scores = {}
 
-    total = 0
     for i in range(len(clues)):
         for j in range(len(clues)):
             if i == j:
@@ -259,15 +265,18 @@ def diff_fields(clues):
 
             one, other = clues[i].headers, clues[j].headers
             matcher = difflib.SequenceMatcher(None, one, other)
+    
             diffs = [opcode for opcode in matcher.get_opcodes() \
                             if opcode[0] != 'equal']
 
             for tag, alo, ahi, blo, bhi in diffs:
                 for name, value in one[alo:ahi] + other[blo:bhi]:
-                    total += 1
                     scores.setdefault(name, 0)
                     scores[name] += 1
 
+    # XXX total should be either: a) passed as a param or b) not computed at
+    # all (the caller would be responsible of computing the percentage.
+    total = sum(scores.values())
     result = [(count * 100 / total, field) for field, count in scores.items()]
     result.sort()
     result.reverse()
@@ -291,12 +300,13 @@ def sort_by_diff(clues):
     @return: A sorted list by time difference.
     @rtype: C{list}
     """
+# XXX This should be removed
     # We proceed through the decorate-sort-undecorate steps.
     decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
     return [diff_clue[1] for diff_clue in decorated]
 
-def find_clusters(clues):
+def find_clusters(clues, step=3):
     """Finds clusters of clues.
 
     A cluster is a group of at most 3 clues which only differ in 1 seconds
@@ -325,29 +335,97 @@ def find_clusters(clues):
         if not clues:
             break
 
-        for i in invrange(3):
+        for i in invrange(step):
             cluster = find_cluster(clues, i)
             if cluster:
                 yield cluster
                 start = i
                 break
 
-def merge_cluster(group):
+def merge_cluster(cluster):
     """Merges a given cluster into one clue.
     """
-    assert len(group) <= 3
+    for clue in cluster[1:]:
+        cluster[0].incCount(clue.getCount())
+    return cluster[0]
 
-    aggregate = lambda src, dst: group[dst].incCount(group[src].getCount())
 
-    if len(group) == 3:
-        aggregate(0, 1)
-        aggregate(2, 1)
-        return group[1]
-    elif len(group) == 2:
-        aggregate(1, 0)
-        return group[0]
-    else:
-        return group[0]
+def classify(clues):
+    """Classify clues by remote clock time and digest.
+    """
+    classified = {}
+
+    decorated = [(clue._remote, clue.info['digest'], clue.diff, clue) \
+           for clue in clues]
+    decorated.sort()
+
+    # We build a dictionary with two key levels and a list of clues at the
+    # innermost level.
+    for rtime, digest, diff, clue in decorated:
+        items = classified.setdefault(rtime, {}).setdefault(digest, [])
+        items.append(clue)
+
+    return classified
+
+def get_deltas(diffs):
+    """Generator function which yields the differences between the eleements of
+    a list of integers.
+    """
+    prev = None
+    for diff in diffs:
+        if prev is None:
+            prev = diff
+            yield 0
+            continue
+
+        delta = diff - prev
+        yield delta
+
+        prev = diff
+
+def get_slices(clues, indexes):
+    start, end = 0, len(clues)
+    for idx in indexes:
+        yield (start, idx)
+        start = idx
+    yield (start, end)
+
+def filter_proxies(clues):
+    """Detect and merge clues pointing to a proxy cache on the remote end.
+    """
+    if __debug__:
+        getcount = lambda x: x.getCount()
+        total = sum(map(getcount, clues))
+
+    results = []
+
+    # Classify clues by remote time and digest.
+    classified = classify(clues)
+
+    for rtime in classified.keys():
+        for digest in classified[rtime].keys():
+
+            # Get a decorated list of clues and sort them by their time diff.
+            decorated = [(clue.diff, clue) for clue in classified[rtime][digest]]
+            decorated.sort()
+
+            # Undecorate.
+            diffs = [diff for diff, clue in decorated]
+            cur_clues = [clue for diff, clue in decorated]
+
+            indexes = [idx for idx, delta in enumerate(get_deltas(diffs)) \
+                           if delta > 3]
+
+            for i, j in get_slices(cur_clues, indexes):
+                for clue in cur_clues[i:j]:
+                    clues.remove(clue)
+
+                results.append(merge_cluster(cur_clues[i:j]))
+
+    if __debug__:
+        assert total == sum(map(getcount, results))
+
+    return results
 
 def analyze(clues):
     """Draw conclusions from the clues obtained during the scanning phase.
@@ -362,13 +440,16 @@ def analyze(clues):
     @return: Coherent list of clues identifying real web servers.
     @rtype: C{list}
     """
+    clues = filter_proxies(clues)
+
     results = []
     getdigest = lambda c: c.info['digest']
 
+    # We discriminate the clues by their digests.
     for key, clues_by_digest in groupby(clues, getdigest):
-        sorted = sort_by_diff(clues_by_digest)
+        group = sort_by_diff(clues_by_digest)
 
-        for cluster in find_clusters(sorted):
+        for cluster in find_clusters(group):
             results.append(merge_cluster(cluster))
 
     return results
