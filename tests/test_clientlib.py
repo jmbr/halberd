@@ -20,7 +20,7 @@
 """Unit tests for hlbd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.1 2004/01/31 14:03:59 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.2 2004/02/07 16:59:18 rwx Exp $'
 
 
 import unittest
@@ -93,7 +93,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def testSendRequestToRemote(self):
         self.client.putRequest('212.204.249.161', 'http://www.synnergy.net')
-        reply = self.client.getReply()
+        timestamp, reply = self.client.getReply()
         self.failUnless(reply.splitlines()[0].startswith('HTTP/'))
 
     def testGetHeaders(self):
