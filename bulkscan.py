@@ -21,7 +21,7 @@
 """Massive load balancer scanner.
 """
 
-__revision__ = '$Id: bulkscan.py,v 1.6 2004/03/05 00:31:50 rwx Exp $'
+__revision__ = '$Id: bulkscan.py,v 1.7 2004/03/26 00:49:05 rwx Exp $'
 
 
 import os
@@ -29,7 +29,7 @@ import sys
 import shutil
 import pickle
 
-import halberd
+import hlbd.shell
 import hlbd.util
 import hlbd.clues.file
 
@@ -47,13 +47,13 @@ def targets(urlfile):
         # Strip end of line character.
         url = url[:-1]
 
-        hostname = halberd.hostname(url)
+        hostname = hlbd.shell.hostname(url)
         if not hostname:
             sys.stderr.write('*** unable to extract hostname from %s\n' \
                              % hostname)
             continue
 
-        for addr in halberd.addresses(hostname):
+        for addr in hlbd.shell.addresses(hostname):
             yield (url, addr)
 
 def make_dir(dest):
@@ -85,7 +85,7 @@ def main():
     for target in targets(urlfile):
         url, addr = target
 
-        h = halberd.Halberd()
+        h = hlbd.shell.Halberd()
         h.scantime = 15
         h.setAddr(addr)
         h.setURL(url)
@@ -97,10 +97,11 @@ def main():
 
         urldir = url.translate(hlbd.util.table)
         make_dir(os.path.join(folder, urldir))
+        addrfile = addr.translate(hlbd.util.table) + os.extsep + 'clu'
 
-        clue_file = os.path.join(folder, urldir, addr)
+        cluefile = os.path.join(folder, urldir, addrfile)
         try:
-            hlbd.clues.file.save(clue_file, h.clues)
+            hlbd.clues.file.save(cluefile, h.clues)
         except IOError, msg:
             error(msg)
 
