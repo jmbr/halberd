@@ -17,13 +17,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Remote Procedure Calls for halberd.
+"""Remote Procedure Calls.
 
 This module implements client and server functionality to enable halberd to
 work as a distributed application.
 """
 
-__revision__ = '$Id: rpclib.py,v 1.2 2004/02/13 01:24:51 rwx Exp $'
+__revision__ = '$Id: rpclib.py,v 1.3 2004/02/15 17:03:20 rwx Exp $'
 
 
 import time
@@ -37,16 +37,20 @@ import hlbd.scanlib as scanlib
 
 
 def utctime():
-    return time.ctime(time.gmtime())
+    return time.mktime(time.gmtime())
 
 
-def server(addr):
+def server(addr, verbose=True):
     """RPC Server.
     """
     serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
     serv.bind(addr)
-    print 'listening on', addr
+
+    if verbose:
+        print 'rpcserver: listening on %s:%d' % (addr[0], addr[1])
+        print
+
     serv.listen(1)
 
     client = None
@@ -54,23 +58,23 @@ def server(addr):
         if client:
             client.close()
 
-        client, clientaddr = serv.accept()
+        client, cliaddr = serv.accept()
 
-        print clientaddr
         client.settimeout(5)
         try:
             data = client.recv(1024)
         except socket.timeout, msg:
-            print msg
+            print 'rpcserver: %s' % msg
             continue
 
         command = pickle.loads(data)
         func, args = command[0], command[1:]
         if func != scanlib.scan:
-            print 'Invalid function', func
+            print 'rpcserver: invalid function', func
             continue
 
-        print func, args
+        if verbose:
+            print '%s:%d ->' % (cliaddr[0], cliaddr[1]), func, args
 
         result = func(*args)
         client.sendall(pickle.dumps((utctime(), result)))
@@ -78,10 +82,10 @@ def server(addr):
     serv.close()
 
     
-def client(serv_addr, target_addr, url, scantime, verbose, parallelism, results):
+def client(serv_addr, target_addr, url, scantime, parallelism, verbose, results):
     """RPC Client.
 
-    @param results: Place to put the results + lock
+    @param results: Mutable object where to put the results + lock
     @type results: C{tuple}
     """
     params = tuple([scanlib.scan, target_addr, url, \
@@ -95,6 +99,7 @@ def client(serv_addr, target_addr, url, scantime, verbose, parallelism, results)
 
     data = ''
     while True:
+        # XXX This function is vulnerable to an infinite stream of data.
         try:
             chunk = sock.recv(1024)
         except socket.timeout, msg:
@@ -107,8 +112,18 @@ def client(serv_addr, target_addr, url, scantime, verbose, parallelism, results)
 
     seq, lock = results
     lock.acquire()
-    import time
-    seq.append((utctime(), pickle.loads(data)))
+
+    # We receive two things from the target: the time at the moment of sending
+    # the data and the list of found clues. To that information we prepend our
+    # timestamp at the moment of reception so that clues can be normalized by
+    # calculating the difference between our clock and our peer's one.
+    payload = []
+    payload.append(utctime())
+    payload.extend(pickle.loads(data))
+    # [local, remote, [clues...]]
+
+    seq.append(payload)
+
     lock.release()
 
 
