@@ -26,7 +26,7 @@ balanced devices.
 @type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.4 2004/01/29 02:14:56 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.5 2004/01/29 13:10:59 rwx Exp $'
 
 
 import time
@@ -105,17 +105,34 @@ class Clue:
         hdrfp.close()
         self.headers = hdrs.items()         # Save a copy of the headers.
 
-        normalize = lambda s: s.replace('-', '_')
-
         # We examine each MIME field and try to find an appropriate handler. If
         # there is none we simply digest the info it provides.
         for name, value in hdrs.items():
             try:
-                handlerfn = getattr(self, '_get_' + normalize(name))
+                handlerfn = getattr(self, '_get_' + self._normalize(name))
                 handlerfn(value)
             except AttributeError:
                 self.__tmphdrs += '%s: %s ' % (name, value)
         self._updateDigest()
+
+    def _normalize(self, name):
+        """Normalize string.
+
+        This method takes a string coming out of mime-fields and transforms it
+        into a valid Python identifier. That's done by removing invalid
+        non-alphanumeric characters and also numeric ones placed at the
+        beginning of the string.
+
+        @param s: String to be normalized.
+        @type s: C{str}
+
+        @return: Normalized string.
+        @rtype: C{str}
+        """
+        normal = filter(lambda c: c.isalnum(), list(name))
+        while normal[0].isdigit():
+            normal = normal[1:]
+        return ''.join(normal)
 
     def _updateDigest(self):
         """Updates header fingerprint.
@@ -132,9 +149,13 @@ class Clue:
     def incCount(self, num=1):
         """Increase the times this clue has been found.
 
-        param num: Number of hits to add.
-        type num: C{int}
+        @param num: A positive non-zero number of hits to increase.
+        @type num: C{int}
+
+        @raise ValueError: in case L{num} is less than or equal to zero.
         """
+        if num <= 0:
+            raise ValueError
         self.__count += num
 
     def getCount(self):
