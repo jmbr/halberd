@@ -31,15 +31,15 @@ relevant to halberd's behavior when acting as a distributed client or server,
 for SSL networking, etc. So if you're going to use some of halberd's more
 advanced features you should change the values there.
 
-Supported platforms
--------------------
+Platforms
+---------
 
 halberd should work in every machine providing the dependencies specified in
 the Installation section. It has been successfully built and tested on:
 
+* RedHat Linux 9.0
 * Windows 2000 Server
 * Mac OS X 10.2
-* RedHat Linux 9.0
 
 Documentation
 -------------
@@ -60,4 +60,4 @@ And follow with::
     $ halberd.py -v www.macromedia.com
 
 
-:Version: $Id: README,v 1.6 2004/03/26 00:46:49 rwx Exp $
+:Version: $Id: README,v 1.7 2004/04/03 15:06:14 rwx Exp $
