@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.15 2004/04/07 12:16:02 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.16 2004/04/11 11:36:08 rwx Exp $'
 
 
 import sys
@@ -39,7 +39,6 @@ def report(scantask):
 
     clues = scantask.analyzed
     hits = analysis.hits(clues)
-    assert hits > 0
     logger = hlbd.logger.getLogger()
 
     # xxx This could be passed by the caller in order to avoid recomputation in
@@ -54,35 +53,40 @@ def report(scantask):
     out.write('=' * 70 + '\n')
 
     for num, clue in enumerate(clues):
+        assert hits > 0
         info = clue.info
 
         out.write('\n')
         out.write('-' * 70 + '\n')
         out.write('server %d: %s\n' % (num + 1, info['server'].lstrip()))
-        out.write('-' * 70 + '\n')
+        out.write('-' * 70 + '\n\n')
 
-        out.write('difference: %d seconds\n' % clue.diff)
+        out.write('difference\n  %d seconds\n' % clue.diff)
 
-        out.write('successful requests: %2d (%.2f%% of the traffic)\n' \
+        out.write('successful requests\n  %2d hits (%.2f%% of the traffic)\n' \
                   % (clue.getCount(), clue.getCount() * 100 / float(hits)))
 
         if info['contloc']:
-            out.write('content-location: %s\n' % info['contloc'].lstrip())
+            out.write('content-location\n  %s\n' % info['contloc'].lstrip())
 
+        if len(info['cookies']) > 0:
+            out.write('cookie(s)\n')
         for cookie in info['cookies']:
-            out.write('cookie: %s\n' % cookie.lstrip())
+            out.write('  %s\n' % cookie.lstrip())
 
-        out.write('header fingerprint: %s\n' % info['digest'])
+        out.write('header fingerprint\n  %s\n' % info['digest'])
 
         different = [(field, value) for field, value in clue.headers \
                                     if field in diff_fields]
         if different:
-            out.write('different headers:\n')
+            out.write('different headers\n')
+            idx = 1
             for field, value in different:
-                out.write('  %s:%s\n' % (field, value))
+                out.write('  %d. %s:%s\n' % (idx, field, value))
+                idx += 1
 
         if scantask.debug:
-            out.write('\nheaders = %s\n' % clue.headers)
+            out.write('headers\n  %s\n' % clue.headers)
 
 
 # vim: ts=4 sw=4 et
