@@ -3,8 +3,6 @@ include setup.py
 include halberd.py
 include halberd.cfg
 
-include bulkscan.py
-
 recursive-include hlbd *.py
 
 include tests/*.py

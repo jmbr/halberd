@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.13 2004/03/26 00:46:49 rwx Exp $
+# $Id: GNUmakefile,v 1.14 2004/03/29 09:56:04 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -44,9 +44,11 @@ SETUP := $(PYTHON) $(srcdir)/setup.py
 
 versionfile := $(hlbddir)/version.py
 
-SCRIPTS := halberd.py bulkscan.py
-MODULES := $(filter-out $(hlbddir)/version.py, $(wildcard $(hlbddir)/*.py)) \
-		   $(wildcard $(hlbddir)/clues/*.py)
+SCRIPTS := halberd.py
+MODULES := $(filter-out $(hlbddir)/version.py, \
+		   $(wildcard $(hlbddir)/*.py)) \
+		   $(wildcard $(hlbddir)/clues/*.py) \
+		   $(wildcard $(hlbddir)/shell/*.py)
 
 SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES := $(wildcard $(testdir)/*.py)

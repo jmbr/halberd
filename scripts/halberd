@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
+"""Command line interface.
+"""
+__revision__ = '$Id: halberd,v 1.22 2004/03/29 09:56:04 rwx Exp $'
+
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -18,16 +22,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Command line interface and main driving module.
-"""
-
-__revision__ = '$Id: halberd,v 1.21 2004/03/26 00:48:30 rwx Exp $'
-
-
 import sys
 
-from hlbd.shell import *
-import hlbd.clues.file
+import hlbd
+import hlbd.shell
 import hlbd.version as version
 
 
@@ -41,7 +39,7 @@ def make_parser():
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend scanning the target',
-                      metavar='NUM', default=default_scantime)
+                      metavar='NUM', default=hlbd.shell.default_scantime)
 
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='explain what is being done', default=False)
@@ -55,7 +53,7 @@ def make_parser():
                       metavar='ADDR', default='')
 
     parser.add_option('-w', '--write', action='store', dest='savefile',
-                      help='saves clues to the specified file',
+                      help='saves clues to the specified file or directory',
                       metavar='FILE', default='')
     parser.add_option('-r', '--read', action='store', dest='cluefile',
                       help='loads clues from the specified file',
@@ -69,13 +67,47 @@ def make_parser():
     parser.add_option('-p', '--parallelism', action='store', type='int',
                       dest='parallelism',
                       help='specifies the degree of parallelism',
-                      metavar='NUM', default=default_parallelism)
+                      metavar='NUM', default=hlbd.shell.default_parallelism)
 
     parser.add_option('', '--config', action='store', dest='confname',
                       help='use configuration file', metavar='FILE',
-                      default=default_conf_file)
+                      default=hlbd.shell.default_conf_file)
+
+    parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
+                      help='read URLs from FILE', metavar='FILE')
 
     return parser
+
+
+def scannerFactory(opts, args):
+    """Instantiates a scanner of the appropriate flavour.
+
+    It selects which scanning strategy to follow depending on how the user
+    invoked the program.
+    """
+    scan_options = {
+        'scantime': opts.scantime,
+        'parallelism': opts.parallelism,
+        'verbose': opts.verbose,
+        'conf_file': opts.confname,
+    }
+
+    if opts.urlfile:
+        # MultiScan
+        scan_options.update({'urlfile': opts.urlfile})
+        if opts.rpc_client:
+            scanner = hlbd.shell.DistMultiScan
+        else:
+            scanner = hlbd.shell.MultiScan
+    else:
+        # UniScan
+        scan_options.update({'url': args[0], 'addr': opts.addr})
+        if opts.rpc_client:
+            scanner = hlbd.shell.DistUniScan
+        else:
+            scanner = hlbd.shell.UniScan
+
+    return scanner(**scan_options)
 
 
 def main(argv):
@@ -85,60 +117,33 @@ def main(argv):
 
     (opts, args) = parser.parse_args(argv)
 
-    halberd = Halberd(opts.verbose)
-
-    halberd.info('%s\nhttp load balancer detector\n\n' % version.version.v_gnu)
-
-    halberd.readConf(opts.confname)
+    print version.version.v_gnu
+    print 'http load balancer detector'
+    print
 
     if opts.cluefile:
-        # Load from file
+        # Load from file.
+        import hlbd.clues.file
+
+        halberd = hlbd.shell.Halberd()
         halberd.clues = hlbd.clues.file.load(opts.cluefile)
         halberd.analyze()
         halberd.report(opts.output)
         sys.exit(0)
     elif opts.rpc_server:
+        # Run as server.
+        halberd = hlbd.shell.Halberd()
+        halberd.readConf(opts.confname)
         halberd.server()
         sys.exit(0)
 
     # Scan target.
-    if len(args) < 1:
+    if opts.urlfile is None and len(args) < 1:
         # We need an URL to scan.
         parser.error('incorrect number of arguments')
 
-    halberd.setURL(args[0])
-    halberd.scantime = opts.scantime
-    halberd.parallelism = opts.parallelism
-
-    # Get network addresses.
-    if opts.addr:
-        # The user passed a specific address as a parameter.
-        addrs = [opts.addr]
-    else:
-        host = hostname(halberd.url)
-        halberd.info('looking up host %s... ' % host)
-        addrs = addresses(host)
-        if not addrs:
-            Halberd.fatal('unable to resolve %s\n' % host)
-        halberd.info('done.\n\n')
-        addrs.sort()
-
-    for addr in addrs:
-        halberd.setAddr(addr)
-
-        if opts.rpc_client:
-            halberd.client()
-        else:
-            halberd.scan()
-
-        halberd.analyze()
-
-        halberd.report(opts.output)
-
-    if opts.savefile:
-        if len(addrs) > 1:
-            halberd.info('warning: only the last clues will be stored\n')
-        hlbd.clues.file.save(opts.savefile, halberd.clues)
+    scanner = scannerFactory(opts, args)
+    scanner.run(opts.savefile, opts.output)
 
 
 if __name__ == '__main__':
