@@ -21,7 +21,7 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.2 2004/01/27 16:47:42 rwx Exp $'
 
 
 import sys
@@ -30,8 +30,60 @@ import sys
 # Time to spend probing the target expressed in seconds.
 _DEFAULT_SCANTIME = 30
 # Number of sockets to create at each scanning round.
-_DEFAULT_SOCKETS = 10
+_DEFAULT_SOCKETS = 3
 
+
+class Halberd:
+    """Container for all the information needed to perform a scan.
+    """
+    def __init__(self):
+        """Initializes halberd object.
+        """
+        self.address = ''
+        self.url = ''
+        self.clues = []
+        self.hits = 0
+
+        self.scanner = None
+        self.analyzer = None
+
+
+def fatal(msg):
+    """Fatal error notification.
+    """
+    sys.stderr.write(str(msg))
+    sys.stderr.flush()
+    sys.exit(-1)
+
+def get_address(url, address):
+    """Extract an IP address to scan.
+    """
+    import urlparse
+    import socket
+
+    netloc = urlparse.urlparse(url)[1]
+    hostname = netloc.split(':')[0]
+
+    try:
+        name, aliases, addresses = socket.gethostbyname_ex(hostname)
+    except socket.gaierror, msg:
+        fatal('%s (%s)\n' % (msg[1], hostname))
+
+    if address:
+        if address not in addresses:
+            fatal('%s resolves to a different address than %s\n'
+                  % (hostname, address))
+        else:
+            return address  # Address found in the valid address list.
+
+    # Pick up a valid address from the given list.
+    sys.stdout.write('warning: the server at %s resolves to the '
+                     'following addresses:\n' % hostname)
+    sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
+    for addr in addresses[1:]:
+        sys.stdout.write('  %s\n' % addr)
+
+    return addresses[0]
 
 def main(argv):
     """http load balancer detector's main routine.
@@ -54,6 +106,8 @@ def main(argv):
     parser.add_option('-o', '--output', action='store', dest='output',
                       help='write output to the specified file',
                       metavar='FILE', default='')
+    parser.add_option('-a', '--address', action='store', dest='address',
+                      metavar='ADDR', default='')
     group = optparse.OptionGroup(parser, 'Example',
                 'halberd.py -vt 10 -s 5 http://example.net   # would scan '
                 'example.net during 10 seconds using 5 sockets in parallel '
@@ -69,25 +123,30 @@ def main(argv):
     if opts.verbose:
         print '%s\nhttp load balancer detector\n' % version.version.v_gnu 
 
+    halberd = Halberd()
+
     # Ensures the URL is a valid one.
     make_url = lambda url, base: (url.startswith(base) and url) or (base + url)
+    halberd.url = make_url(args[0], 'http://')
 
     # Go through the reconnaissance stage.
     from hlbd import scanlib
-
-    address, clues, hits = ('', [], 0)
+    halberd.address = get_address(halberd.url, opts.address)
+    
     scanner = scanlib.Scanner(opts.scantime, opts.sockets, opts.verbose)
+
     try:
-        address, clues, hits = scanner.scan(make_url(args[0], 'http://'))
+        halberd.clues, halberd.hits = scanner.scan(halberd.address, halberd.url)
     except KeyboardInterrupt:
         print '\n*** interrupted by the user ***'
 
-    if len(clues) > 0:
+    if len(halberd.clues) > 0:
         # Analyze results and print report.
         from hlbd import cluelib, reportlib
 
-        analyzer = cluelib.Analyzer(clues)
-        reportlib.report(address, analyzer.analyze(), hits, opts.output)
+        halberd.analyzer = cluelib.Analyzer(halberd.clues)
+        reportlib.report(halberd.address, halberd.analyzer.analyze(),
+                         halberd.hits, opts.output)
 
 if __name__ == '__main__':
     main(sys.argv[1:])

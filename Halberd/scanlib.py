@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.1 2004/01/26 23:07:31 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.2 2004/01/27 16:47:59 rwx Exp $'
 
 
 import sys
@@ -33,7 +33,7 @@ import hlbd.clientlib as clientlib
 __all__ = ["Scanner"]
 
 
-class _State:
+class State:
     """Holds the state of the scanner at the current point in time.
     """
     def __init__(self, sockets, verbose):
@@ -67,7 +67,7 @@ class _State:
                 '%4d replies)' % (remaining, len(self.clues), self.replies))
         sys.stdout.flush()
 
-
+
 # ===============================
 # Callbacks passed to HTTPClient.
 # ===============================
@@ -97,7 +97,7 @@ def _error_cb(state):
     else:
         sys.stderr.write('Caught exception: ' + `sys.exc_type` + '\n')
 
-
+
 class Scanner:
     """Load-balancer scanner.
     """
@@ -106,15 +106,17 @@ class Scanner:
         """Initializes scanner object.
 
         @param scantime: Time (in seconds) to spend peforming the analysis.
-        @type scantime: int
+        @type scantime: C{int}
+
         @param sockets: Number of sockets to use in parallel to probe the target.
-        @type sockets: int
+        @type sockets: C{int}
+
         @param verbose: Specifies whether progress information should be printed or
         not.
-        @type verbose: bool
+        @type verbose: C{bool}
         """
         self.__scantime = scantime
-        self.__state = _State(sockets, verbose)
+        self.__state = State(sockets, verbose)
         self.__clients = self._setupClientPool()
 
     def _setupClientPool(self):
@@ -123,7 +125,8 @@ class Scanner:
         clients = []
 
         if self.__state.verbose:
-            print 'setting up client pool...',
+            sys.stdout.write('setting up client pool... ')
+            sys.stdout.flush()
 
         for client in xrange(self.__state.sockets):
             client = clientlib.HTTPClient(_get_clues_cb, _error_cb,
@@ -131,43 +134,29 @@ class Scanner:
             clients.append(client)
 
         if self.__state.verbose:
-            print 'done.',
+            sys.stdout.write('done.')
+            sys.stdout.flush()
 
         return clients
+
+    def scan(self, address, url):
+        """Scans for load balanced servers.
 
-    def _getAddress(self, url):
-        """Extract an IP address to scan.
-        """
-        import urlparse
-        import socket
-
-        netloc = urlparse.urlparse(url)[1]
-        hostname = netloc.split(':')[0]
-        name, aliases, addresses = socket.gethostbyname_ex(hostname)
-
-        if len(addresses) > 1:
-            sys.stdout.write('\nwarning: the server at %s resolves to the '
-                             'following addresses:\n' % hostname)
-            sys.stdout.write('  %s <-- using this one.\n' % addresses[0])
-            for address in addresses[1:]:
-                sys.stdout.write('  %s\n' % address)
-
-        return addresses[0]
-
-    def scan(self, url):
-        """Looks for load balanced servers.
+        @param address: Target IP address to scan.
+        @type address: C{str}
 
         @param url: URL to scan.
-        @type url: str
+        @type url: C{str}
+
         @return: list of clues found and number of replies received from the
         target.
-        @rtype: tuple
+        @rtype: C{tuple}
         """
         remaining = lambda end: int(end - time.time())
         hasexpired = lambda end: (remaining(end) <= 0)
 
         state = self.__state
-        state.address = self._getAddress(url)
+        state.address = address
 
         # Start with the scanning loop
         state.round = 0
@@ -189,7 +178,7 @@ class Scanner:
         if state.verbose:
             print
 
-        return state.address, state.clues, state.replies
+        return state.clues, state.replies
 
 
 # vim: ts=4 sw=4 et
