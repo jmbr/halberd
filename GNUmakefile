@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.12 2004/03/07 10:29:14 rwx Exp $
+# $Id: GNUmakefile,v 1.13 2004/03/26 00:46:49 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -27,6 +27,7 @@ docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
 testdir := $(srcdir)/tests
 tmpdir := $(srcdir)/tmp
+sandboxdir := $(srcdir)/sandbox
 
 
 PYTHON := /usr/local/bin/python
@@ -51,12 +52,13 @@ SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES := $(wildcard $(testdir)/*.py)
 ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
-ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
+ALL_DIRS := $(sort $(dir $(ALL_SOURCES)) $(sandboxdir)/)
 
 
 remove = $(RM) $(addsuffix $(strip $(1)), $(2))
-rest2html = $(PYTHON) -c "from docutils.core import publish_cmdline; \
-						publish_cmdline(writer_name='html')"
+rest2html = $(PYTHON) -c \
+	"from docutils.core import publish_cmdline; \
+	publish_cmdline(writer_name='html')"
 
 
 clean:

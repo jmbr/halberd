@@ -35,7 +35,7 @@ Supported platforms
 -------------------
 
 halberd should work in every machine providing the dependencies specified in
-the Installation section. It has been successfully built on:
+the Installation section. It has been successfully built and tested on:
 
 * Windows 2000 Server
 * Mac OS X 10.2
@@ -60,4 +60,4 @@ And follow with::
     $ halberd.py -v www.macromedia.com
 
 
-:Version: $Id: README,v 1.5 2004/03/07 10:27:51 rwx Exp $
+:Version: $Id: README,v 1.6 2004/03/26 00:46:49 rwx Exp $
