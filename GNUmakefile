@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.14 2004/03/29 09:56:04 rwx Exp $
+# $Id: GNUmakefile,v 1.15 2004/04/03 15:05:54 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -99,7 +99,7 @@ distclean: clobber
 doc: $(apidocdir)/index.html \
 	$(docdir)/default.css $(docdir)/overview.html
 
-$(apidocdir)/index.html: $(SOURCES)
+$(apidocdir)/index.html: $(MODULES)
 	$(EPYDOC) -o $(apidocdir) $^
 
 $(docdir)/overview.html: $(docdir)/overview.txt
