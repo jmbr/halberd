@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.11 2004/02/11 10:19:20 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.12 2004/02/13 01:16:55 rwx Exp $'
 
 
 import sys
@@ -33,11 +33,11 @@ import threading
 #except ImportError:
 #    import dummy_threading as threading
 
-import hlbd.cluelib as cluelib
+import hlbd.clues.Clue as Clue
 import hlbd.clientlib as clientlib
 
 
-__all__ = ['scan', 'rpcscan']
+__all__ = ['scan']
 
 
 class State:
@@ -100,7 +100,10 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
         """
         state.shouldstop = True
 
-    prev = signal.signal(signal.SIGINT, interrupt)
+    try:    # XXX
+        prev = signal.signal(signal.SIGINT, interrupt) 
+    except:
+        pass
 
     # This is a very POSIXish idiom but I don't think there's a need for
     # anything fancier.
@@ -140,7 +143,11 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
     if verbose:
         sys.stdout.write('\n')
 
-    signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
+    # XXX
+    try:
+        signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
+    except:
+        pass
     return state.clues
 
 
@@ -150,7 +157,7 @@ def insert_clue(clues, reply):
     """
     timestamp, headers = reply
 
-    clue = cluelib.Clue()
+    clue = Clue.Clue()
     clue.setTimestamp(timestamp)
     clue.parse(headers)
 

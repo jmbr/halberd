@@ -20,12 +20,12 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.6 2004/02/12 11:15:39 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.7 2004/02/13 01:16:55 rwx Exp $'
 
 
 import sys
 
-import hlbd.cluelib as cluelib
+import hlbd.clues.analysis as analysis
 
 
 def report(address, clues, outfile=''):
@@ -44,7 +44,7 @@ def report(address, clues, outfile=''):
 
     hits = sum([clue.getCount() for clue in clues])
 
-    diff_fields = [field for percent, field in cluelib.diff_fields(clues)]
+    diff_fields = [field for percent, field in analysis.diff_fields(clues)]
 
     for num, clue in enumerate(clues):
         info = clue.info
