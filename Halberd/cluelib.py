@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.12 2004/02/07 13:29:56 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.13 2004/02/07 17:01:09 rwx Exp $'
 
 
 import time
@@ -98,7 +98,7 @@ class Clue:
         @type headers: str
         """
         def make_list(hdrs):
-            return [tuple(line.split(':', 1)) for line in hdrs.splitlines() \
+            return [tuple(line.split(': ', 1)) for line in hdrs.splitlines() \
                                               if line != '']
 
         self.headers = make_list(headers)
@@ -265,36 +265,32 @@ def find_clusters(clues):
     def iscluster(clues, num):
         """Determines if a list of clues form a cluster of the specified size.
         """
-        assert len(clues) == num, \
-               'len(clues) == %d / num == %d' % (len(clues), num)
+        assert len(clues) == num
 
         if abs(clues[0].diff - clues[-1].diff) <= num:
             return True
         return False
 
+    def find_cluster(clues, num):
+        if len(clues) >= num:
+            if iscluster(clues[:num], num):
+                return tuple(clues[:num])
+        return ()
+
+    invrange = lambda num: [(num - x) for x in range(num)]
+
     start = 0
     while True:
         clues = clues[start:]
-
-        if len(clues) >= 3:
-            if iscluster(clues[:3], 3):
-                yield tuple(clues[:3])
-                start = 3
-                continue
-
-        if len(clues) >= 2:
-            if iscluster(clues[:2], 2):
-                yield tuple(clues[:2])
-                start = 2
-                continue
-
-        if len(clues) >= 1:
-            yield((clues[0],))
-            start = 1
-            continue
-
-        if len(clues) == 0:
+        if not clues:
             break
+
+        for i in invrange(3):
+            cluster = find_cluster(clues, i)
+            if cluster:
+                yield cluster
+                start = i
+                break
 
 
 def merge_cluster(group):
