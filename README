@@ -1,11 +1,11 @@
 halberd -- HTTP load balancer detector
 ======================================
 
-"The halberd, a weapon based on the spear, was developed by combining the
-merits of the spear and dagger-axe in the Yin and Shang period (1600-1100
-B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
-more powerful weapon than the dagger-axe and spear."
-Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
+    The halberd, a weapon based on the spear, was developed by combining the
+    merits of the spear and dagger-axe in the Yin and Shang period (1600-1100
+    B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
+    more powerful weapon than the dagger-axe and spear.
+    -- Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
 
 Overview
 --------
@@ -57,7 +57,7 @@ You could start by trying::
 
 And follow with::
 
-    $ halberd.py -v www.macromedia.com
+    $ halberd.py www.macromedia.com
 
 
-:Version: $Id: README,v 1.7 2004/04/03 15:06:14 rwx Exp $
+:Version: $Id: README,v 1.8 2004/04/11 11:34:10 rwx Exp $
