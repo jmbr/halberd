@@ -26,7 +26,7 @@ balanced devices.
 @type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.5 2004/01/29 13:10:59 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.6 2004/01/31 13:59:21 rwx Exp $'
 
 
 import time
@@ -59,24 +59,20 @@ class Clue:
         # Number of times this clue has been found.
         self.__count = 1
 
-        # Server status line.
-        self._server = ''
+        # Generic server info (sometimes useful for distinguising servers).
+        self.info = {
+            'server': None,
+            'contloc': None,
+            'cookie': None,
+            'date': None,
+            'digest': None
+        }
 
-        # Content-Location field. In case the server is misconfigured and
-        # advertises IP addresses those will be shown here.
-        self._contloc = ''
-
-        # Cookie. Sometimes it helps pointing out real servers.
-        self._cookie = ''
-
-        # Copy of the returned Date field (kept for convenience).
-        self._date = ''
         # Local time and remote time (in seconds since the Epoch)
         self._local, self._remote = 0, 0
 
         # Fingerprint for the reply.
         self.__fp = hashfn('')
-        self._digest = ''
         # We store the headers we're interested in digesting in a string and
         # calculate its hash _after_ the header processing takes place. This
         # way we incur in less computational overhead.
@@ -101,7 +97,7 @@ class Clue:
 
         hdrfp = StringIO(headers)
         hdrs = rfc822.Message(hdrfp)
-        hdrs.readheaders()
+        #hdrs.readheaders()
         hdrfp.close()
         self.headers = hdrs.items()         # Save a copy of the headers.
 
@@ -123,8 +119,8 @@ class Clue:
         non-alphanumeric characters and also numeric ones placed at the
         beginning of the string.
 
-        @param s: String to be normalized.
-        @type s: C{str}
+        @param name: String to be normalized.
+        @type name: C{str}
 
         @return: Normalized string.
         @rtype: C{str}
@@ -142,7 +138,7 @@ class Clue:
         """
         self.__fp.update(self.__tmphdrs)
         self.__tmphdrs = ''
-        self._digest = self.__fp.hexdigest()
+        self.info['digest'] = self.__fp.hexdigest()
         self.__fp = None
 
 
@@ -196,7 +192,7 @@ class Clue:
 
     def __repr__(self):
         return "<Clue diff=%d found=%d digest='%s'>" \
-                % (self.calcDiff(), self.__count, self._digest)
+                % (self.calcDiff(), self.__count, self.info['digest'])
 
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
@@ -204,21 +200,21 @@ class Clue:
 
     def _get_server(self, field):
         """Server:"""
-        self._server = field
+        self.info['server'] = field
 
     def _get_date(self, field):
         """Date:"""
-        self._date = field
+        self.info['date'] = field
         self._remote = time.mktime(rfc822.parsedate(field))
 
     def _get_content_location(self, field):
         """Content-location:"""
-        self._contloc = field
+        self.info['contloc'] = field
         self.__tmphdrs += field     # Make sure this gets hashed too.
 
     def _get_set_cookie(self, field):
         """Set-cookie:"""
-        self._cookie = field
+        self.info['cookie'] = field
 
     def _get_expires(self, field):
         """Expires:"""
@@ -229,53 +225,85 @@ class Clue:
         pass
 
 
-class Analyzer:
-    """Makes sens of the data gathered during the scanning stage.
+def analyze(clues):
+    """Draw conclusions from the clues obtained during the scanning phase.
     """
+    def makedict(clues):
+        def append(cluedict, clue):
+            digest = clue.info['digest']
+            try:
+                l = cluedict[digest]
+            except KeyError:
+                l = []
+                cluedict[digest] = l
+            l.append(clue)
+            
+        cluedict = {}
+        # Put all the clues into the dictionary.
+        map(append, [cluedict] * len(clues), clues)
 
-    def __init__(self, pending):
-        """Initializes the analyzer object
+        return cluedict
+
+    def sort(clues):
+        """Perform the schwartzian transform to sort clues by time diff.
         """
-        assert pending is not None
-        self.__pending = pending
-        self.__analyzed = []
-        self.__sortcmp = CmpOperator([cmp_digest, cmp_diff])
+        # We proceed through the decorate-sort-undecorate steps.
+        decorate = lambda c: (c.calcDiff(), c)
+        decorated = map(decorate, clues)
+        
+        decorated.sort()
 
-    def analyze(self):
-        """Processes the list of pending clues checking for duplicated entries.
+        return [diff_clue[1] for diff_clue in decorated]
 
-        Duplicated entries (differing in one second and equal in everything
-        else) are moved from the list of pending clues to the list of analyzed
-        ones.
-        """
-        self.__pending.sort(self.__sortcmp.compare)
+    def groups(clues):
+        # XXX refactor
+        idx = 0
+        groups = []
 
-        while self.__pending:
-            cur = self.__pending[0]
-            if len(self.__pending) >= 2:
-                next = self.__pending[1]
-                if cur in next:
-                    self._consolidateClues(cur, next)
-                    continue
+        cluesleft = lambda clues, idx: (len(clues) - idx)
+        while cluesleft(clues, idx):
+            step = 1
+            if cluesleft(clues, idx) >= 3:
+                avg = sum([clue.calcDiff() for clue in clues[idx:idx + 3]]) / 3
+                if (avg == clues[idx + 1].calcDiff()):
+                    groups.append(tuple(clues[idx:idx + 3]))
+                    step = 3
+            if cluesleft(clues, idx) == 2:
+                if abs(clues[idx].calcDiff() - clues[idx + 1].calcDiff()) <= 1:
+                    groups.append((clues[idx], clues[idx + 1]))
+                    step = 2
+            if cluesleft(clues, idx) == 1:
+                groups.append((clues[idx],))
 
-            self._moveClue(cur)
+            idx += step
 
-        return self.__analyzed
+        return groups
 
-    def _consolidateClues(self, one, two):
-        """Converts two or three clues into one.
+    def merge(group):
+        # XXX refactor
+        assert len(group) <= 3
 
-        Note that the first one is the one which survives.
-        """
-        one.incCount(two.getCount())
-        self._moveClue(one)
-        self.__pending.remove(two)
+        if len(group) == 3:
+            group[1].incCount(group[0].getCount())
+            group[1].incCount(group[2].getCount())
+            return group[1]
+        elif len(group) == 2:
+            group[0].incCount(group[1].getCount())
+            return group[0]
+        else:
+            return group[0]
 
-    def _moveClue(self, clue):
-        """Moves a clue from pending to analyzed.
-        """
-        self.__analyzed.append(clue)
-        self.__pending.remove(clue)
+    results = []
+    cluedict = makedict(clues)
+
+    for key in cluedict.keys():
+        cluedict[key] = sort(cluedict[key])
+
+    for key in cluedict.keys():
+        for group in groups(cluedict[key]):
+            results.append(merge(group))
+
+    return results
 
 
 # =====================
@@ -309,7 +337,7 @@ def cmp_server(one, other):
     @return: 0 if both clues have the same server, a non-zero value otherwise.
     @rtype: C{int}
     """
-    if one._server != other._server:
+    if one.info['server'] != other.info['server']:
         return -1
     return 0
 
@@ -319,9 +347,9 @@ def cmp_digest(one, other):
     @return: 0 if both clues have the same digest, a non-zero value otherwise.
     @rtype: C{int}
     """
-    if one._digest < other._digest:
+    if one.info['digest'] < other.info['digest']:
         return -1
-    elif one._digest > other._digest:
+    elif one.info['digest'] > other.info['digest']:
         return 1
     return 0
 
@@ -338,7 +366,7 @@ def cmp_timeskew(one, other):
 def cmp_contloc(one, other):
     """Compares Content-location fields.
     """
-    if one._contloc != other._contloc:
+    if one.info['contloc'] != other.info['contloc']:
         return -1
     return 0
 
