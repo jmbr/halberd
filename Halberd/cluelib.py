@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.17 2004/02/11 11:17:02 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.18 2004/02/12 11:19:02 rwx Exp $'
 
 
 import time
@@ -239,6 +239,10 @@ class Clue:
         """ETag:"""
         pass
 
+    def _get_cacheexpires(self, field):
+        """Cache-expires:"""
+        pass
+
 
 # ========================
 # Clue analysis functions.
@@ -274,8 +278,6 @@ def diff_fields(clues):
                     scores.setdefault(name, 0)
                     scores[name] += 1
 
-    # XXX total should be either: a) passed as a param or b) not computed at
-    # all (the caller would be responsible of computing the percentage.
     total = sum(scores.values())
     result = [(count * 100 / total, field) for field, count in scores.items()]
     result.sort()
@@ -369,20 +371,18 @@ def classify(clues):
     return classified
 
 def get_deltas(diffs):
-    """Generator function which yields the differences between the eleements of
+    """Generator function which yields the differences between the elements of
     a list of integers.
     """
     prev = None
     for diff in diffs:
         if prev is None:
             prev = diff
-            yield 0
-            continue
-
-        delta = diff - prev
-        yield delta
-
-        prev = diff
+            yield 0     # Maybe it should return None instead.
+        else:
+            delta = diff - prev
+            prev = diff
+            yield delta
 
 def get_slices(clues, indexes):
     start, end = 0, len(clues)
@@ -391,13 +391,9 @@ def get_slices(clues, indexes):
         start = idx
     yield (start, end)
 
-def filter_proxies(clues):
+def filter_proxies(clues, maxdelta=3):
     """Detect and merge clues pointing to a proxy cache on the remote end.
     """
-    if __debug__:
-        getcount = lambda x: x.getCount()
-        total = sum(map(getcount, clues))
-
     results = []
 
     # Classify clues by remote time and digest.
@@ -409,17 +405,16 @@ def filter_proxies(clues):
             # Sort clues by their time diff.
             diffs, cur_clues = unzip(decor_and_sort(classified[rtime][digest]))
 
+            # We find the indexes of those clues which differ from the rest in
+            # more than maxdelta seconds.
             indexes = [idx for idx, delta in enumerate(get_deltas(diffs)) \
-                           if delta > 3]
+                           if delta > maxdelta]
 
             for i, j in get_slices(cur_clues, indexes):
                 for clue in cur_clues[i:j]:
                     clues.remove(clue)
 
                 results.append(merge_cluster(cur_clues[i:j]))
-
-    if __debug__:
-        assert total == sum(map(getcount, results))
 
     return results
 
