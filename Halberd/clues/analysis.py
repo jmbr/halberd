@@ -17,12 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Clue analysis and miscellaneous utilities.
-
-XXX Write good documentation (with doctest)
+"""Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.2 2004/02/15 04:33:11 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.3 2004/02/15 14:03:54 rwx Exp $'
 
 
 def diff_fields(clues):
@@ -70,16 +68,33 @@ def unzip(seq):
 
     >>> unzip([('a', 1), ('b', 2), ('c', 3)])
     (('a', 'b', 'c'), (1, 2, 3))
+
+    @param seq: A sequence to unzip.
+    @type seq: C{list} or C{tuple}
+
+    @return: Unzipped sequence
+    @rtype: C{tuple}
     """
     return tuple(zip(*seq))
 
 def get_digest(clue):
     """Returns the specified clue's digest.
+
+    This function is usually passed as a parameter for L{classify} so it can
+    separate clues according to their digest (among other fields).
+
+    @return: The digest of a clue's parsed headers.
+    @rtype: C{str}
     """
     return clue.info['digest']
 
 def decorate_and_sort(clues):
-    """Decorates a list of clues and sorts it by their time diff.
+    """Sorts a list of clues by their time difference.
+
+    Decorates a sequence of clues with their time difference and sorts those
+    clues (application of the schwartzian transform).
+
+    See also L{undecorate}
 
     >>> import Clue
     >>> a, b, c = Clue.Clue(), Clue.Clue(), Clue.Clue()
@@ -87,6 +102,12 @@ def decorate_and_sort(clues):
     >>> clues = undecorate(decorate_and_sort([c, b, a]))
     >>> (clues[0] == a, clues[1] == b, clues[2] == c)
     (True, True, True)
+
+    @param clues: Sequence of clues to sort.
+    @type clues: C{list}
+
+    @return: Decorated (with time diff.) sequence of clues.
+    @rtype: C{list}
     """
     decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
@@ -94,6 +115,13 @@ def decorate_and_sort(clues):
 
 def undecorate(decorated):
     """Undecorate a list of decorated clues.
+
+    @param decorated: A decorated sequence of clues in which the clues are at
+    the last position in each element.
+    @type decorated: C{list} or C{tuple}
+
+    @return: A sequence of clues (without decoration).
+    @rtype: C{list}
     """
     return unzip(decorated)[-1]
 
@@ -102,6 +130,16 @@ def clusters(clues, step=3):
 
     A cluster is a group of at most C{step} clues which only differ in 1 seconds
     between each other.
+
+    @param clues: A sequence of clues to analyze
+    @type clues: C{list} or C{tuple}
+
+    @param step: Maximum difference between the time differences of the
+    cluster's clues.
+    @type step: C{int}
+
+    @return: A sequence with merged clusters.
+    @rtype: C{tuple}
     """
     def iscluster(clues, num):
         """Determines if a list of clues form a cluster of the specified size.
@@ -139,13 +177,12 @@ def clusters(clues, step=3):
 def merge(clues):
     """Merges a sequence of clues into one.
 
-    The first clue from the sequence will be the one aggregating the count values
-    from the rest.
+    The first clue of the sequence will be store the total count of the clues.
+    
+    Note that each L{Clue} has a starting count of 1
 
     >>> from Clue import Clue
     >>> a, b, c = Clue(), Clue(), Clue()
-
-    We are aware each Clue has a starting count of 1
     >>> sum([x.getCount() for x in [a, b, c]])
     3
     >>> a.incCount(5), b.incCount(11), c.incCount(23)
@@ -155,6 +192,12 @@ def merge(clues):
     42
     >>> merged == a
     True
+
+    @param clues: A sequence containing all the clues to merge into one.
+    @type clues: C{list} or C{tuple}
+
+    @return: The result of merging all the passed clues into one.
+    @rtype: L{Clue}
     """
     for clue in clues[1:]:
         clues[0].incCount(clue.getCount())
@@ -164,7 +207,47 @@ def classify(seq, *classifiers):
     """Classify a sequence according to one or several criteria.
 
     We store each item into a nested dictionary using the classifiers as key
-    generators.
+    generators (all of them must be callable objects).
+
+    In the following example we classify a list of clues according to their
+    digest and their time difference.
+
+    >>> from Clue import Clue
+    >>> a, b, c = Clue(), Clue(), Clue()
+    >>> a.diff, b.diff, c.diff = 1, 2, 2
+    >>> a.info['digest'] = 'x'
+    >>> b.info['digest'] = c.info['digest'] = 'y'
+    >>> get_diff = lambda x: x.diff
+    >>> classified = classify([a, b, c], get_digest, get_diff)
+    >>> digests = classified.keys()
+    >>> digests.sort()  # We sort these so doctest won't fail.
+    >>> for digest in digests:
+    ...     print digest
+    ...     for diff in classified[digest].keys():
+    ...         print ' ', diff
+    ...         for clue in classified[digest][diff]:
+    ...             if clue is a: print '    a'
+    ...             elif clue is b: print '    b'
+    ...             elif clue is c: print '    c'
+    ...
+    x
+      1
+        a
+    y
+      2
+        b
+        c
+
+    @param seq: A sequence to classify.
+    @type seq: C{list} or C{tuple}
+
+    @param classifiers: A sequence of callables which return specific fields of
+    the items contained in L{seq}
+    @type classifiers: C{list} or C{tuple}
+
+    @return: A nested dictionary in which the keys are the fields obtained by
+    applying the classifiers to the items in the specified sequence.
+    @rtype: C{dict}
     """
     classified = {}
 
@@ -182,6 +265,17 @@ def classify(seq, *classifiers):
 
 def sections(classified, sects=None):
     """Returns sections (and their items) from a nested dict.
+
+    See also: L{classify}
+
+    @param classified: Nested dictionary.
+    @type classified: C{dict}
+
+    @param sects: List of results. It should not be specified by the user.
+    @type sects: C{list}
+
+    @return: A list of lists in where each item is a subsection of a nested dictionary.
+    @rtype: C{list}
     """
     if sects is None:
         sects = []
@@ -195,7 +289,7 @@ def sections(classified, sects=None):
     return sects
 
 def deltas(diffs):
-    """Returns the differences between the elements of a sequence of integers.
+    """Computes the differences between the elements of a sequence of integers.
 
     >>> list(deltas([-1, 0, 1]))
     [None, 1, 1]
@@ -203,6 +297,14 @@ def deltas(diffs):
     [None, 0, 2, -1, 1, 1, 2, -4]
     >>> list(deltas(range(10)))
     [None, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+    @param diffs: A sequence of integers.
+    @type diffs: C{list} or C{tuple}
+
+    @return: A generator which yields the difference between the consecutive
+    elements of L{diffs}. For the first element it yields None as there's no
+    previous item available to compute the delta.
+    @rtype: C{generator}
     """
     prev = None
     for diff in diffs:
@@ -217,22 +319,24 @@ def deltas(diffs):
 def slices(seq, indexes):
     """Returns slices of a given sequence separated by the specified indexes.
 
+    If we wanted to get the slices necessary to split range(20) in
+    sub-sequences of 5 items each we'd do:
+
+    >>> seq = range(20) 
+    >>> indexes = (5, 10, 15)
+    >>> for sl in slices(seq, indexes):
+    ...     print seq[sl]
+    [0, 1, 2, 3, 4]
+    [5, 6, 7, 8, 9]
+    [10, 11, 12, 13, 14]
+    [15, 16, 17, 18, 19]
+
     @param seq: Sequence to split in slices.
     @type seq: Any (mutable) sequence which provides de __len__ method.
 
     @return: A sequence of C{slice} objects suitable for splitting the given
     sequence.
     @rtype: C{tuple}
-
-    For example. We want to get the slices necessary to split range(20) in
-    sub-sequences of 5 items each:
-    >>> seq, points = range(20), range(5, 20, 5)
-    >>> for sl in slices(seq, points):
-    ...     print seq[sl]
-    [0, 1, 2, 3, 4]
-    [5, 6, 7, 8, 9]
-    [10, 11, 12, 13, 14]
-    [15, 16, 17, 18, 19]
     """
     start, end = 0, len(seq)
     for idx in indexes:
@@ -242,6 +346,17 @@ def slices(seq, indexes):
 
 def filter_proxies(clues, maxdelta=3):
     """Detect and merge clues pointing to a proxy cache on the remote end.
+
+    @param clues: Sequence of clues to analyze
+    @type clues: C{list}
+
+    @param maxdelta: Maximum difference allowed between a clue's time
+    difference and the previous one.
+    @type maxdelta: C{int}
+
+    @return: Sequence of clues where all irrelevant clues pointing out to proxy
+    caches have been filtered out.
+    @rtype: C{list}
     """
     results = []
 
@@ -251,7 +366,6 @@ def filter_proxies(clues, maxdelta=3):
 
     subsections = sections(classified)
     for section in subsections:
-        # Sort clues by their time diff.
         diffs, cur_clues = unzip(decorate_and_sort(section))
 
         # We find the indexes of those clues which differ from the rest in
@@ -273,6 +387,13 @@ def uniq(clues):
     This is needed when merging clues coming from different sources. Clues with
     the same time diff and digest are not discarded, they are merged into one
     clue with the aggregated number of hits.
+
+    @param clues: A sequence containing the clues to analyze.
+    @type clues: C{list}
+
+    @return: Filtered sequence of clues where no clue has the same digest and
+    time difference.
+    @rtype: C{list}
     """
     results = []
 

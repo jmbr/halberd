@@ -17,7 +17,15 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-__revision__ = '$Id: Clue.py,v 1.1 2004/02/13 01:17:43 rwx Exp $'
+"""Clue generation module.
+
+Clues are pieces of information obtained from the responses sent by a
+webserver.
+Their importance comes from the fact that they're the datastructure we use to
+detect real servers behind HTTP load balancer devices.
+"""
+
+__revision__ = '$Id: Clue.py,v 1.2 2004/02/15 14:03:54 rwx Exp $'
 
 
 import time
@@ -29,36 +37,15 @@ except ImportError:
     from md5 import new as hashfn
 
 
-def normalize(name):
-    """Normalize string.
-
-    This method takes a string coming out of mime-fields and transforms it
-    into a valid Python identifier. That's done by removing invalid
-    non-alphanumeric characters and also numeric ones placed at the
-    beginning of the string.
-
-    @param name: String to be normalized.
-    @type name: C{str}
-
-    @return: Normalized string.
-    @rtype: C{str}
-    """
-    normal = [char for char in list(name.lower()) if char.isalnum()]
-    while normal[0].isdigit():
-        normal = normal[1:]
-    return ''.join(normal)
-
 
 class Clue:
-    """A clue is what we use to tell real servers from virtual ones.
+    """A clue is what we use to tell real servers behind a virtual IP. 
 
-    Clues are gathered during several connections to the target and they try to
-    identify clearly potential patterns in the HTTP responses.
+    Clues are gathered during several connections to the target and they allow
+    us to try to identify patterns in the HTTP responses. Those patterns could
+    lead us to be able to find out which real servers are behind a VIP
     """
     def __init__(self):
-        """Initializes the clue object.
-        """
-
         # Number of times this clue has been found.
         self.__count = 1
 
@@ -83,6 +70,7 @@ class Clue:
 
         # Original MIME headers. They're useful during analysis and reporting.
         self.headers = None
+
 
     def parse(self, headers):
         """Extracts all relevant information from the MIME headers replied by
@@ -109,13 +97,34 @@ class Clue:
         # there is none we simply digest the info it provides.
         for name, value in self.headers:
             try:
-                handlerfn = getattr(self, '_get_' + normalize(name))
+                handlerfn = getattr(self, '_get_' + Clue.normalize(name))
                 handlerfn(value)
             except AttributeError:
                 self.__tmphdrs += '%s: %s ' % (name, value)
 
         self._updateDigest()
         self._calcDiff()
+
+    def normalize(name):
+        """Normalize string.
+
+        This method takes a string coming out of mime-fields and transforms it
+        into a valid Python identifier. That's done by removing invalid
+        non-alphanumeric characters and also numeric ones placed at the
+        beginning of the string.
+
+        @param name: String to be normalized.
+        @type name: C{str}
+
+        @return: Normalized string.
+        @rtype: C{str}
+        """
+        normal = [char for char in list(name.lower()) if char.isalnum()]
+        while normal[0].isdigit():
+            normal = normal[1:]
+        return ''.join(normal)
+
+    normalize = staticmethod(normalize)
 
     def _updateDigest(self):
         """Updates header fingerprint.
@@ -132,7 +141,7 @@ class Clue:
         """
         self.diff = int(self._local - self._remote)
 
-
+
     def incCount(self, num=1):
         """Increase the times this clue has been found.
 
@@ -171,13 +180,6 @@ class Clue:
         if self.info['digest'] != other.info['digest']:
             return False
 
-# WARNING: Re-enabling this might break the analysis functions.
-#        local = (self._local, other._local)
-#        remote = (self._remote, other._remote)
-#        if ((local[0] < local[1]) and (remote[0] > remote[1]) \
-#           or (local[0] > local[1]) and (remote[0] < remote[1])):
-#            return False
-
         return True
 
     def __ne__(self, other):
@@ -189,7 +191,7 @@ class Clue:
         return "<Clue at %x diff=%d found=%d digest='%s'>" \
                 % (id(self), self.diff, self.__count,
                    self.info['digest'][:4] + '...')
-
+
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
     # ==================================================================

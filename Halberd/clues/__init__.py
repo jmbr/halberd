@@ -19,14 +19,11 @@
 
 """Clue management module
 
-This module implements functionality related to creation and and analysis of
-pieces of information returned by a webserver which may help in locating load
-balanced devices.
-
-XXX Explain all about analysis (clusters, filter_proxies, etc).
+This module implements functionality related to creation, analysis and storage
+of clues.
 """
 
-__revision__ = '$Id: __init__.py,v 1.1 2004/02/13 01:17:43 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.2 2004/02/15 14:03:54 rwx Exp $'
 
 __all__ = ['Clue', 'analysis']
 
