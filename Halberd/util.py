@@ -17,22 +17,30 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""http load balancer detector module (hlbd)
+"""Miscellaneous functions.
+
+@var table: Translation table for normalizing strings.
+@type table: C{str}
 """
 
-__revision__ = '$Id: __init__.py,v 1.3 2004/03/03 15:20:03 rwx Exp $'
+__revision__ = '$Id: util.py,v 1.1 2004/03/03 15:20:03 rwx Exp $'
 
-__all__ = [
-    'version',
-    'scanlib',
-    'clientlib',
-    'clues',
-    'reportlib',
-    'rpclib',
-    'proxylib',
-    'conflib',
-    'util',
-]
+
+table = '________________________________________________0123456789_______ABCDEFGHIJKLMNOPQRSTUVWXYZ______abcdefghijklmnopqrstuvwxyz_____________________________________________________________________________________________________________________________________'
+
+
+def _gen_table():
+    """Generate translation table.
+    """
+    tab = ''
+    for c in map(chr, xrange(256)):
+        tab += (c.isalnum() and c) or '_'
+
+    return tab
+
+
+if __name__ == '__main__':
+    print "table = '%s'" % _gen_table()
 
 
 # vim: ts=4 sw=4 et
