@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.3 2004/01/31 14:03:46 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.4 2004/02/01 03:48:39 rwx Exp $'
 
 
 import sys
@@ -41,6 +41,7 @@ class State:
         self.verbose = verbose
 
         self.round = 0
+        self.missed = 0
         self.replies = 0
         self.errorfound = False
         self.cluesperreply = 0
@@ -63,8 +64,9 @@ class State:
     def _show(self, remaining):
         """Displays progress information.
         """
-        sys.stdout.write('\r%3d seconds left, %3d clue(s) so far (out of ' \
-                '%4d replies)' % (remaining, len(self.clues), self.replies))
+        sys.stdout.write('\r%3d seconds left, %3d clue(s) so far, ' \
+                '%3d valid replies and %3d missed)' \
+                % (remaining, len(self.clues), self.replies, self.missed))
         sys.stdout.flush()
 
 
@@ -127,9 +129,13 @@ class Scanner:
         while 1:
             client = clientlib.HTTPClient(3)
 
-            reply = client.getHeaders(address, url)
+            try:
+                reply = client.getHeaders(address, url)
+            except clientlib.ConnectionRefused:
+                sys.stderr.write('\r*** connection refused. aborting. ***\n')
+                break
             if not reply:
-                sys.stderr.write('*missed*\n')
+                state.missed += 1
                 continue
 
             timestamp, headers = reply
