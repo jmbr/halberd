@@ -19,9 +19,13 @@
 
 
 """Command line interface and main driving module.
+
+@var default_scantime: Time to spend probing the target expressed in seconds.
+@var default_parallelism: Number of parallel threads to launch for the scan.
+@var default_conf_file: Name of the default configuration file for halberd.
 """
 
-__revision__ = '$Id: halberd,v 1.9 2004/02/11 10:19:55 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.10 2004/02/12 11:19:51 rwx Exp $'
 
 
 import sys
@@ -30,10 +34,11 @@ import hlbd.version as version
 import hlbd.cluelib as cluelib
 
 
-# Time to spend probing the target expressed in seconds.
-_DEFAULT_SCANTIME = 30
+default_scantime = 30
 
-_DEFAULT_PARALLELISM = 8
+default_parallelism = 4
+
+default_conf_file = 'halberd.cfg'
 
 
 class Halberd:
@@ -119,7 +124,7 @@ class Halberd:
         cluelib.save_clues(filename, self.clues)
 
 
-    def setScantime(self, scantime=_DEFAULT_SCANTIME):
+    def setScantime(self, scantime=default_scantime):
         self.scantime = scantime
         return self
 
@@ -158,37 +163,23 @@ class Halberd:
             clues = rpclib.client(server, self.addr, self.url, self.scantime)
             self.clues.extend(clues)
 
-    def readConf(self, cfgfile='halberd.cfg'):
+    def readConf(self, cfgfile):
         """Read configuration file.
         """
-        import ConfigParser
+        import hlbd.conflib as conflib
 
-        config = ConfigParser.RawConfigParser()
-        cfgfp = open(cfgfile)
-        try:
-            config.readfp(cfgfp)
-        except:
-            return
-
-        # ...
+        reader = conflib.ConfReader()
 
         try:
-            addr = config.get('server', 'address')
-            port = int(config.get('server', 'port'))
-            self.serv_addr = (addr, port)
-        except ConfigParser.NoOptionError, msg:
-            print msg
+            reader.open(cfgfile)
+        except (IOError, conflib.InvalidConfFile):
+            self.fatal('Couldn\'t open configuration file %s\n' % cfgfile)
 
-        try:
-            value = config.get('client', 'servers')
-        except ConfigParser.NoOptionError, msg:
-            print msg
-        try:
-            value = config.get('client', 'servers')
-        except ConfigParser.NoOptionError, msg:
-            print msg
+        options = reader.parse()
+        self.serv_addr = options.rpc_serv_addr
+        self.rpc_servers = options.rpc_servers
 
-        self.rpc_servers = filter(bool, value.split('\n'))
+        reader.close()
 
 
 def make_parser():
@@ -201,7 +192,7 @@ def make_parser():
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend analyzing the target',
-                      metavar='NUM', default=_DEFAULT_SCANTIME)
+                      metavar='NUM', default=default_scantime)
 
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='explain what is being done', default=False)
@@ -228,7 +219,11 @@ def make_parser():
 
     parser.add_option('-p', '--parallelism', action='store', type='int',
                       dest='parallelism', help='specifies the degree of parallelism',
-                      metavar='NUM', default=_DEFAULT_PARALLELISM)
+                      metavar='NUM', default=default_parallelism)
+
+    parser.add_option('-f', '--config', action='store', dest='confname',
+                      help='use configuration file', metavar='FILE',
+                      default=default_conf_file)
 
     return parser
 
@@ -244,7 +239,7 @@ def main(argv):
 
     halberd.info('%s\nhttp load balancer detector\n\n' % version.version.v_gnu)
 
-    halberd.readConf()
+    halberd.readConf(opts.confname)
 
     if opts.cluefile:
         # Load from file
