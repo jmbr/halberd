@@ -30,7 +30,7 @@ target in parallel.
 @var default_rpc_port: Default TCP port to listen when acting as an RPC server.
 """
 
-__revision__ = '$Id: conflib.py,v 1.1 2004/02/12 11:20:11 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.2 2004/02/13 01:27:36 rwx Exp $'
 
 
 import os
@@ -132,28 +132,6 @@ class ConfReader:
 
     def __del__(self):
         self.close()
-
-
-if __name__ == '__main__':
-    confreader = ConfReader()
-    try:
-        confreader.open('halbert.cfg')
-    except IOError:
-        pass
-
-    try:
-        confreader.open('/bin/bash')
-    except InvalidConfFile:
-        pass
-
-    confreader.open('halberd.cfg')
-
-    opts = confreader.parse()
-    print opts.proxy_serv_addr
-    print opts.rpc_serv_addr
-    print opts.rpc_servers
-    
-    confreader.close()
 
 
 # vim: ts=4 sw=4 et
