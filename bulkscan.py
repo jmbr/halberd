@@ -21,18 +21,21 @@
 """Massive load balancer scanner.
 """
 
-__revision__ = '$Id: bulkscan.py,v 1.4 2004/03/02 00:54:02 rwx Exp $'
+__revision__ = '$Id: bulkscan.py,v 1.5 2004/03/04 11:55:57 rwx Exp $'
 
 
 import os
 import sys
+import shutil
 import pickle
 
 import halberd
+import hlbd.util
+import hlbd.clues.file
 
 
 def error(msg):
-    sys.stderr.write(msg)
+    sys.stderr.write('%s\n' % str(msg))
     sys.stderr.flush()
     sys.exit(-1)
 
@@ -46,26 +49,38 @@ def targets(urlfile):
 
         hostname = halberd.hostname(url)
         if not hostname:
-            sys.stderr.write('*** unable to extract hostname from %s' \
+            sys.stderr.write('*** unable to extract hostname from %s\n' \
                              % hostname)
             continue
 
         for addr in halberd.addresses(hostname):
             yield (url, addr)
 
+def make_dir(dest):
+    try:
+        st = os.stat(dest)
+    except OSError:
+        try:
+            os.mkdir(dest)
+        except OSError, msg:
+            error(msg)
+    else:
+        if not shutil.stat.S_ISDIR(st.st_mode):
+            error('%s already exist and is not a directory' % dest)
+
 def main():
     if len(sys.argv) < 3:
-        error('usage: %s <url-file> <dest-dir>\n' % sys.argv[0])
-
-    print 'reading urls from', sys.argv[1]
+        error('usage: %s <url-file> <dest-dir>' % sys.argv[0])
 
     folder = sys.argv[2]
+
+    make_dir(folder)
 
     urlfile = ''
     try:
         urlfile = open(sys.argv[1], 'r')
     except IOError, msg:
-        error('open: %s\n' % msg)
+        error('open: %s' % msg)
             
     for target in targets(urlfile):
         url, addr = target
@@ -80,9 +95,14 @@ def main():
 
         h.scan()
 
-        f = open(os.path.join(folder, addr), 'wb')
-        pickle.dump((url, h.clues), f)
-        f.close()
+        urldir = url.translate(hlbd.util.table)
+        make_dir(os.path.join(folder, urldir))
+
+        clue_file = os.path.join(folder, urldir, addr)
+        try:
+            hlbd.clues.file.save(clue_file, h.clues)
+        except IOError, msg:
+            error(msg)
 
 
 if __name__ == '__main__':
