@@ -19,7 +19,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.4 2004/02/07 13:27:12 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.5 2004/02/09 12:05:37 rwx Exp $'
 
 
 import sys
@@ -39,28 +39,29 @@ def report(address, clues, hits, outfile=''):
     """
     out = (outfile and open(outfile, 'w')) or sys.stdout
 
-    out.write('found %d possibly real server(s) at %s.\n'
+    out.write('\n[ %d ] possibly real server(s) at [ %s ].\n'
               % (len(clues), address))
+
+    import cluelib
+    fields = [field for percent, field in cluelib.diff_fields(clues)]
+
     for num, clue in enumerate(clues):
         info = clue.info
-        out.write('\nserver %d: %s\n' % (num, info['server']))
-        out.write('  received %2d hits' % clue.getCount())
+        different = [(field, value) for field, value in clue.headers \
+                                    if field in fields]
+        out.write('\n')
+        out.write('server [ %d ]\t\t[ %s ]\n' % (num, info['server'].lstrip()))
+        out.write('successful requests\t[ %2d ]\n' % clue.getCount())
         if hits:
-            out.write(' (%.2f%% of the traffic)\n' \
+            out.write('traffic\t\t\t[ %.2f%% ]\n' \
                       % (clue.getCount() * 100 / float(hits)))
-        else:
-            out.write('\n')
-
-        out.write('  time information:\n')
-        out.write('    remote clock: %s\n' % info['date'])
-        out.write('    difference: %d seconds\n' % clue.diff)
+        out.write('difference\t\t[ %d ]\n' % clue.diff)
         if info['contloc']:
-            out.write('  content-location: %s\n' % info['contloc'])
-        if info['cookie']:
-            out.write('  cookie: %s\n' % info['cookie'])
-        out.write('  header fingerprint: %s\n' % info['digest'])
-
-        out.write('  %s\n' % clue.headers)
-
+            out.write('content-location\t[ %s ]\n' % info['contloc'].lstrip())
+        out.write('header fingerprint\t[ %s ]\n' % info['digest'])
+        if different:
+            out.write('different headers:\n')
+            for field, value in different:
+                out.write('  %s:%s\n' % (field, value))
 
 # vim: ts=4 sw=4 et
