@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.15 2004/04/03 15:11:02 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.16 2004/04/04 01:15:39 rwx Exp $'
 
 
 import copy
@@ -82,13 +82,11 @@ def ignore_changing_fields(clues, verbose=False):
 
     # First alter Clue to be able to cope with the varying fields.
     ignored = []
-    if verbose:
-        print
     for field in different:
         method = '_get_' + Clue.normalize(field)
         if not hasattr(Clue, method):
             if verbose:
-                print '+++ ignoring', field
+                print '+++ ignoring', field,
             ignored.append(method)
             setattr(Clue, method, lambda s, f: None)
 
@@ -507,7 +505,7 @@ def reanalyze(clues, analyzed, threshold, verbose=False):
         analyzed = analyze(clues)
 
         if verbose:
-            print 'done.'
+            print '...done.'
 
     return analyzed
 
