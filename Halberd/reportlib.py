@@ -20,7 +20,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.9 2004/02/20 09:35:10 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.10 2004/02/20 12:55:21 rwx Exp $'
 
 
 import sys
@@ -44,32 +44,33 @@ def report(address, clues, outfile=''):
 
     hits = analysis.hits(clues)
 
-    diff_fields = [field for percent, field in analysis.diff_fields(clues)]
+    # XXX This could be passed by the caller in order to avoid recomputation in
+    # case the clues needed a re-analysis.
+    diff_fields = analysis.diff_fields(clues)
 
     for num, clue in enumerate(clues):
         info = clue.info
-        different = [(field, value) for field, value in clue.headers \
-                                    if field in diff_fields]
 
         out.write('\n')
         out.write('server [ %d ]\t\t[ %s ]\n' % (num, info['server'].lstrip()))
 
         out.write('successful requests\t[ %2d ]\n' % clue.getCount())
-        if hits:
-            out.write('traffic\t\t\t[ %.2f%% ]\n' \
-                      % (clue.getCount() * 100 / float(hits)))
+        assert hits > 0
+        out.write('traffic\t\t\t[ %.2f%% ]\n' \
+                  % (clue.getCount() * 100 / float(hits)))
 
         out.write('difference\t\t[ %d ]\n' % clue.diff)
 
         if info['contloc']:
             out.write('content-location\t[ %s ]\n' % info['contloc'].lstrip())
 
-        if info['cookies']:
-            for cookie in info['cookies']:
-                out.write('cookie\t\t\t[ %s ]\n' % cookie.lstrip())
+        for cookie in info['cookies']:
+            out.write('cookie\t\t\t[ %s ]\n' % cookie.lstrip())
 
         out.write('header fingerprint\t[ %s ]\n' % info['digest'])
 
+        different = [(field, value) for field, value in clue.headers \
+                                    if field in diff_fields]
         if different:
             out.write('different headers:\n')
             for field, value in different:
