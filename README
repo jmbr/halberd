@@ -27,7 +27,7 @@ enabled, this is needed to scan through HTTPS.
 
 	A configuration file is stored in a directory named .halberd hanging
 from the user's home directory. Its name is halberd.cfg and it holds
-information relevant to halberd's behaviour when acting as a distributed client
+information relevant to halberd's behavior when acting as a distributed client
 or server, for SSL networking, etc. So if you're going to use some of halberd's
 more advanced features you should change the values there.
 
@@ -59,4 +59,4 @@ Getting started
     $ halberd.py -v www.macromedia.com
 
 
-$Id: README,v 1.3 2004/03/06 10:27:23 rwx Exp $
+$Id: README,v 1.4 2004/03/06 10:28:21 rwx Exp $
