@@ -20,7 +20,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.10 2004/02/25 03:52:20 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.11 2004/02/25 11:08:22 rwx Exp $'
 
 
 import copy
@@ -478,8 +478,27 @@ def analyze(clues):
     return results
 
 def reanalyze(clues, analyzed, threshold, verbose=False):
-    """
-    @param clues: Analyzed sequence of clues.
+    """Implements the second phase in clue analysis.
+
+    After initial analysis one must check that there aren't as many realservers
+    as obtained clues. If there were it could be a sign of something wrong
+    happening: each clue is different from the others due to one or more MIME
+    header fields which change unexpectedly.
+    Our mission in this phase is to identify those fields and to recompute the
+    clues ignoring the offending fields.
+
+    @param clues: Raw sequence of clues.
+    @type clues: C{list}
+
+    @param analyzed: Result from the first analysis phase.
+    @type analyzed: C{list}
+
+    @param threshold: Minimum clue-to-realserver ratio in order to trigger
+    field inspection.
+    @type threshold: C{float}
+
+    @param verbose: Display status information.
+    @type verbose: C{bool}
     """
     assert len(clues) > 0
 
