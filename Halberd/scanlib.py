@@ -19,7 +19,7 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.6 2004/02/02 07:32:08 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.7 2004/02/07 13:33:30 rwx Exp $'
 
 
 import sys
@@ -32,7 +32,7 @@ import hlbd.clientlib as clientlib
 __all__ = ["Scanner"]
 
 
-_THRESHOLD = 10
+#_THRESHOLD = 25
 
 
 class State:
@@ -42,134 +42,151 @@ class State:
         self.clues = []
         self.verbose = verbose
 
-        self.round = 0
         self.missed = 0
         self.replies = 0
+        self.ratio = 0
         self.errorfound = False
         self.cluesperreply = 0
-
-        self.address = ''
 
     def update(self, remaining):
         """Updates certain statistics while the scan is happening.
         """
-        self.round += 1
+        self._show(remaining)
 
-        ratio = self.ratio = len(self.clues) / float(self.replies)
-        if self.replies > _THRESHOLD and ratio >= 0.7:
-            # Start automagick clue inspector...
-            import hlbd.inspectlib as inspectlib
-            print '\r*** inspector started ***' + ' ' * 60
-
-            # XXX Document and refactor heavily!
-            ignore = inspectlib.get_diff_fields(self.clues, 80)
-            print ignore
-            assert len(ignore) > 0
-
-            for field in ignore:
-                method = '_get_' + cluelib.normalize(field)
-                try:
-                    getattr(cluelib.Clue, method)
-                except AttributeError:
-                    print '*** ignoring %s field ***' % field
-                    setattr(cluelib.Clue, method, lambda s, f: None)
-                    self.clues = []
-                    self.replies = 0
-            
-
-        if self.verbose:
-            self._show(remaining)
+#        if not self.clues or not self.replies:
+#            return
+#        
+#        self.ratio = len(self.clues) / float(self.replies)
+#        if self.replies > _THRESHOLD and self.ratio >= 0.5:
+#            # Start automagick clue inspector...
+#            import hlbd.inspectlib as inspectlib
+#
+#            # XXX Document and refactor heavily!
+#            ignore = inspectlib.get_diff_fields(self.clues, 0)
+#            assert len(ignore) > 0
+#
+#            for field in ignore:
+#                method = '_get_' + cluelib.normalize(field)
+#                if not hasattr(cluelib.Clue, method):
+#                    print '\n*** inspector: ignoring "%s" field ***' % field
+#                    setattr(cluelib.Clue, method, lambda s, f: None)
+#                    self.clues = []
+#                    self.replies = 0
 
     def _show(self, remaining):
         """Displays progress information.
         """
+        if not self.verbose:
+            return
+
         sys.stdout.write('\r%3d seconds left, %3d clue(s) so far, ' \
-                '%3d valid replies and %3d missed) [%f]' \
-                % (remaining, len(self.clues), self.replies, self.missed, self.ratio))
+                '%3d valid replies and %3d missed) [%.02f]' \
+                % (remaining, len(self.clues), self.replies, self.missed,
+                   self.ratio))
         sys.stdout.flush()
 
 
-class Scanner:
-    """Load-balancer scanner.
+def insert_clue(clues, timestamp, headers):
+    """Transforms a timestamp-header pair into a clue and appends it to a list
+    if it wasn't seen before.
     """
+    clue = cluelib.Clue()
+    clue.setTimestamp(timestamp)
+    clue.parse(headers)
 
-    def __init__(self, scantime, verbose):
-        """Initializes scanner object.
+    try:
+        i = clues.index(clue)
+        clues[i].incCount()
+    except ValueError:
+        clues.append(clue)
 
-        @param scantime: Time (in seconds) to spend peforming the analysis.
-        @type scantime: C{int}
+def rpcscan(addr, url, scantime):
+    pass
 
-        @param verbose: Specifies whether progress information should be printed or
-        not.
-        @type verbose: C{bool}
-        """
-        self.__scantime = scantime
-        self.__state = State(verbose)
+def scan(addr, url, scantime, verbose=False, parallelism=1):
+    if parallelism <= 1:
+        return _scan_thr(addr, url, scantime, verbose)
 
-    def _makeClue(self, timestamp, headers):
-        """Transforms timestamp-header pairs into clues.
-        """
-        self.__state.replies += 1
+    import threading
 
-        clue = cluelib.Clue()
-        clue.setTimestamp(timestamp)
-        clue.processHdrs(headers)
-#        print clue.info['server']
+    threads = []
+    results = [[] for i in range(parallelism)]
+
+    for i in range(parallelism):
+        thread = threading.Thread(None, _scan_thr, None,
+                                  (addr, url, scantime, verbose, results[i]))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    clues = []
+    replies = 0
+
+    for result in results:
+        for partial_clues, partial_replies in result:
+            replies += partial_replies
+            for clue in partial_clues:
+                if clue not in clues:
+                    clues.append(clue)
+                else:
+                    i = clues.index(clue)
+                    clues[i].incCount(clue.getCount())
+
+    return clues, replies
+
+def _scan_thr(addr, url, scantime, verbose=False, results=None):
+    """Scans a given target looking for load balanced web servers.
+
+    @param addr: Target IP address to scan.
+    @type addr: C{str}
+
+    @param url: URL to scan.
+    @type url: C{str}
+
+    @param scantime: Time (in seconds) to spend peforming the analysis.
+    @type scantime: C{int}
+
+    @return: list of clues found and number of replies received from the
+    target.
+    @rtype: C{tuple}
+    """
+    state = State(verbose)
+
+    remaining = lambda end: int(end - time.time())
+    hasexpired = lambda end: (remaining(end) <= 0)
+
+    stop = time.time() + scantime		# Expiration time for the scan.
+    while 1:
+        if hasexpired(stop) or state.errorfound:
+            break
+
+        client = clientlib.HTTPClient()
 
         try:
-            i = self.__state.clues.index(clue)
-            self.__state.clues[i].incCount()
-        except ValueError:
-            self.__state.clues.append(clue)
+            reply = client.getHeaders(addr, url)
+        except clientlib.ConnectionRefused:
+            sys.stderr.write('\r*** connection refused. aborting. ***\n')
+            break
 
-    def scan(self, address, url):
-        """Scans for load balanced servers.
-
-        @param address: Target IP address to scan.
-        @type address: C{str}
-
-        @param url: URL to scan.
-        @type url: C{str}
-
-        @return: list of clues found and number of replies received from the
-        target.
-        @rtype: C{tuple}
-        """
-        remaining = lambda end: int(end - time.time())
-        hasexpired = lambda end: (remaining(end) <= 0)
-
-        state = self.__state
-        state.address = address
-
-        # Start with the scanning loop
-        stop = time.time() + self.__scantime		# Expiration time for the scan.
-        while 1:
-            client = clientlib.HTTPClient()
-
-            try:
-                reply = client.getHeaders(address, url)
-            except clientlib.ConnectionRefused:
-                sys.stderr.write('\r*** connection refused. aborting. ***\n')
-                break
-
-            if not reply:
-                state.missed += 1
-                continue
-
-            timestamp, headers = reply
-            self._makeClue(timestamp, headers) 
-
-            # Check if the timer expired.
-            if hasexpired(stop) or state.errorfound:
-                break
-
+        if not reply:
+            state.missed += 1
             state.update(remaining(stop))
+            continue
 
-        if state.verbose:
-            print
+        timestamp, headers = reply
+        state.replies += 1
+        insert_clue(state.clues, timestamp, headers)
 
+        state.update(remaining(stop))
 
-        return state.clues, state.replies
+    if state.verbose:
+        print
+
+    if results is not None:
+        results.append((state.clues, state.replies))
+    return state.clues, state.replies
 
 
 # vim: ts=4 sw=4 et
