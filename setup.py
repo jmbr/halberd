@@ -75,15 +75,27 @@ class test(Command):
         sys.path = old_path[:]
 
 
-setup(name = 'halberd', version = version.v_short,
-      description = 'HTTP load balancer detector',
-      author = 'Juan M. Bello Rivas',
-      author_email = 'rwx+halberd@synnergy.net',
-      url = 'http://www.synnergy.net/~rwx/halberd',
-      license = 'GNU GENERAL PUBLIC LICENSE',
-      package_dir = {'hlbd': 'hlbd'},
-      scripts = ['halberd.py'],
-      cmdclass = {'test': test},
+setup(
+    name = 'halberd', version = version.v_short,
+    description = 'HTTP load balancer detector',
+    author = 'Juan M. Bello Rivas',
+    author_email = 'rwx+halberd@synnergy.net',
+    url = 'http://www.synnergy.net/~rwx/halberd',
+    license = 'GNU GENERAL PUBLIC LICENSE',
+    package_dir = {'hlbd': 'hlbd'},
+    scripts = ['halberd.py'],
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Information Technology',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Security',
+    ],
+    cmdclass = {'test': test},
 )
 
 
