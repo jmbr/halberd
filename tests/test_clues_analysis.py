@@ -20,12 +20,13 @@
 """Unit test for hlbd.clues.analysis
 """
 
-__revision__ = '$Id: test_clues_analysis.py,v 1.1 2004/02/25 03:52:46 rwx Exp $'
+__revision__ = '$Id: test_clues_analysis.py,v 1.2 2004/02/26 04:12:40 rwx Exp $'
 
 
 import os
 import unittest
 
+import halberd
 import hlbd.clues.file
 import hlbd.clues.analysis as analysis
 
@@ -33,7 +34,7 @@ import hlbd.clues.analysis as analysis
 class TestAnalysis(unittest.TestCase):
 
     def setUp(self):
-        self.threshold = 0.6
+        self.threshold = halberd.default_ratio_threshold
 
 
     def _hits(self, clues):
@@ -82,16 +83,16 @@ class TestAnalysis(unittest.TestCase):
 
 
     def testRegister(self):
-        self.analyze('www.register.com', 30, 1)
+        self.analyze('www.register.com', 20, 1)
 
     def testPricegrabber(self):
         self.analyze('www.pricegrabber.com', 20, 1)
 
     def testYesky(self):
-        self.analyze('www.yesky.com', 30, 1)
+        self.analyze('www.yesky.com', 20, 1)
 
     def testPogo(self):
-        self.analyze('www.pogo.com', 30, 1)
+        self.analyze('www.pogo.com', 20, 1)
 
 
 if __name__ == '__main__':
