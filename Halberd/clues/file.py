@@ -4,7 +4,7 @@
 
 Provides functionality needed to store clues on disk.
 """
-__revision__ = '$Id: file.py,v 1.3 2004/03/29 10:35:57 rwx Exp $'
+__revision__ = '$Id: file.py,v 1.4 2004/04/06 11:57:39 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -114,9 +114,9 @@ class ClueDir:
     This is an example layout::
 
         http___www_microsoft_com/
-        http___www_microsoft_com/207.46.134.221
-        http___www_microsoft_com/207.46.156.220
-        http___www_microsoft_com/207.46.156.252
+        http___www_microsoft_com/207_46_134_221.clu
+        http___www_microsoft_com/207_46_156_220.clu
+        http___www_microsoft_com/207_46_156_252.clu
                 .
                 .
                 .
