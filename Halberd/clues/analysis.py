@@ -20,7 +20,7 @@
 """Utilities for clue analysis and storage.
 """
 
-__revision__ = '$Id: analysis.py,v 1.7 2004/02/20 09:30:39 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.8 2004/02/20 12:54:36 rwx Exp $'
 
 
 import copy
@@ -44,8 +44,7 @@ def diff_fields(clues):
 
     import difflib
 
-    scores = {}
-
+    different = []
     for i, j in pairs(len(clues)):
         one, other = clues[i].headers, clues[j].headers
         matcher = difflib.SequenceMatcher(None, one, other)
@@ -55,15 +54,12 @@ def diff_fields(clues):
                 continue
                 
             for name, value in one[alo:ahi] + other[blo:bhi]:
-                scores.setdefault(name, 0)
-                scores[name] += 1
+                different.append(name)
 
-    total = sum(scores.values())
-    result = [(count * 100 / total, field) for field, count in scores.items()]
-    result.sort()
-    result.reverse()
+    different.sort()
+    different.reverse()
 
-    return result
+    return different
 
 def ignore_changing_fields(clues, verbose=False):
     """Tries to detect and ignore MIME fields with ever changing content.
@@ -88,11 +84,11 @@ def ignore_changing_fields(clues, verbose=False):
     ignored = []
     if verbose:
         print
-    for percent, field in different:
+    for field in different:
         method = '_get_' + Clue.normalize(field)
         if not hasattr(Clue, method):
             if verbose:
-                print '+++ ignoring %s (%2d%%)' % (field, percent)
+                print '+++ ignoring', field
             ignored.append(method)
             setattr(Clue, method, lambda s, f: None)
 
