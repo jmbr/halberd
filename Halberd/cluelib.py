@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.16 2004/02/11 10:18:36 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.17 2004/02/11 11:17:02 rwx Exp $'
 
 
 import time
@@ -294,17 +294,18 @@ class groupby(dict):
 
     __iter__ = dict.iteritems
 
-def sort_by_diff(clues):
-    """Perform the schwartzian transform to sort clues by time diff.
-
-    @return: A sorted list by time difference.
-    @rtype: C{list}
+def unzip(seq):
+    """Inverse of zip.
     """
-# XXX This should be removed
-    # We proceed through the decorate-sort-undecorate steps.
+    return tuple(zip(*seq))
+
+def decor_and_sort(clues):
+    """Decorates a list of clues and sorts it by their time diff.
+    """
     decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
-    return [diff_clue[1] for diff_clue in decorated]
+    return decorated
+
 
 def find_clusters(clues, step=3):
     """Finds clusters of clues.
@@ -405,13 +406,8 @@ def filter_proxies(clues):
     for rtime in classified.keys():
         for digest in classified[rtime].keys():
 
-            # Get a decorated list of clues and sort them by their time diff.
-            decorated = [(clue.diff, clue) for clue in classified[rtime][digest]]
-            decorated.sort()
-
-            # Undecorate.
-            diffs = [diff for diff, clue in decorated]
-            cur_clues = [clue for diff, clue in decorated]
+            # Sort clues by their time diff.
+            diffs, cur_clues = unzip(decor_and_sort(classified[rtime][digest]))
 
             indexes = [idx for idx, delta in enumerate(get_deltas(diffs)) \
                            if delta > 3]
@@ -447,7 +443,8 @@ def analyze(clues):
 
     # We discriminate the clues by their digests.
     for key, clues_by_digest in groupby(clues, getdigest):
-        group = sort_by_diff(clues_by_digest)
+        # Sort by time difference.
+        group = unzip(decor_and_sort(clues_by_digest))[1]
 
         for cluster in find_clusters(group):
             results.append(merge_cluster(cluster))
