@@ -19,7 +19,7 @@
 """Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.14 2004/02/19 14:58:14 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.15 2004/03/02 02:10:30 rwx Exp $'
 
 
 import sys
@@ -66,7 +66,7 @@ class State:
             return
 
         statusline = """\
-\r%15s | remaining time: %3d  | clues: %3d | replies: %3d | missed: %3d\
+\r%15s | remaining: %3d | clues: %3d | replies: %3d | missed: %3d\
 """ % (self.addr, remaining, len(self.clues), self.replies, self.missed)
 
         sys.stdout.write(statusline)
@@ -148,7 +148,7 @@ def scan(addr, url, scantime, parallelism=1, verbose=False):
     # Show the last update.
     state.show(remaining(stop))
     if verbose:
-        sys.stdout.write('\n')
+        sys.stdout.write('\n\n')
 
     try:
         signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
@@ -185,7 +185,9 @@ def scan_thr(state):
             break
         state.lock.release()
 
-        client = clientlib.HTTPClient()
+        # XXX - Devise a way to pass keyfile and certfile from halberd.cfg to
+        # the client factory.
+        client = clientlib.client(state.url)
 
         try:
             reply = client.getHeaders(state.addr, state.url)
