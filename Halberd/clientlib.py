@@ -34,7 +34,7 @@ XXX Explain why this module is written as it is.
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.3 2004/02/04 04:31:03 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.4 2004/02/06 15:59:22 rwx Exp $'
 
 
 import time
@@ -92,9 +92,8 @@ class HTTPClient:
 
     def getHeaders(self, address, urlstr):
         self.putRequest(address, urlstr)
-        timestamp = time.time()
 
-        reply = self.getReply()
+        timestamp, reply = self.getReply()
         if not reply:
             return None
 
@@ -185,22 +184,25 @@ class HTTPClient:
     def getReply(self):
         """Read a reply from the server.
 
-        XXX Implement a real timeout for the case:
-        $ cat /dev/urandom | nc -lp 8080
-        In such situation it would read endlessly. That's bad.
-
-        @return: Received data, if .
-        @rtype: C{str}
+        @return: Received data plus the time when it arrived.
+        @rtype: C{tuple}
 
         @raise UnknownReply: If the remote server doesn't return a valid HTTP
         reply.
         """
+        # XXX Implement a real timeout for the case:
+        # $ cat /dev/urandom | nc -lp 8080
+        # In such situation it would read endlessly. That's bad.
+
         data = ''
+        timestamp = None
         while 1:
             try:
                 chunk = self._sock.recv(default_bufsize)
+                if not timestamp:
+                    timestamp = time.time()
             except:
-                return None
+                return None, None
     
             if not chunk:   # chunk == '' when the remote end finishes writing.
                 break
@@ -215,7 +217,7 @@ class HTTPClient:
         if not data.startswith('HTTP/'):
             raise UnknownReply
 
-        return data
+        return timestamp, data
 
 
     def __del__(self):
