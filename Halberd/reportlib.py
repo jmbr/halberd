@@ -20,11 +20,12 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.14 2004/04/07 11:11:22 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.15 2004/04/07 12:16:02 rwx Exp $'
 
 
 import sys
 
+import hlbd.logger
 import hlbd.clues.analysis as analysis
 
 
@@ -38,36 +39,40 @@ def report(scantask):
 
     clues = scantask.analyzed
     hits = analysis.hits(clues)
+    assert hits > 0
+    logger = hlbd.logger.getLogger()
 
     # xxx This could be passed by the caller in order to avoid recomputation in
     # case the clues needed a re-analysis.
     diff_fields = analysis.diff_fields(clues)
 
-    out.write('*** %s ' % scantask.url)
+    out.write('=' * 70 + '\n')
+    out.write('%s' % scantask.url)
     if scantask.addr:
-        out.write('(%s) ' % scantask.addr)
-    out.write('-> %d real server(s)\n'  % len(clues))
+        out.write(' (%s)' % scantask.addr)
+    out.write(': %d real server(s)\n'  % len(clues))
+    out.write('=' * 70 + '\n')
 
     for num, clue in enumerate(clues):
         info = clue.info
 
         out.write('\n')
-        out.write('server [ %d ]\t\t[ %s ]\n' % (num, info['server'].lstrip()))
+        out.write('-' * 70 + '\n')
+        out.write('server %d: %s\n' % (num + 1, info['server'].lstrip()))
+        out.write('-' * 70 + '\n')
 
-        out.write('successful requests\t[ %2d ]\n' % clue.getCount())
-        assert hits > 0
-        out.write('traffic\t\t\t[ %.2f%% ]\n' \
-                  % (clue.getCount() * 100 / float(hits)))
+        out.write('difference: %d seconds\n' % clue.diff)
 
-        out.write('difference\t\t[ %d ]\n' % clue.diff)
+        out.write('successful requests: %2d (%.2f%% of the traffic)\n' \
+                  % (clue.getCount(), clue.getCount() * 100 / float(hits)))
 
         if info['contloc']:
-            out.write('content-location\t[ %s ]\n' % info['contloc'].lstrip())
+            out.write('content-location: %s\n' % info['contloc'].lstrip())
 
         for cookie in info['cookies']:
-            out.write('cookie\t\t\t[ %s ]\n' % cookie.lstrip())
+            out.write('cookie: %s\n' % cookie.lstrip())
 
-        out.write('header fingerprint\t[ %s ]\n' % info['digest'])
+        out.write('header fingerprint: %s\n' % info['digest'])
 
         different = [(field, value) for field, value in clue.headers \
                                     if field in diff_fields]
@@ -76,7 +81,8 @@ def report(scantask):
             for field, value in different:
                 out.write('  %s:%s\n' % (field, value))
 
-        out.write('headers\t\t\t%s\n' % clue.headers)
+        if scantask.debug:
+            out.write('\nheaders = %s\n' % clue.headers)
 
 
 # vim: ts=4 sw=4 et

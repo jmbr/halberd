@@ -22,7 +22,7 @@ clue reanalysis.
 @var default_out: Default place where to write reports (None means stdout).
 @type default_out: C{str}
 """
-__revision__ = '$Id: ScanTask.py,v 1.3 2004/04/07 00:22:19 rwx Exp $'
+__revision__ = '$Id: ScanTask.py,v 1.4 2004/04/07 12:16:02 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -76,6 +76,9 @@ class ScanTask:
     @ivar verbose: Display status information during the scan.
     @type verbose: C{bool}
 
+    @ivar debug: Display debug information.
+    @type debug: C{bool}
+
     @ivar urlfile: Root folder to use for storing results of MultiScans.
     @type urlfile: C{str}
 
@@ -123,6 +126,7 @@ class ScanTask:
         self.parallelism = default_parallelism
         self.conf_file = default_conf_file
         self.verbose = False
+        self.debug = False
 
         self.ratio_threshold = default_ratio_threshold
 
