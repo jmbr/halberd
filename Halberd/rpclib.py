@@ -23,7 +23,7 @@ This module implements client and server functionality to enable halberd to
 work as a distributed application.
 """
 
-__revision__ = '$Id: rpclib.py,v 1.4 2004/02/19 14:58:39 rwx Exp $'
+__revision__ = '$Id: rpclib.py,v 1.5 2004/03/03 12:10:35 rwx Exp $'
 
 
 import time
@@ -104,7 +104,7 @@ def client(serv_addr, target_addr, url, scantime, parallelism, verbose, results)
         try:
             chunk = sock.recv(1024)
         except socket.timeout, msg:
-            print msg
+            print 'rpcclient (%s): %s' % (`serv_addr`, msg)
             return None
 
         if not chunk:
