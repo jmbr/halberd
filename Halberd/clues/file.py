@@ -4,7 +4,7 @@
 
 Provides functionality needed to store clues on disk.
 """
-__revision__ = '$Id: file.py,v 1.2 2004/03/29 09:46:15 rwx Exp $'
+__revision__ = '$Id: file.py,v 1.3 2004/03/29 10:35:57 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -170,7 +170,7 @@ class ClueDir:
         @raise OSError: If the directories can't be created.
         @raise IOError: If the file can't be stored successfully.
         """
-        assert url and addr and clues
+        assert url and addr
         
         urldir = self._mkdir(os.path.join(self.root, self._sanitize(url)))
         filename = self._sanitize(addr) + os.extsep + self.ext
