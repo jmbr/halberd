@@ -25,12 +25,16 @@ needs to act as a proxy server or connect to other peers in order to scan a
 target in parallel.
 
 @var default_cfgfile: Path and name of the configuration file used by default.
+@type default_cfgfile: C{str}
 
 @var default_proxy_port: Default TCP port to listen when acting as a proxy.
+@type default_proxy_port: C{int}
+
 @var default_rpc_port: Default TCP port to listen when acting as an RPC server.
+@type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.2 2004/02/13 01:27:36 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.3 2004/03/02 02:12:21 rwx Exp $'
 
 
 import os
