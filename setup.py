@@ -103,7 +103,7 @@ setup(
     author_email = 'rwx+halberd@synnergy.net',
     url = 'http://www.synnergy.net/~rwx/halberd',
     license = 'GNU GENERAL PUBLIC LICENSE',
-    packages = ['hlbd', 'hlbd.clues'],
+    packages = ['hlbd', 'hlbd.clues', 'hlbd.shell'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],
     data_files = [(halberd.default_conf_dir, ['halberd.cfg'])],
