@@ -4,7 +4,7 @@
 """Command line interface.
 """
 
-__revision__ = '$Id: halberd,v 1.29 2004/04/07 12:15:25 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.30 2004/04/11 11:34:29 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -166,10 +166,11 @@ def main(argv):
         scanner = scannerFactory(opts, args)
         if scanner is None:
             parser.error('incorrect number of arguments')
-
         scanner.execute()
     except hlbd.shell.ScanError, msg:
         sys.stderr.write('\n*** %s ***\n' % msg)
+    except KeyboardInterrupt:
+        sys.stderr.write('\r*** interrupted by the user ***\n')
 
 
 if __name__ == '__main__':
