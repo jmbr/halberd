@@ -19,18 +19,19 @@
 """Scanning engine for halberd.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.9 2004/02/07 21:15:53 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.10 2004/02/09 12:05:08 rwx Exp $'
 
 
 import sys
 import time
 import signal
-import bisect
 
-try:
-    import threading
-except ImportError:
-    import dummy_threading as threading
+# XXX For using dummy_threading the timeout must be checked in scan_thr
+import threading
+#try:
+#    import threading
+#except ImportError:
+#    import dummy_threading as threading
 
 import hlbd.cluelib as cluelib
 import hlbd.clientlib as clientlib
@@ -96,6 +97,8 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
 
     # Set up interrupt handler to let the user stop the scan when he wishes.
     def interrupt(signum, frame):
+        """SIGINT handler
+        """
         state.shouldstop = True
 
     prev = signal.signal(signal.SIGINT, interrupt)
@@ -109,17 +112,26 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
 
     remaining = lambda end: int(end - time.time())
     hasexpired = lambda end: (remaining(end) <= 0)
+
     stop = time.time() + state.scantime		# Expiration time for the scan.
     while True:
+        state.lock.acquire()
         state.show(remaining(stop))
 
-        if state.shouldstop:
+        if state.shouldstop or hasexpired(stop):
+            state.lock.release()
             break
-        if hasexpired(stop):
-            state.shouldstop = True         # Tell the threads to stop.
+        state.lock.release()
+
+        try:
+            time.sleep(0.5)
+        except IOError: # Catch interrupted system call exception.
             break
 
-        time.sleep(0.50)
+    # Tell the threads to stop.
+    state.lock.acquire()
+    state.shouldstop = True
+    state.lock.release()
 
     for thread in threads:
         thread.join()
@@ -128,8 +140,6 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
     state.show(remaining(stop))
     if verbose:
         sys.stdout.write('\n')
-
-    state.clues = [clue for digest, diff, clue in state.clues]
 
     signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
     return state.clues, state.replies
@@ -155,15 +165,21 @@ def scan_thr(state):
     """Scans a given target looking for load balanced web servers.
     """
     while True:
+        state.lock.acquire()
         if state.shouldstop:
+            state.lock.release()
             break
+        state.lock.release()
 
         client = clientlib.HTTPClient()
 
         try:
             reply = client.getHeaders(state.addr, state.url)
         except clientlib.ConnectionRefused:
-            sys.stderr.write('\r*** connection refused. aborting. ***\n')
+            sys.stderr.write('\n*** connection refused. aborting. ***\n')
+            state.lock.acquire()
+            state.shouldstop = True
+            state.lock.release()
             break
 
         state.lock.acquire()
