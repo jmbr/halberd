@@ -4,4 +4,4 @@ include halberd.cfg
 recursive-include hlbd *.py
 include tests/*.py
 recursive-include doc *
-include AUTHORS ChangeLog LICENSE README THANKS
+include AUTHORS ChangeLog LICENSE README THANKS MANIFEST.in
