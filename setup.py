@@ -64,7 +64,7 @@ class test(Command):
                      if test.startswith('test_') and test.endswith('.py')]
 
         loader = unittest.TestLoader()
-        runner = unittest.TextTestRunner()
+        runner = unittest.TextTestRunner(verbosity=2)
 
         for module in modules:
             print "Running tests found in '%s'..." % module
