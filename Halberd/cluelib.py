@@ -23,7 +23,7 @@ pieces of information returned by a webserver which may help in locating load
 balanced devices.
 """
 
-__revision__ = '$Id: cluelib.py,v 1.11 2004/02/06 16:02:26 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.12 2004/02/07 13:29:56 rwx Exp $'
 
 
 import time
@@ -219,6 +219,14 @@ class Clue:
         """Content-length:"""
         pass
 
+    def _get_etag(self, field):
+        """ETag:"""
+        pass
+
+    def _get_lastmodified(self, field):
+        """Last-modified:"""
+        pass
+
 
 # ========================
 # Clue analysis functions.
@@ -254,7 +262,7 @@ def find_clusters(clues):
     A cluster is a group of at most 3 clues which only differ in 1 seconds
     between each other.
     """
-    def isclusterof(clues, num):
+    def iscluster(clues, num):
         """Determines if a list of clues form a cluster of the specified size.
         """
         assert len(clues) == num, \
@@ -264,23 +272,30 @@ def find_clusters(clues):
             return True
         return False
 
-    idx = 0
+    start = 0
+    while True:
+        clues = clues[start:]
 
-    cluesleft = lambda clues, idx: (len(clues) - idx)
-    while cluesleft(clues, idx):
-        step = 1
-        if cluesleft(clues, idx) >= 3 \
-            and isclusterof(clues[idx:idx+3], 3):
-            step = 3
-            yield tuple(clues[idx:idx+3])
-        elif cluesleft(clues, idx) == 2 \
-            and isclusterof(clues[idx:idx+2], 2):
-            step = 2
-            yield tuple(clues[idx:idx+2])
-        elif cluesleft(clues, idx) == 1:
-            yield (clues[idx], )
+        if len(clues) >= 3:
+            if iscluster(clues[:3], 3):
+                yield tuple(clues[:3])
+                start = 3
+                continue
 
-        idx += step
+        if len(clues) >= 2:
+            if iscluster(clues[:2], 2):
+                yield tuple(clues[:2])
+                start = 2
+                continue
+
+        if len(clues) >= 1:
+            yield((clues[0],))
+            start = 1
+            continue
+
+        if len(clues) == 0:
+            break
+
 
 def merge_cluster(group):
     """Merges a given cluster into one clue.
