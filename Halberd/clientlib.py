@@ -29,7 +29,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.12 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.13 2004/04/06 12:01:09 rwx Exp $'
 
 
 import time
@@ -86,21 +86,30 @@ class UnknownReply(HTTPError):
 
 class HTTPClient:
     """Special-purpose HTTP client.
+
+    @ivar timeout: Timeout for socket operations (expressed in seconds).
+    B{WARNING}: changing this value is strongly discouraged.
+    @type timeout: C{float}
+
+    @ivar bufsize: Buffer size for network I/O.
+    @type bufsize: C{int}
+
+    @ivar template: Template of the HTTP request to be sent to the target.
+    @type template: C{str}
+
+    @ivar _recv: Reference to a callable responsible from reading data from the
+    network.
+    @type _recv: C{callable}
     """
+    timeout = default_timeout
+    bufsize = default_bufsize
+    template = default_template
 
-    def __init__(self, timeout=default_timeout):
+    def __init__(self):
         """Initializes the object.
-
-        @param timeout: Timeout for socket operations (expressed in seconds).
-        @type timeout: C{float}
         """
         self.schemes = ['http']
-
         self.default_port = 80
-
-        self.bufsize = default_bufsize
-
-        self.timeout = timeout
         # _timeout_exceptions MUST be converted to a tuple before using it with
         # except.
         self._timeout_exceptions = [socket.timeout]
@@ -165,7 +174,7 @@ class HTTPClient:
 
         self._connect((address, port))
 
-        self._sendall(req)
+        self._sendAll(req)
 
     def _getHostAndPort(self, netloc):
         """Determine the hostname and port to connect to from an URL
@@ -188,8 +197,7 @@ class HTTPClient:
 
         return hostname, port
 
-    def _fillTemplate(self, hostname, url, params='', query='', fragment='',
-                      template=default_template):
+    def _fillTemplate(self, hostname, url, params='', query='', fragment=''):
         """Fills the request template with relevant information.
 
         @param hostname: Target host to reach.
@@ -211,7 +219,7 @@ class HTTPClient:
 
         values = {'request': urlstr, 'hostname': hostname}
 
-        return template % values
+        return self.template % values
 
     def _connect(self, addr):
         """Connect to the target address.
@@ -226,7 +234,7 @@ class HTTPClient:
         except socket.error:
             raise ConnectionRefused, 'Connection refused'
 
-    def _sendall(self, data):
+    def _sendAll(self, data):
         """Sends a string to the socket.
         """
         try:
@@ -288,9 +296,7 @@ class HTTPSClient(HTTPClient):
         self.default_port = 443
 
         self._recv = None
-
         self._sslsock = None
-
         self._timeout_exceptions.append(socket.sslerror)
 
         # Path to an SSL key file and certificate.
@@ -314,9 +320,10 @@ class HTTPSClient(HTTPClient):
 
         self._recv = self._sslsock.read
 
-    def _sendall(self, data):
+    def _sendAll(self, data):
         """Sends a string to the socket.
         """
+        # xxx - currently we don't make sure everything is sent.
         self._sslsock.write(data)
         
 
