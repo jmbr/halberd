@@ -21,52 +21,95 @@
 
 This module implements client and server functionality to enable halberd to
 work as a distributed application.
-This is useful when the user wants to send a lot of traffic to the target but
-it doesn't have enough bandwith with just one computer/network. In that case,
-he would start halberd in sever mode on one or several machines and from
-another computer he would start the program in client mode telling it where the
-halberd servers are located.
-The RPC mechanism is the XML-RPC protocol.
 """
 
-__revision__ = '$Id: rpclib.py,v 1.1 2004/02/07 13:28:02 rwx Exp $'
+__revision__ = '$Id: rpclib.py,v 1.2 2004/02/13 01:24:51 rwx Exp $'
 
 
+import time
+import socket
 import pickle
-import xmlrpclib
-import SimpleXMLRPCServer
 
 import hlbd.scanlib as scanlib
 
 
-class RPCServer(SimpleXMLRPCServer.SimpleXMLRPCServer):
-    def __init__(self, addr,
-                 requestHandler=SimpleXMLRPCServer.SimpleXMLRPCRequestHandler,
-                 logRequests=1):
-        self.allow_reuse_address = True
-        SimpleXMLRPCServer.SimpleXMLRPCServer.__init__(self, addr,
-                requestHandler, logRequests)
+# XXX Improve error checking
 
 
-def client(serv_url, addr, url, scantime):
-    server = xmlrpclib.ServerProxy(serv_url, None, None, 1, 1)
-    #server = xmlrpclib.ServerProxy(serv_url)
-#    return pickle.loads(server.scan(addr, url, scantime, True))
-    return server.scan(addr, url, scantime, True)
+def utctime():
+    return time.ctime(time.gmtime())
+
 
 def server(addr):
-    def scan(addr, url, scantime, verbose):
-        return scanlib.scan(addr, url, scantime, verbose)
-#        return pickle.dumps(scanlib.scan(addr, url, scantime, verbose))
+    """RPC Server.
+    """
+    serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, True)
+    serv.bind(addr)
+    print 'listening on', addr
+    serv.listen(1)
 
-    rpcserver = RPCServer(addr)
+    client = None
+    while True:
+        if client:
+            client.close()
 
-    rpcserver.register_introspection_functions()
-    rpcserver.register_function(scan)
+        client, clientaddr = serv.accept()
 
-    rpcserver.serve_forever()
-    # Handle one request.
-    #server.handle_request()
+        print clientaddr
+        client.settimeout(5)
+        try:
+            data = client.recv(1024)
+        except socket.timeout, msg:
+            print msg
+            continue
+
+        command = pickle.loads(data)
+        func, args = command[0], command[1:]
+        if func != scanlib.scan:
+            print 'Invalid function', func
+            continue
+
+        print func, args
+
+        result = func(*args)
+        client.sendall(pickle.dumps((utctime(), result)))
+
+    serv.close()
+
+    
+def client(serv_addr, target_addr, url, scantime, verbose, parallelism, results):
+    """RPC Client.
+
+    @param results: Place to put the results + lock
+    @type results: C{tuple}
+    """
+    params = tuple([scanlib.scan, target_addr, url, \
+                    scantime, verbose, parallelism])
+    request = pickle.dumps(params)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(scantime + 10)
+    sock.connect(serv_addr)
+    sock.sendall(request)
+
+    data = ''
+    while True:
+        try:
+            chunk = sock.recv(1024)
+        except socket.timeout, msg:
+            print msg
+            return None
+
+        if not chunk:
+            break
+        data += chunk
+
+    seq, lock = results
+    lock.acquire()
+    import time
+    seq.append((utctime(), pickle.loads(data)))
+    lock.release()
 
 
 # vim: ts=4 sw=4 et
