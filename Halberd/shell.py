@@ -2,9 +2,12 @@
 
 """Provides scanning patterns to be used as building blocks for more complex
 scans.
+
+Strategies are different ways in which target scans may be done. We provide
+basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.3 2004/04/03 15:23:58 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.4 2004/04/04 01:16:40 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -34,6 +37,8 @@ from hlbd.RPCServer import RPCServer
 
 
 class ScanError(Exception):
+    """Generic error during scanning.
+    """
     def __init__(self, msg):
         self.msg = msg
 
@@ -48,6 +53,8 @@ class BaseStrategy:
         self.task = scanopts
 
     def run(self):
+        """Executes the strategy.
+        """
         pass
         
     def info(self, msg):
@@ -60,6 +67,8 @@ class BaseStrategy:
         sys.stdout.flush()
 
     def scan(self):
+        """Higher level target scan.
+        """
         crew = hlbd.crew.WorkCrew(self.task)
         self.task.clues = crew.scan()
 
@@ -102,6 +111,8 @@ class UniScanStrategy(BaseStrategy):
             self.info('done.\n\n')
 
     def run(self):
+        """Scans, analyzes and presents results coming a single target.
+        """
         if self.task.save:
             cluedir = hlbd.clues.file.ClueDir(self.task.save)
 
@@ -128,36 +139,42 @@ class MultiScanStrategy(BaseStrategy):
 
         self.urlfp = open(self.task.urlfile, 'r')
 
+    def _targets(self, urlfp):
+        """Obtain target addresses from URLs.
+
+        @param urlfp: File where the list of URLs is stored.
+        @type urlfp: C{file}
+
+        @return: Generator providing the desired addresses.
+        """
+        for url in urlfp:
+            if url == '\n':
+                continue
+
+            # Strip end of line character.
+            url = url[:-1]
+
+            host = hlbd.util.hostname(url)
+            if not host:
+                self.warn('unable to extract hostname from %s\n' % host)
+                continue
+
+            self.info('looking up host %s... ' % host)
+            try:
+                addrs = hlbd.util.addresses(host)
+            except KeyboardInterrupt:
+                raise ScanError, 'interrupted by the user'
+
+            for addr in addrs:
+                self.info('done.\n')
+                yield (url, addr)
 
     def run(self):
         """Launch a multiple URL scan.
         """
-        def targets(urlfp):
-            for url in urlfp:
-                if url == '\n':
-                    continue
-
-                # Strip end of line character.
-                url = url[:-1]
-
-                host = hlbd.util.hostname(url)
-                if not host:
-                    self.warn('unable to extract hostname from %s\n' % host)
-                    continue
-
-                self.info('looking up host %s... ' % host)
-                try:
-                    addrs = hlbd.util.addresses(host)
-                except KeyboardInterrupt:
-                    raise ScanError, 'interrupted by the user'
-
-                for addr in addrs:
-                    self.info('done.\n')
-                    yield (url, addr)
-
         cluedir = hlbd.clues.file.ClueDir(self.task.save)
 
-        for url, addr in targets(self.urlfp):
+        for url, addr in self._targets(self.urlfp):
             self.task.setURL(url)
             self.task.setAddr(addr)
             self.info('scanning %s (%s)\n' % (url, addr))
@@ -170,21 +187,27 @@ class MultiScanStrategy(BaseStrategy):
             hlbd.reportlib.report(self.task)
 
 class RPCServerStrategy(BaseStrategy):
-
+    """Distributed scanner server strategy.
+    """
     def __init__(self, scanopts):
         BaseStrategy.__init__(self, scanopts)
 
         self.rpcserver = RPCServer(scanopts.rpc_serv_addr)
     
     def run(self):
+        """Turn the program into a provider of scan results.
+        """
         return self.rpcserver.serve_forever()
 
 class ClueReadStrategy(BaseStrategy):
-
+    """Clue reader strategy.
+    """
     def __init__(self, scanopts):
         BaseStrategy.__init__(self, scanopts)
 
     def run(self):
+        """Reads and interprets previously stored clues.
+        """
         self.task.clues = hlbd.clues.file.load(self.task.cluefile)
         self.analyze()
         self.task.url = self.task.cluefile
