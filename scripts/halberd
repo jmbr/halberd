@@ -21,7 +21,7 @@
 """Command line interface and main driving module.
 """
 
-__revision__ = '$Id: halberd,v 1.8 2004/02/07 13:26:04 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.9 2004/02/11 10:19:55 rwx Exp $'
 
 
 import sys
@@ -31,7 +31,9 @@ import hlbd.cluelib as cluelib
 
 
 # Time to spend probing the target expressed in seconds.
-_DEFAULT_SCANTIME = 60
+_DEFAULT_SCANTIME = 30
+
+_DEFAULT_PARALLELISM = 8
 
 
 class Halberd:
@@ -40,8 +42,9 @@ class Halberd:
 
     url = None
     addr = None
+    rpc_servers = []
+    serv_addr = None
 
-    hits = 0
     clues = []
     analyzed = []
 
@@ -123,9 +126,8 @@ class Halberd:
     def scan(self, parallelism):
         import hlbd.scanlib as scanlib
 
-        self.clues, self.hits = scanlib.scan(self.addr, self.url,
-                                             self.scantime, self.verbose,
-                                             parallelism)
+        self.clues = scanlib.scan(self.addr, self.url, self.scantime,
+                                  self.verbose, parallelism)
     def analyze(self):
         """Analyze clues.
         """
@@ -136,23 +138,57 @@ class Halberd:
         """
         import hlbd.reportlib
 
-        hlbd.reportlib.report(self.addr, self.analyzed, self.hits, outfile)
+        hlbd.reportlib.report(self.addr, self.analyzed, outfile)
 
 
-    def server(self, addr):
+    def server(self):
         """Launch the program as a server.
         """
         import hlbd.rpclib
 
-        hlbd.rpclib.server(addr)
+        hlbd.rpclib.server(self.serv_addr)
 
-    def client(self, serv_url):
+    def client(self):
         """Launch the program as a client.
         """
         import hlbd.rpclib as rpclib
 
-        self.clues, self.hits = rpclib.client(serv_url, self.addr, self.url,
-                                              self.scantime)
+        for server in self.rpc_servers:
+            print server
+            clues = rpclib.client(server, self.addr, self.url, self.scantime)
+            self.clues.extend(clues)
+
+    def readConf(self, cfgfile='halberd.cfg'):
+        """Read configuration file.
+        """
+        import ConfigParser
+
+        config = ConfigParser.RawConfigParser()
+        cfgfp = open(cfgfile)
+        try:
+            config.readfp(cfgfp)
+        except:
+            return
+
+        # ...
+
+        try:
+            addr = config.get('server', 'address')
+            port = int(config.get('server', 'port'))
+            self.serv_addr = (addr, port)
+        except ConfigParser.NoOptionError, msg:
+            print msg
+
+        try:
+            value = config.get('client', 'servers')
+        except ConfigParser.NoOptionError, msg:
+            print msg
+        try:
+            value = config.get('client', 'servers')
+        except ConfigParser.NoOptionError, msg:
+            print msg
+
+        self.rpc_servers = filter(bool, value.split('\n'))
 
 
 def make_parser():
@@ -185,15 +221,14 @@ def make_parser():
                       help='loads clues from the specified file',
                       metavar='FILE', default='')
 
-    parser.add_option('-s', '--server', action='store', type='int',
-                      dest='serv_port', help='run as scan server',
-                      metavar='PORT')
-    parser.add_option('-c', '--client', action='store', dest='serv_url',
-                      help='run as cilent', metavar='URL', default='')
+    parser.add_option('-s', '--server', action='store_true', dest='rpc_server',
+                      help='run as scan server')
+    parser.add_option('-c', '--client', action='store_true', dest='rpc_client',
+                      help='run as scan cilent')
 
     parser.add_option('-p', '--parallelism', action='store', type='int',
                       dest='parallelism', help='specifies the degree of parallelism',
-                      metavar='NUM', default=1)
+                      metavar='NUM', default=_DEFAULT_PARALLELISM)
 
     return parser
 
@@ -209,11 +244,13 @@ def main(argv):
 
     halberd.info('%s\nhttp load balancer detector\n\n' % version.version.v_gnu)
 
+    halberd.readConf()
+
     if opts.cluefile:
         # Load from file
         halberd.load(opts.cluefile)
-    elif opts.serv_port:
-        halberd.server(('localhost', opts.serv_port))
+    elif opts.rpc_server:
+        halberd.server()
         sys.exit(0)
     else:
         # Scan target.
@@ -223,11 +260,10 @@ def main(argv):
 
         halberd.setURL(args[0]).setAddr(opts.addr)
         halberd.setScantime(opts.scantime)
+        halberd.scan(opts.parallelism)
 
-        if opts.serv_url:
-            halberd.client(opts.serv_url)
-        else:
-            halberd.scan(opts.parallelism)
+        if opts.rpc_client:
+            halberd.client()
 
         if not halberd.clues:
             sys.exit(-1)
