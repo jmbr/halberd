@@ -19,7 +19,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.3 2004/01/31 13:59:21 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.4 2004/02/07 13:27:12 rwx Exp $'
 
 
 import sys
@@ -39,21 +39,28 @@ def report(address, clues, hits, outfile=''):
     """
     out = (outfile and open(outfile, 'w')) or sys.stdout
 
-    out.write('\nfound %d possibly real server(s) at %s.\n'
+    out.write('found %d possibly real server(s) at %s.\n'
               % (len(clues), address))
     for num, clue in enumerate(clues):
         info = clue.info
         out.write('\nserver %d: %s\n' % (num, info['server']))
-        out.write('  received %.2f%% of the traffic\n' \
-                  % (clue.getCount() * 100 / float(hits)))
+        out.write('  received %2d hits' % clue.getCount())
+        if hits:
+            out.write(' (%.2f%% of the traffic)\n' \
+                      % (clue.getCount() * 100 / float(hits)))
+        else:
+            out.write('\n')
+
         out.write('  time information:\n')
         out.write('    remote clock: %s\n' % info['date'])
-        out.write('    difference: %d seconds\n' % (clue.calcDiff() - 3600))
+        out.write('    difference: %d seconds\n' % clue.diff)
         if info['contloc']:
             out.write('  content-location: %s\n' % info['contloc'])
         if info['cookie']:
             out.write('  cookie: %s\n' % info['cookie'])
         out.write('  header fingerprint: %s\n' % info['digest'])
+
+        out.write('  %s\n' % clue.headers)
 
 
 # vim: ts=4 sw=4 et
