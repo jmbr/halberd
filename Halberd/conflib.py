@@ -35,11 +35,10 @@ This module takes care of reading and writing configuration files.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.6 2004/03/03 09:29:28 rwx Exp $'
+__revision__ = '$Id: conflib.py,v 1.7 2004/03/03 09:38:17 rwx Exp $'
 
 
 import os
-import types
 import ConfigParser
 
 
@@ -80,12 +79,16 @@ class InvalidConfFile(Exception):
 
 
 class ConfOptions:
+    """Structure holding information obtained from a configuration file.
+    """
     proxy_serv_addr = ()
     rpc_serv_addr = ()
     rpc_servers = []
 
 
 class ConfReader:
+    """Takes care of turning configuration files into meaningful information.
+    """
 
     def __init__(self):
         self.__dict = {}
@@ -115,6 +118,8 @@ class ConfReader:
 
 
     def _getAddr(self, sectname, default_port):
+        """Read a network address from the given section.
+        """
         section = self.__dict[sectname]
         addr = section.get('address', '')
         try:
@@ -165,11 +170,11 @@ class ConfReader:
         @param conf_file: Target file where the default conf. will be written.
         @type conf_file: C{str}
         """
-        assert conf_file and isinstance(conf_file, basestring).
+        assert conf_file and isinstance(conf_file, basestring)
 
-        fp = open(conf_file, 'w')
-        fp.write(default_conf)
-        fp.close()
+        conf_fp = open(conf_file, 'w')
+        conf_fp.write(default_conf)
+        conf_fp.close()
 
 
     def __del__(self):
