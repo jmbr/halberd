@@ -20,12 +20,11 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.12 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.13 2004/04/06 12:07:29 rwx Exp $'
 
 
 import sys
 
-import ScanTask
 import hlbd.clues.analysis as analysis
 
 
