@@ -10,8 +10,9 @@ recursive-include hlbd *.py
 include tests/*.py
 recursive-include tests/data *.clu
 
+include doc/*.txt
+include doc/*.html doc/*.css
 recursive-include doc/api *
-include doc/overview.txt
 
 include AUTHORS ChangeLog LICENSE README THANKS MANIFEST.in
 
