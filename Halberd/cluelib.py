@@ -21,9 +21,12 @@
 This module implements a few classes related to creation and and analysis of
 pieces of information returned by a webserver which may help in locating load
 balanced devices.
+
+@var delta: Allowed delta for cmp_delta_diff()
+@type delta: C{int}
 """
 
-__revision__ = '$Id: cluelib.py,v 1.2 2004/01/27 13:15:03 rwx Exp $'
+__revision__ = '$Id: cluelib.py,v 1.3 2004/01/27 22:10:02 rwx Exp $'
 
 
 import time
@@ -40,7 +43,7 @@ except ImportError:
     from md5 import new as hashfn
 
 
-DELTA = 1
+delta = 2
 
 
 class Clue:
@@ -49,7 +52,6 @@ class Clue:
     Clues are gathered during several connections to the target and they try to
     identify clearly potential patterns in the HTTP responses.
     """
-
     def __init__(self):
         """Initializes the clue object.
         """
@@ -57,25 +59,28 @@ class Clue:
         # Number of times this clue has been found.
         self.__count = 1
 
-        # Server information.
+        # Server status line.
         self._server = ''
-
-        # Local and remote time in seconds since the Epoch.
-        self._local, self._remote = 0, 0
 
         # Content-Location field. In case the server is misconfigured and
         # advertises IP addresses those will be shown here.
         self._contloc = ''
 
+        # Cookie. Sometimes it helps pointing out real servers.
+        self._cookie = ''
+
+        # Copy of the returned Date field (kept for convenience).
+        self._date = ''
+        # Local time and remote time (in seconds since the Epoch)
+        self._local, self._remote = 0, 0
+
         # Fingerprint for the reply.
-        self._fp = hashfn('')
+        self.__fp = hashfn('')
+        self._digest = ''
         # We store the headers we're interested in digesting in a string and
         # calculate its hash _after_ the header processing takes place. This
         # way we incur in less computational overhead.
         self.__tmphdrs = ''
-
-        # Cookie. Sometimes it helps pointing out real servers.
-        self._cookie = ''
 
         # Original MIME headers. They're useful during analysis and reporting.
         self.headers = None
@@ -98,8 +103,7 @@ class Clue:
         hdrs = rfc822.Message(hdrfp)
         hdrs.readheaders()
         hdrfp.close()
-
-        self.headers = hdrs         # Save a copy of the headers.
+        self.headers = hdrs.items()         # Save a copy of the headers.
 
         normalize = lambda s: s.replace('-', '_')
 
@@ -111,15 +115,25 @@ class Clue:
                 handlerfn(value)
             except AttributeError:
                 self.__tmphdrs += '%s: %s ' % (name, value)
+        self._updateDigest()
 
-        self._fp.update(self.__tmphdrs)
+    def _updateDigest(self):
+        """Updates header fingerprint.
+    
+        Updates self._digest and derreferences the self.__fp object because SHA
+        or MD5 objects are unpickable and this way we get rid of that problem.
+        """
+        self.__fp.update(self.__tmphdrs)
+        self.__tmphdrs = ''
+        self._digest = self.__fp.hexdigest()
+        self.__fp = None
 
-
+
     def incCount(self, num=1):
         """Increase the times this clue has been found.
 
         param num: Number of hits to add.
-        type num: int
+        type num: C{int}
         """
         self.__count += num
 
@@ -127,7 +141,7 @@ class Clue:
         """Retrieve the number of times the clue has been found
 
         @return: Number of hits.
-        @rtype: integer.
+        @rtype: C{int}.
         """
         return self.__count
 
@@ -137,42 +151,32 @@ class Clue:
 
         @param timestamp: The local time (expressed in seconds since the Epoch)
         when the connection to the target was successfully completed.
-        @type timestamp: numeric.
+        @type timestamp: C{int}
         """
         self._local = timestamp
 
     def calcDiff(self):
         """Compute the time difference between the remote and local clocks.
+
+        @return: Time difference.
+        @rtype: C{int}
         """
         return (int(self._local) - int(self._remote))
 
-
-    # ===================
-    # Comparison methods.
-    # ===================
 
     def __eq__(self, other):
-        """Rich comparison method implementing ==
-        """
         return (self.__equalscmp.compare(self, other) == 0)
 
     def __ne__(self, other):
-        """Rich comparison method implementing !=
-        """
         return not self == other
-
-    # =========
-    # Contains.
-    # =========
 
     def __contains__(self, other):
         return (self.__containscmp.compare(self, other) == 0)
 
-
     def __repr__(self):
         return "<Clue diff=%d found=%d digest='%s'>" \
-                % (self.calcDiff(), self.__count, self._fp.hexdigest())
-
+                % (self.calcDiff(), self.__count, self._digest)
+
     # ==================================================================
     # The following methods extract relevant data from the MIME headers.
     # ==================================================================
@@ -183,6 +187,7 @@ class Clue:
 
     def _get_date(self, field):
         """Date:"""
+        self._date = field
         self._remote = time.mktime(rfc822.parsedate(field))
 
     def _get_content_location(self, field):
@@ -203,7 +208,6 @@ class Clue:
         pass
 
 
-
 class Analyzer:
     """Makes sens of the data gathered during the scanning stage.
     """
@@ -267,10 +271,10 @@ def cmp_diff(one, other):
     return 0
 
 def cmp_delta_diff(one, other):
-    """Compares two clues allowing time differences of less than DELTA seconds.
+    """Compares two clues with a delta.
     """
     onediff, otherdiff = one.calcDiff(), other.calcDiff()
-    if abs(onediff - otherdiff) > DELTA:
+    if abs(onediff - otherdiff) > delta:
         return -1
     return 0
 
@@ -284,9 +288,9 @@ def cmp_server(one, other):
 def cmp_digest(one, other):
     """Compares header digests.
     """
-    if one._fp.digest() < other._fp.digest():
+    if one._digest < other._digest:
         return -1
-    elif one._fp.digest() > other._fp.digest():
+    elif one._digest > other._digest:
         return 1
     return 0
 
@@ -307,29 +311,10 @@ def cmp_contloc(one, other):
         return -1
     return 0
 
-
 class CmpOperator:
     """Customizable comparison operator.
-
-    >>> one, other = Clue(), Clue()
-    >>> one.setTimestamp(10)
-    >>> other.setTimestamp(20)
-
-    We set up our custom operator.
-    >>> cluecmp = CmpOperator([cmp_digest, cmp_diff])
-    >>> cluecmp.compare(one, other)
-    -1
-    >>> other.setTimestamp(10)
-    >>> cluecmp.compare(one, other)
-    0
-    >>> one._fp, other._fp = hashfn('blah'), hashfn('blop')
-    >>> cluecmp.compare(one, other) != 0
-    True
-    >>> other._fp = hashfn('blah')
-    >>> cluecmp.compare(one, other) == 0
-    True
     """
-    def __init__(self, operators=[]):
+    def __init__(self, operators):
         self.__operators = operators
 
     def compare(self, one, other):
@@ -340,14 +325,6 @@ class CmpOperator:
             if status != 0:
                 return status
         return status
-
-
-def _test():
-    import doctest, cluelib
-    return doctest.testmod(cluelib)
-
-if __name__ == '__main__':
-    _test()
     
 
 # vim: ts=4 sw=4 et
