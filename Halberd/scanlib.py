@@ -16,10 +16,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""Scanning engine for halberd.
+"""Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.12 2004/02/13 01:16:55 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.13 2004/02/15 17:02:06 rwx Exp $'
 
 
 import sys
@@ -71,7 +71,7 @@ class State:
         sys.stdout.flush()
 
 
-def scan(addr, url, scantime, verbose=False, parallelism=1):
+def scan(addr, url, scantime, parallelism=1, verbose=False):
     """Performs a parallel load balancer scanning.
 
     @param addr: Target IP address to scan.
@@ -82,6 +82,9 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
 
     @param scantime: Time (in seconds) to spend peforming the analysis.
     @type scantime: C{int}
+
+    @param parallelism: Number of threads to spawn.
+    @type parallelism: C{int}
 
     @param verbose: Specifies whether status info should be displayed or not.
     @type verbose: C{bool}
@@ -100,22 +103,23 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
         """
         state.shouldstop = True
 
-    try:    # XXX
+    try:
         prev = signal.signal(signal.SIGINT, interrupt) 
-    except:
-        pass
+    except ValueError:      # XXX this is temporary
+        prev = None
 
     # This is a very POSIXish idiom but I don't think there's a need for
     # anything fancier.
-    threads = [threading.Thread(None, scan_thr, None, (state,)) \
-               for i in range(parallelism)]
-    for thread in threads:
+    threads = []
+    for i in xrange(parallelism):
+        thread = threading.Thread(None, scan_thr, None, (state,))
         thread.start()
 
     remaining = lambda end: int(end - time.time())
     hasexpired = lambda end: (remaining(end) <= 0)
 
-    stop = time.time() + state.scantime		# Expiration time for the scan.
+    # Expiration time for the scan.
+    stop = time.time() + state.scantime
     while True:
         state.lock.acquire()
         state.show(remaining(stop))
@@ -127,7 +131,8 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
 
         try:
             time.sleep(0.5)
-        except IOError: # Catch interrupted system call exception.
+        except IOError:
+            # Catch interrupted system call exception.
             break
 
     # Tell the threads to stop.
@@ -143,11 +148,12 @@ def scan(addr, url, scantime, verbose=False, parallelism=1):
     if verbose:
         sys.stdout.write('\n')
 
-    # XXX
     try:
         signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
-    except:
+    except ValueError:
+        # XXX temp
         pass
+
     return state.clues
 
 

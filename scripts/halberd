@@ -25,7 +25,7 @@
 @var default_conf_file: Name of the default configuration file for halberd.
 """
 
-__revision__ = '$Id: halberd,v 1.11 2004/02/13 01:29:00 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.12 2004/02/15 17:01:46 rwx Exp $'
 
 
 import sys
@@ -138,7 +138,7 @@ class Halberd:
         import hlbd.scanlib as scanlib
 
         self.clues += scanlib.scan(self.addr, self.url, self.scantime,
-                                  self.verbose, self.parallelism)
+                                  self.parallelism, self.verbose)
     def analyze(self):
         """Analyze clues.
         """
@@ -157,49 +157,60 @@ class Halberd:
         """
         import hlbd.rpclib
 
-        hlbd.rpclib.server(self.rpc_serv_addr)
+        hlbd.rpclib.server(self.rpc_serv_addr, self.verbose)
 
     def client(self):
         """Launch the program as a client.
         """
-        import socket
+        def run_thr(addr, port, clues, lock):
+            rpclib.client((addr, port), self.addr, self.url, self.scantime,
+                          self.parallelism, self.verbose, (clues, lock))
+
+        def normalize_clues(clues, delta):
+            for clue in clues:
+                clue._local -= delta
+                clue._calcDiff()
+            return clues
+
         import threading
         import hlbd.rpclib as rpclib
 
         assert self.rpc_servers is not None
 
-        clues = []
-        lock = threading.Lock()
         threads = []
-        for i, rpc_server in enumerate(self.rpc_servers):
+        results = []
+        lock = threading.Lock()
+
+        thread = (threading.Thread(None, self.scan, None, ()))
+        thread.start()
+        threads.append(thread)
+
+        for rpc_server in self.rpc_servers:
             addr, port = rpc_server.split(':')
             port = int(port)
 
-            if self.verbose:
-                print 'scanning through', addr, port
+            self.info('scanning through %s:%d\n' % (addr, port))
 
-            # XXX All this is a bit hairy. Fix this.
-            thread = threading.Thread(None, rpclib.client, None, \
-                      ((addr, port), self.addr, self.url, self.scantime, self.verbose, self.parallelism, \
-                      (clues, lock))
-                     )
+            thread = threading.Thread(None, run_thr, None, \
+                                            (addr, port, results, lock))
             thread.start()
             threads.append(thread)
+
+        self.info('\n')
 
         for thread in threads:
             thread.join()
 
-        for local, rest in clues:
-            remote, seq = rest
-            delta = remote - local
-            print remote, local, delta
-            for clue in seq:
-                before = clue.diff
-                clue._local -= delta
-                clue._calcDiff()
-                print 'BEFORE:', before, '\tAFTER:', clue.diff
-            self.clues.extend(seq)
-        print self.clues
+#        for local, remote, clues in results:
+        for result in results:
+            if len(result) == 3:
+                # Clues coming from a distributed scan.
+                local, remote, clues = result
+                self.clues.extend(normalize_clues(clues, remote - local))
+            else:
+                # Clues acquired locally.
+                self.clues.extend(result)
+
 
     def readConf(self, cfgfile):
         """Read configuration file.
@@ -284,31 +295,34 @@ def main(argv):
     if opts.cluefile:
         # Load from file
         halberd.load(opts.cluefile)
+        halberd.analyze()
+        halberd.report(opts.output)
+        sys.exit(0)
     elif opts.rpc_server:
         halberd.server()
         sys.exit(0)
+
+    # Scan target.
+    if len(args) < 1:
+        # We need an URL to scan.
+        parser.error('incorrect number of arguments')
+
+    halberd.setURL(args[0]).setAddr(opts.addr)
+    halberd.setScantime(opts.scantime)
+    halberd.parallelism = opts.parallelism
+
+    if opts.rpc_client:
+        halberd.client()
     else:
-        # Scan target.
-        if len(args) < 1:
-            # We need an URL to scan.
-            parser.error('incorrect number of arguments')
-
-        halberd.setURL(args[0]).setAddr(opts.addr)
-        halberd.setScantime(opts.scantime)
-        halberd.parallelism = opts.parallelism
-
-        if opts.rpc_client:
-            halberd.client()
         halberd.scan()
 
-        if not halberd.clues:
-            sys.exit(-1)
+    if not halberd.clues:
+        sys.exit(-1)
 
-        if opts.savefile:
-            halberd.save(opts.savefile)
+    if opts.savefile:
+        halberd.save(opts.savefile)
 
     halberd.analyze()
-
     halberd.report(opts.output)
 
 
