@@ -19,7 +19,7 @@
 """Scanning engine.
 """
 
-__revision__ = '$Id: scanlib.py,v 1.16 2004/03/03 11:33:52 rwx Exp $'
+__revision__ = '$Id: scanlib.py,v 1.17 2004/03/03 12:53:32 rwx Exp $'
 
 
 import sys
@@ -56,6 +56,7 @@ class State:
         self.missed = 0
         self.replies = 0
         self.shouldstop = False
+        self.error = None
 
         self.lock = threading.Lock()
 
@@ -127,6 +128,8 @@ def scan(addr, url, scantime, parallelism=1, verbose=False):
         state.show(remaining(stop))
 
         if state.shouldstop or hasexpired(stop):
+            if state.error:
+                sys.stderr.write('\n*** aborting (%s) ***\n' % state.error)
             state.lock.release()
             break
         state.lock.release()
@@ -146,9 +149,10 @@ def scan(addr, url, scantime, parallelism=1, verbose=False):
         thread.join()
 
     # Show the last update.
-    state.show(remaining(stop))
-    if verbose:
-        sys.stdout.write('\n\n')
+    if not state.error:
+        state.show(remaining(stop))
+        if verbose:
+            sys.stdout.write('\n')
 
     try:
         signal.signal(signal.SIGINT, prev)  # Restore SIGINT handler.
@@ -159,12 +163,9 @@ def scan(addr, url, scantime, parallelism=1, verbose=False):
     return state.clues
 
 
-def insert_clue(clues, reply):
-    """Transforms a timestamp-header pair into a clue and appends it to a list
-    if it wasn't seen before.
+def insert_clue(clues, timestamp, headers):
+    """Generates a clue and appends it to the list if it is new.
     """
-    timestamp, headers = reply
-
     clue = Clue.Clue()
     clue.setTimestamp(timestamp)
     clue.parse(headers)
@@ -189,11 +190,17 @@ def scan_thr(state):
         # the client factory.
         client = clientlib.client(state.url)
 
+        fatal_exceptions = (
+            clientlib.ConnectionRefused,
+            clientlib.UnknownReply,
+            clientlib.HTTPSError
+        )
+
         try:
-            reply = client.getHeaders(state.addr, state.url)
-        except (clientlib.ConnectionRefused, clientlib.UnknownReply), msg:
+            timestamp, headers = client.getHeaders(state.addr, state.url)
+        except fatal_exceptions, msg:
             state.lock.acquire()
-            sys.stderr.write('\n*** %s. aborting. ***\n' % msg)
+            state.error = msg
             state.shouldstop = True
             state.lock.release()
         except clientlib.TimedOut, msg:
@@ -203,7 +210,7 @@ def scan_thr(state):
         else:
             state.lock.acquire()
             state.replies += 1
-            insert_clue(state.clues, reply)
+            insert_clue(state.clues, timestamp, headers)
             state.lock.release()
 
 
