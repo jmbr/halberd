@@ -62,7 +62,7 @@ RPC protocol
 Our RPC protocol is very simple and designed to avoid hassle on the
 programmer's side.
 """
-__revision__ = '$Id: crew.py,v 1.1 2004/04/03 15:10:45 rwx Exp $'
+__revision__ = '$Id: crew.py,v 1.2 2004/04/04 01:18:51 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -138,10 +138,11 @@ class ScanState:
         """
         self.__mutex.acquire()
 
-        self.__replies += 1
+        count = clue.getCount()
+        self.__replies += count
         try:
             idx = self.__clues.index(clue)
-            self.__clues[idx].incCount(clue.getCount())
+            self.__clues[idx].incCount(count)
         except ValueError:
             self.__clues.append(clue)
 
@@ -272,7 +273,7 @@ class WorkCrew:
 
         err = self.state.getError()
         if err is not None:
-            sys.stderr.write('*** aborting (%s) ***\n\n' % err)
+            sys.stderr.write('*** finished (%s) ***\n\n' % err)
 
         return self._getClues()
 
@@ -416,6 +417,7 @@ class RPCScanner(BaseScanner):
 
     def setTimeout(self, secs):
         BaseScanner.setTimeout(self, secs)
+        # Storing the timeout is useful for socket.settimeout
         self.__timeout = secs
 
     def _sendRequest(self):
@@ -536,9 +538,9 @@ class Manager(BaseScanner):
             remaining = self.remaining()
 
         statusline = '\r' + self.task.addr.ljust(15) + \
-            '  %s  clues: %3d | replies: %3d | missed: %3d | threads: %d' \
-            % (statbar(remaining, self.task.scantime), \
-              nclues, replies, missed, threading.activeCount())
+                    '  %s  clues: %3d | replies: %3d | missed: %3d' \
+                    % (statbar(remaining, self.task.scantime),
+                       nclues, replies, missed)
         sys.stdout.write(statusline)
         sys.stdout.flush()
 
