@@ -20,7 +20,7 @@
 """Unit test for hlbd.clues.analysis
 """
 
-__revision__ = '$Id: test_clues_analysis.py,v 1.2 2004/02/26 04:12:40 rwx Exp $'
+__revision__ = '$Id: test_clues_analysis.py,v 1.3 2004/03/03 11:38:10 rwx Exp $'
 
 
 import os
@@ -57,12 +57,14 @@ class TestAnalysis(unittest.TestCase):
 
         self.failUnlessEqual(total_before, total_after)
 
-
     def testSimple(self):
         self.analyze('agartha', 2, 1)
 
     def testSynnergy(self):
         self.analyze('www.synnergy.net', 2, 1)
+
+    def testTripod(self):
+        self.analyze('www.tripod.com', 9, 5)
 
     def testEbay(self):
         self.analyze('www.ebay.com', 2, 1)
@@ -70,17 +72,14 @@ class TestAnalysis(unittest.TestCase):
     def testBarclays(self):
         self.analyze('www.barclays.es', 3, 2)
 
-
     def testSohu(self):
         self.analyze('www.sohu.com', 15, 2)
 
     def testDmoz(self):
         self.analyze('www.dmoz.org', 15, 3)
 
-
     def testExcite(self):
         self.analyze('email.excite.com', 30, 20)
-
 
     def testRegister(self):
         self.analyze('www.register.com', 20, 1)
