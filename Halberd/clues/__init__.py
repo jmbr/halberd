@@ -17,15 +17,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Clue management module
+"""Clue management package
 
-This module implements functionality related to creation, analysis and storage
-of clues.
+This package contains modules implements functionality related to creation,
+analysis and storage of clues.
 """
 
-__revision__ = '$Id: __init__.py,v 1.3 2004/03/02 02:08:38 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.4 2004/03/03 09:29:53 rwx Exp $'
 
-__all__ = ['Clue', 'analysis', 'file']
+__all__ = [
+    'Clue',
+    'analysis',
+    'file'
+]
 
 
 # vim: ts=4 sw=4 et
