@@ -25,7 +25,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.6 2004/02/25 03:51:18 rwx Exp $'
+__revision__ = '$Id: Clue.py,v 1.7 2004/03/03 01:14:48 rwx Exp $'
 
 
 import time
@@ -82,7 +82,7 @@ class Clue:
 
         @raise TypeError: If headers is neither a string nor a sequence.
         """
-        if isinstance(headers, types.StringType):
+        if isinstance(headers, basestring):
             # We parse the server's response into a sequence of name, value
             # tuples instead of a dictionary because with this approach we keep
             # the header's order as sent by the target, This is a relevant
@@ -90,7 +90,6 @@ class Clue:
             self.headers = [tuple(line.split(':', 1)) \
                             for line in headers.splitlines() if line != '']
         elif isinstance(headers, types.ListType) \
-             or isinstance(headers, types.TupleType):
             self.headers = headers
         else:
             raise TypeError, 'Unable to parse headers of type %s' \
@@ -220,9 +219,13 @@ class Clue:
         """Set-cookie:"""
         self.info['cookies'].append(field)
 
+    # ====================================================
+    # Ignored headers (they don't contribute to the hash).
+    # ====================================================
+
     def _get_expires(self, field):
         """Expires:"""
-        pass    # By passing we prevent this header from being hashed.
+        pass
 
     def _get_age(self, field):
         """Age:"""
