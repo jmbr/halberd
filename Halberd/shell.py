@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.4 2004/04/04 01:16:40 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.5 2004/04/06 11:58:41 rwx Exp $'
 
 # Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -48,9 +48,12 @@ class ScanError(Exception):
 
 class BaseStrategy:
     """Defines the strategy used to scan.
+
+    A strategy is a certain way to use the program. Theses can be layered to
+    build a bigger strategy doing more complex things, etc.
     """
-    def __init__(self, scanopts):
-        self.task = scanopts
+    def __init__(self, scantask):
+        self.task = scantask
 
     def run(self):
         """Executes the strategy.
@@ -66,14 +69,18 @@ class BaseStrategy:
         sys.stdout.write('warning: %s' % msg)
         sys.stdout.flush()
 
-    def scan(self):
-        """Higher level target scan.
+    # ---------------------------
+    # Higher-level helper methods
+    # ---------------------------
+
+    def _scan(self):
+        """Allocates a work crew of scanners and launches them on the target.
         """
         crew = hlbd.crew.WorkCrew(self.task)
         self.task.clues = crew.scan()
 
-    def analyze(self):
-        """Higher level clue analysis.
+    def _analyze(self):
+        """Performs clue analysis.
         """
         if len(self.task.clues) == 0:
             return
@@ -86,8 +93,8 @@ class BaseStrategy:
 class UniScanStrategy(BaseStrategy):
     """Scan a single URL.
     """
-    def __init__(self, scanopts):
-        BaseStrategy.__init__(self, scanopts)
+    def __init__(self, scantask):
+        BaseStrategy.__init__(self, scantask)
 
         if not self.task.url:
             raise ScanError, 'Didn\'t provide an URL to scan'
@@ -118,9 +125,9 @@ class UniScanStrategy(BaseStrategy):
 
         for addr in self.addrs:
             self.task.setAddr(addr)
-            self.scan()
+            self._scan()
 
-            self.analyze()
+            self._analyze()
             hlbd.reportlib.report(self.task)
 
             if self.task.save:
@@ -131,8 +138,8 @@ class UniScanStrategy(BaseStrategy):
 class MultiScanStrategy(BaseStrategy):
     """Scan multiple URLs.
     """
-    def __init__(self, scanopts):
-        BaseStrategy.__init__(self, scanopts)
+    def __init__(self, scantask):
+        BaseStrategy.__init__(self, scantask)
 
         if not self.task.urlfile:
             raise ScanError, 'An urlfile parameter must be provided'
@@ -151,8 +158,8 @@ class MultiScanStrategy(BaseStrategy):
             if url == '\n':
                 continue
 
-            # Strip end of line character.
-            url = url[:-1]
+            # Strip end of line character and whitespaces.
+            url = url[:-1].strip()
 
             host = hlbd.util.hostname(url)
             if not host:
@@ -178,38 +185,42 @@ class MultiScanStrategy(BaseStrategy):
             self.task.setURL(url)
             self.task.setAddr(addr)
             self.info('scanning %s (%s)\n' % (url, addr))
-            self.scan()
+            self._scan()
 
             cluedir.save(url, addr, self.task.clues)
 
-            self.analyze()
+            self._analyze()
 
             hlbd.reportlib.report(self.task)
 
 class RPCServerStrategy(BaseStrategy):
     """Distributed scanner server strategy.
-    """
-    def __init__(self, scanopts):
-        BaseStrategy.__init__(self, scanopts)
 
-        self.rpcserver = RPCServer(scanopts.rpc_serv_addr)
+    Turns the program into an RPC server.
+    """
+    def __init__(self, scantask):
+        BaseStrategy.__init__(self, scantask)
+
+        self.rpcserver = RPCServer(scantask.rpc_serv_addr)
     
     def run(self):
-        """Turn the program into a provider of scan results.
+        """Listen for scanning requests and serve them.
         """
         return self.rpcserver.serve_forever()
 
-class ClueReadStrategy(BaseStrategy):
+class ClueReaderStrategy(BaseStrategy):
     """Clue reader strategy.
+
+    Works by reading and analyzing files of previously stored clues.
     """
-    def __init__(self, scanopts):
-        BaseStrategy.__init__(self, scanopts)
+    def __init__(self, scantask):
+        BaseStrategy.__init__(self, scantask)
 
     def run(self):
-        """Reads and interprets previously stored clues.
+        """Reads and interprets clues.
         """
         self.task.clues = hlbd.clues.file.load(self.task.cluefile)
-        self.analyze()
+        self._analyze()
         self.task.url = self.task.cluefile
         hlbd.reportlib.report(self.task)
     
