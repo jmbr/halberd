@@ -87,7 +87,8 @@ classifiers = """\
 Development Status :: 4 - Beta
 Environment :: Console
 Intended Audience :: Information Technology
-License :: Other/Proprietary License
+Intended Audience :: System Administrators
+License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
 Natural Language :: English
 Operating System :: OS Independent
 Programming Language :: Python
@@ -104,7 +105,7 @@ setup(
     url = 'http://www.synnergy.net/~rwx/halberd',
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
-    scripts = ['halberd.py'],
+    scripts = ['halberd'],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
