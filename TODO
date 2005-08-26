@@ -18,6 +18,9 @@ The following is a list of pending items:
 
 - Improve API documentation.
 
+- Test extensively and determine whether 'Development Status' should be raised
+  to 'Production/Stable' in setup.py
+
 - Release the program (securityfocus, freshmeat, reality tunnels and maybe
   notify the authors of hacking exposed).
 
