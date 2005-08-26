@@ -1,22 +1,33 @@
-=======
- To do
-=======
+TODO
+====
 
-The following is a list of things to be done in *halberd*:
+The following is a list of pending items:
 
-    - Implement read/write locks.
+- 'halberd.py' should be renamed to 'halberd' and 'hlbd' to 'Halberd'
 
-    - Improve API documentation.
+- Review hlbd.cluster.analysis (maybe implement a different clustering
+  algorithm, rewrite the auxiliary functions as recursive functions and
+  formally verify them).
 
-    - Write user documentation.
+- Write a man page (perhaps in XML).
 
-    - Write more test cases... much more!
+- Write a good user's guide.
 
-    - Replace RPC protocol by a more secure one.
+- Improve API documentation.
 
-So if you want, you can feel free to contribute in those areas. Pick up
-something and `mail me`_ the results.
+- Release the program (securityfocus, freshmeat, reality tunnels and maybe
+  notify the authors of hacking exposed).
 
-.. _mail me: rwx+halberd@synnergy.net
+- Implement SSL detection feature.
 
-:Version: $Id: TODO,v 1.4 2004/08/21 06:42:39 rwx Exp $
+- Implement Proxy functionality or maybe modify some program like Paros or some
+  other (preferably written in Python to take halberd's clues into account when
+  reaching web servers).
+
+- Implement read/write locks.
+
+- Write user documentation.
+
+- Write more test cases... much more!
+
+- Replace RPC protocol by a more secure one.

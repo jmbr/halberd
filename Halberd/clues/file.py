@@ -4,9 +4,9 @@
 
 Provides functionality needed to store clues on disk.
 """
-__revision__ = '$Id: file.py,v 1.4 2004/04/06 11:57:39 rwx Exp $'
+__revision__ = '$Id: file.py,v 1.5 2005/08/26 11:44:24 rwx Exp $'
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

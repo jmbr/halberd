@@ -1,10 +1,10 @@
-# $Id: GNUmakefile,v 1.15 2004/04/03 15:05:54 rwx Exp $
+# $Id: GNUmakefile,v 1.16 2005/08/26 11:44:21 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
 # ============================================================================
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@ tmpdir := $(srcdir)/tmp
 sandboxdir := $(srcdir)/sandbox
 
 
-PYTHON := /usr/local/bin/python
+PYTHON := /usr/bin/python
 PYTHON_COUNT := /usr/local/bin/python_count
-EPYDOC := /usr/local/bin/epydoc
+EPYDOC := /usr/bin/epydoc
 CTAGS := /usr/local/bin/ctags
-CVS2CL := /usr/local/bin/cvs2cl.pl
+CVS2CL := $(HOME)/bin/cvs2cl.pl
 SHTOOLIZE := /usr/local/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
 RM := /bin/rm -f

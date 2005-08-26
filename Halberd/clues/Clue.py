@@ -1,6 +1,16 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+"""Clue generation module.
+
+Clues are pieces of information obtained from the responses sent by a
+webserver.
+Their importance comes from the fact that they're the datastructure we use to
+detect real servers behind HTTP load balancer devices.
+"""
+
+__revision__ = '$Id: Clue.py,v 1.10 2005/08/26 11:44:24 rwx Exp $'
+
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,17 +25,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-"""Clue generation module.
-
-Clues are pieces of information obtained from the responses sent by a
-webserver.
-Their importance comes from the fact that they're the datastructure we use to
-detect real servers behind HTTP load balancer devices.
-"""
-
-__revision__ = '$Id: Clue.py,v 1.9 2004/03/03 15:21:23 rwx Exp $'
 
 
 import time

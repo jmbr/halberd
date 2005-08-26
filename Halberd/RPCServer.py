@@ -5,9 +5,9 @@
 This is the key component for halberd's distributed scanning architecture.
 """
 
-__revision__ = '$Id: RPCServer.py,v 1.5 2004/08/21 06:42:42 rwx Exp $'
+__revision__ = '$Id: RPCServer.py,v 1.6 2005/08/26 11:44:23 rwx Exp $'
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

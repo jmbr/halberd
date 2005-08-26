@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -87,7 +87,7 @@ classifiers = """\
 Development Status :: 4 - Beta
 Environment :: Console
 Intended Audience :: Information Technology
-License :: OSI Approved :: GNU General Public License (GPL)
+License :: Other/Proprietary License
 Natural Language :: English
 Operating System :: OS Independent
 Programming Language :: Python
@@ -102,7 +102,6 @@ setup(
     author = 'Juan M. Bello Rivas',
     author_email = 'rwx+halberd@synnergy.net',
     url = 'http://www.synnergy.net/~rwx/halberd',
-    license = 'GNU GENERAL PUBLIC LICENSE',
     packages = ['hlbd', 'hlbd.clues'],
     package_dir = {'hlbd': 'hlbd'},
     scripts = ['halberd.py'],

@@ -1,6 +1,6 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 """Testing framework.
 """
 
-__revision__ = '$Id: __init__.py,v 1.2 2004/02/15 18:02:05 rwx Exp $'
+__revision__ = '$Id: __init__.py,v 1.3 2005/08/26 11:44:26 rwx Exp $'
 
 
 # vim: ts=4 sw=4 et

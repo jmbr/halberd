@@ -1,6 +1,11 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+"""Unit tests for hlbd.clientlib
+"""
+
+__revision__ = '$Id: test_clientlib.py,v 1.6 2005/08/26 11:44:26 rwx Exp $'
+
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,12 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-"""Unit tests for hlbd.clientlib
-"""
-
-__revision__ = '$Id: test_clientlib.py,v 1.5 2004/03/05 00:29:08 rwx Exp $'
 
 
 import unittest

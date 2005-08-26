@@ -1,6 +1,11 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+"""Utilities for clue analysis.
+"""
+
+__revision__ = '$Id: analysis.py,v 1.20 2005/08/26 11:44:24 rwx Exp $'
+
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,12 +22,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-"""Utilities for clue analysis.
-"""
-
-__revision__ = '$Id: analysis.py,v 1.19 2004/08/21 06:42:44 rwx Exp $'
-
-
 import copy
 
 import hlbd.logger
@@ -30,6 +29,15 @@ import hlbd.logger
 
 logger = hlbd.logger.getLogger()
 
+
+# TODO - Test fuzzy clustering and k-means against this naive hierarchical
+# clustering algorithm to see which one performs better (there's a k-means
+# implementation in Scipy).
+# Fuzzy clustering will probably be better as it can output a degree of
+# confidence which might be helpful to halberd's users.
+
+# XXX - In python 2.4 there's itertools.groupby() which replaces the idiomatic
+# dictionary uses for grouping things together.
 
 def diff_fields(clues):
     """Study differences between fields.
@@ -148,6 +156,11 @@ def decorate_and_sort(clues):
     @return: Decorated (with time diff.) sequence of clues.
     @rtype: C{list}
     """
+
+    # XXX Fix this, in Python 2.3 there's a cmp parameter to sort which makes
+    # this two functions (decorate_and_sort and undecorate useless.
+    # Also, in Python 2.4 there's a `key' keyword parameter to sort that replaces the
+    # decorate_and_sort idiom.
     decorated = [(clue.diff, clue) for clue in clues]
     decorated.sort()
     return decorated

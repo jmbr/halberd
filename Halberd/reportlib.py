@@ -1,6 +1,11 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+"""Output module.
+"""
+
+__revision__ = '$Id: reportlib.py,v 1.17 2005/08/26 11:44:23 rwx Exp $'
+
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,12 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-"""Output module.
-"""
-
-__revision__ = '$Id: reportlib.py,v 1.16 2004/04/11 11:36:08 rwx Exp $'
 
 
 import sys
@@ -57,36 +56,36 @@ def report(scantask):
         info = clue.info
 
         out.write('\n')
-        out.write('-' * 70 + '\n')
+#        out.write('-' * 70 + '\n')
         out.write('server %d: %s\n' % (num + 1, info['server'].lstrip()))
         out.write('-' * 70 + '\n\n')
 
-        out.write('difference\n  %d seconds\n' % clue.diff)
+        out.write('difference: %d seconds\n' % clue.diff)
 
-        out.write('successful requests\n  %2d hits (%.2f%% of the traffic)\n' \
+        out.write('successful requests: %d hits (%.2f%% of the traffic)\n' \
                   % (clue.getCount(), clue.getCount() * 100 / float(hits)))
 
         if info['contloc']:
-            out.write('content-location\n  %s\n' % info['contloc'].lstrip())
+            out.write('content-location: %s\n' % info['contloc'].lstrip())
 
         if len(info['cookies']) > 0:
-            out.write('cookie(s)\n')
+            out.write('cookie(s):\n')
         for cookie in info['cookies']:
             out.write('  %s\n' % cookie.lstrip())
 
-        out.write('header fingerprint\n  %s\n' % info['digest'])
+        out.write('header fingerprint: %s\n' % info['digest'])
 
         different = [(field, value) for field, value in clue.headers \
                                     if field in diff_fields]
         if different:
-            out.write('different headers\n')
+            out.write('different headers:\n')
             idx = 1
             for field, value in different:
                 out.write('  %d. %s:%s\n' % (idx, field, value))
                 idx += 1
 
         if scantask.debug:
-            out.write('headers\n  %s\n' % clue.headers)
+            out.write('headers:\n  %s\n' % clue.headers)
 
 
 # vim: ts=4 sw=4 et

@@ -1,6 +1,21 @@
 # -*- coding: iso-8859-1 -*-
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+
+"""HTTP/HTTPS client module.
+
+@var default_timeout: Default timeout for socket operations.
+@type default_timeout: C{float}
+
+@var default_bufsize: Default number of bytes to try to read from the network.
+@type default_bufsize: C{int}
+
+@var default_template: Request template, must be filled by L{HTTPClient}
+@type default_template: C{str}
+"""
+
+__revision__ = '$Id: clientlib.py,v 1.14 2005/08/26 11:44:23 rwx Exp $'
+
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,21 +30,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-"""HTTP/HTTPS client module.
-
-@var default_timeout: Default timeout for socket operations.
-@type default_timeout: C{float}
-
-@var default_bufsize: Default number of bytes to try to read from the network.
-@type default_bufsize: C{int}
-
-@var default_template: Request template, must be filled by L{HTTPClient}
-@type default_template: C{str}
-"""
-
-__revision__ = '$Id: clientlib.py,v 1.13 2004/04/06 12:01:09 rwx Exp $'
 
 
 import time

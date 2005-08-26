@@ -5,9 +5,9 @@
 This module allows halberd to easily log certain events.
 """
 
-__revision__ = '$Id: logger.py,v 1.3 2004/04/11 11:34:53 rwx Exp $'
+__revision__ = '$Id: logger.py,v 1.4 2005/08/26 11:44:23 rwx Exp $'
 
-# Copyright (C) 2004 Juan M. Bello Rivas <rwx@synnergy.net>
+# Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
