@@ -12,6 +12,9 @@ The following is a list of pending items:
 - Rewrite Halberd.clues.analysis' auxiliary functions as recursive functions
   and formally verify them (think of automated theorem proving as well).
 
+- Take into account Python 2.4's improvements and determine whether to use them
+  or not.
+
 - Write a man page (perhaps in XML).
 
 - Write a good user's guide.
