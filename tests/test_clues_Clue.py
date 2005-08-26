@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 
-"""Unit test for hlbd.clues.Clue
+"""Unit test for Halberd.clues.Clue
 """
 
-__revision__ = '$Id: test_clues_Clue.py,v 1.3 2005/08/26 11:44:26 rwx Exp $'
+__revision__ = '$Id: test_clues_Clue.py,v 1.4 2005/08/26 12:06:15 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -24,7 +24,7 @@ __revision__ = '$Id: test_clues_Clue.py,v 1.3 2005/08/26 11:44:26 rwx Exp $'
 
 import unittest
 
-from hlbd.clues.Clue import Clue
+from Halberd.clues.Clue import Clue
 
 
 class TestClue(unittest.TestCase):

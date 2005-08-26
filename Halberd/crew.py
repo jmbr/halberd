@@ -63,7 +63,7 @@ Our RPC protocol is very simple and designed to avoid hassle on the
 programmer's side.
 """
 
-__revision__ = '$Id: crew.py,v 1.5 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: crew.py,v 1.6 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -92,10 +92,10 @@ import pickle
 import socket
 import threading
 
-import hlbd.logger
-import hlbd.clues.Clue
-import hlbd.clientlib as clientlib
-from hlbd.util import utctime
+import Halberd.logger
+import Halberd.clues.Clue
+import Halberd.clientlib as clientlib
+from Halberd.util import utctime
 
 
 __all__ = ['WorkCrew']
@@ -313,7 +313,7 @@ class BaseScanner(threading.Thread):
         self.state = state
         self.task = scantask
         self.timeout = 0
-        self.logger = hlbd.logger.getLogger()
+        self.logger = Halberd.logger.getLogger()
 
     def remaining(self, end=None):
         """Seconds left until a given point in time.
@@ -397,7 +397,7 @@ class Scanner(BaseScanner):
         @return: A valid clue
         @rtype: C{Clue}
         """
-        clue = hlbd.clues.Clue.Clue()
+        clue = Halberd.clues.Clue.Clue()
         clue.setTimestamp(timestamp)
         clue.parse(headers)
 

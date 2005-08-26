@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 
-"""Unit test for hlbd.clues.analysis
+"""Unit test for Halberd.clues.analysis
 """
 
-__revision__ = '$Id: test_clues_analysis.py,v 1.7 2005/08/26 11:44:26 rwx Exp $'
+__revision__ = '$Id: test_clues_analysis.py,v 1.8 2005/08/26 12:06:15 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,15 +25,15 @@ __revision__ = '$Id: test_clues_analysis.py,v 1.7 2005/08/26 11:44:26 rwx Exp $'
 import os
 import unittest
 
-import hlbd.ScanTask
-import hlbd.clues.file
-import hlbd.clues.analysis as analysis
+import Halberd.ScanTask
+import Halberd.clues.file
+import Halberd.clues.analysis as analysis
 
 
 class TestAnalysis(unittest.TestCase):
 
     def setUp(self):
-        self.threshold = hlbd.ScanTask.default_ratio_threshold
+        self.threshold = Halberd.ScanTask.default_ratio_threshold
 
 
     def _hits(self, clues):
@@ -41,7 +41,7 @@ class TestAnalysis(unittest.TestCase):
 
     def _getClues(self, filename):
         fname = os.path.join('tests', 'data', filename + '.clu')
-        return hlbd.clues.file.load(fname)
+        return Halberd.clues.file.load(fname)
 
     def analyze(self, filename, expected_raw, expected_analyzed):
         clues = self._getClues(filename)

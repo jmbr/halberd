@@ -5,7 +5,7 @@
 This is the key component for halberd's distributed scanning architecture.
 """
 
-__revision__ = '$Id: RPCServer.py,v 1.6 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: RPCServer.py,v 1.7 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -30,9 +30,9 @@ import pickle
 import socket
 import SocketServer
 
-import hlbd.util
-import hlbd.crew
-import hlbd.logger
+import Halberd.util
+import Halberd.crew
+import Halberd.logger
 
 
 class RPCRequestHandler(SocketServer.StreamRequestHandler):
@@ -41,7 +41,7 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
     Those requests are pickled ScanTask instances encoded in Base64 and
     finished by an extra LF.
     """
-    logger = hlbd.logger.getLogger()
+    logger = Halberd.logger.getLogger()
 
     def handle(self):
         self.logger.info('Connection from %s', self.client_address)
@@ -68,10 +68,10 @@ class RPCRequestHandler(SocketServer.StreamRequestHandler):
         scantask.rpc_servers = None
         scantask.isDistributed = False
 
-        workcrew = hlbd.crew.WorkCrew(scantask)
+        workcrew = Halberd.crew.WorkCrew(scantask)
         clues = workcrew.scan()
         
-        timestamp = hlbd.util.utctime()
+        timestamp = Halberd.util.utctime()
         response = pickle.dumps((timestamp, clues))
         self.wfile.write(response)
         

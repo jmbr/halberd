@@ -4,7 +4,7 @@
 """Command line interface.
 """
 
-__revision__ = '$Id: halberd,v 1.32 2005/08/26 11:44:21 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.33 2005/08/26 12:06:11 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,10 +25,10 @@ __revision__ = '$Id: halberd,v 1.32 2005/08/26 11:44:21 rwx Exp $'
 
 import sys
 
-import hlbd.shell
-import hlbd.logger
-import hlbd.ScanTask
-import hlbd.version as version
+import Halberd.shell
+import Halberd.logger
+import Halberd.ScanTask
+import Halberd.version as version
 
 
 def make_parser():
@@ -49,12 +49,12 @@ def make_parser():
     parser.add_option('-t', '--time',
                       action='store', type='int', dest='scantime',
                       help='time (in seconds) to spend scanning the target',
-                      metavar='NUM', default=hlbd.ScanTask.default_scantime)
+                      metavar='NUM', default=Halberd.ScanTask.default_scantime)
 
     parser.add_option('-p', '--parallelism', action='store', type='int',
                       dest='parallelism',
                       help='specify the number of parallel threads to use',
-                      metavar='NUM', default=hlbd.ScanTask.default_parallelism)
+                      metavar='NUM', default=Halberd.ScanTask.default_parallelism)
 
     parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
                       help='read URLs from FILE', metavar='FILE')
@@ -81,7 +81,7 @@ def make_parser():
 
     parser.add_option('', '--config', action='store', dest='confname',
                       help='use configuration file', metavar='FILE',
-                      default=hlbd.ScanTask.default_conf_file)
+                      default=Halberd.ScanTask.default_conf_file)
 
     return parser
 
@@ -108,7 +108,7 @@ def scannerFactory(opts, args):
     It selects which scanning strategy to follow depending on how the user
     invoked the program.
     """
-    scantask = hlbd.ScanTask.ScanTask()
+    scantask = Halberd.ScanTask.ScanTask()
 
     scantask.scantime = opts.scantime
     scantask.parallelism = opts.parallelism
@@ -121,9 +121,9 @@ def scannerFactory(opts, args):
 
     # Set logging level.
     if not scantask.verbose:
-        hlbd.logger.setError()
+        Halberd.logger.setError()
     if scantask.debug:
-        hlbd.logger.setDebug()
+        Halberd.logger.setDebug()
 
     scantask.readConf()
     if opts.rpc_client:
@@ -131,19 +131,19 @@ def scannerFactory(opts, args):
 
     if opts.cluefile:
         # Read and analyze clues.
-        scanner = hlbd.shell.ClueReaderStrategy
+        scanner = Halberd.shell.ClueReaderStrategy
     elif opts.rpc_server:
         # Act as a scan server.
-        scanner = hlbd.shell.RPCServerStrategy
+        scanner = Halberd.shell.RPCServerStrategy
     elif opts.urlfile:
         # MultiScan
         scantask.urlfile = opts.urlfile
-        scanner = hlbd.shell.MultiScanStrategy
+        scanner = Halberd.shell.MultiScanStrategy
     elif len(args) > 0:
         # UniScan
         scantask.url = make_url(args[0])
         scantask.addr = opts.addr
-        scanner = hlbd.shell.UniScanStrategy
+        scanner = Halberd.shell.UniScanStrategy
     else:
         return None
 
@@ -167,7 +167,7 @@ def main(argv):
         if scanner is None:
             parser.error('incorrect number of arguments')
         scanner.execute()
-    except hlbd.shell.ScanError, msg:
+    except Halberd.shell.ScanError, msg:
         sys.stderr.write('\n*** %s ***\n' % msg)
     except KeyboardInterrupt:
         sys.stderr.write('\r*** interrupted by the user ***\n')

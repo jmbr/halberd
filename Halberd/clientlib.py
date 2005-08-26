@@ -1,6 +1,5 @@
 # -*- coding: iso-8859-1 -*-
 
-
 """HTTP/HTTPS client module.
 
 @var default_timeout: Default timeout for socket operations.
@@ -13,7 +12,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.14 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.15 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -36,7 +35,7 @@ import time
 import socket
 import urlparse
 
-import hlbd.ScanTask
+import Halberd.ScanTask
 
 
 default_timeout = 2

@@ -4,7 +4,7 @@
 
 Provides functionality needed to store clues on disk.
 """
-__revision__ = '$Id: file.py,v 1.5 2005/08/26 11:44:24 rwx Exp $'
+__revision__ = '$Id: file.py,v 1.6 2005/08/26 12:06:14 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -28,8 +28,8 @@ import csv
 import types
 import shutil
 
-import hlbd.util
-from hlbd.clues.Clue import Clue
+import Halberd.util
+from Halberd.clues.Clue import Clue
 
 
 class InvalidFile(Exception):
@@ -137,7 +137,7 @@ class ClueDir:
     def _sanitize(self, url):
         """Filter out potentially dangerous chars.
         """
-        return url.translate(hlbd.util.table)
+        return url.translate(Halberd.util.table)
 
     def _mkdir(self, dest):
         """Creates a directory to store clues.
@@ -176,7 +176,7 @@ class ClueDir:
         filename = self._sanitize(addr) + os.extsep + self.ext
         cluefile = os.path.join(urldir, filename)
 
-        hlbd.clues.file.save(cluefile, clues)
+        Halberd.clues.file.save(cluefile, clues)
 
 
 # vim: ts=4 sw=4 et

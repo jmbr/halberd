@@ -23,7 +23,7 @@ clue reanalysis.
 @type default_out: C{str}
 """
 
-__revision__ = '$Id: ScanTask.py,v 1.6 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: ScanTask.py,v 1.7 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -45,7 +45,7 @@ __revision__ = '$Id: ScanTask.py,v 1.6 2005/08/26 11:44:23 rwx Exp $'
 import os
 import sys
 
-import hlbd.conflib
+import Halberd.conflib
 
 
 default_scantime = 30
@@ -163,11 +163,11 @@ class ScanTask:
         @raise ConfError: If there's some problem creating or reading the
         configuration file.
         """
-        import hlbd.conflib
+        import Halberd.conflib
 
-        # xxx - Move this into hlbd.conflib as a higher level function.
+        # xxx - Move this into Halberd.conflib as a higher level function.
 
-        reader = hlbd.conflib.ConfReader()
+        reader = Halberd.conflib.ConfReader()
 
         try:
             reader.open(self.conf_file)

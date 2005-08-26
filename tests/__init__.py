@@ -1,5 +1,10 @@
 # -*- coding: iso-8859-1 -*-
 
+"""Testing framework.
+"""
+
+__revision__ = '$Id: __init__.py,v 1.4 2005/08/26 12:06:15 rwx Exp $'
+
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -15,11 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-"""Testing framework.
-"""
-
-__revision__ = '$Id: __init__.py,v 1.3 2005/08/26 11:44:26 rwx Exp $'
 
 
 # vim: ts=4 sw=4 et

@@ -3,7 +3,7 @@
 """Unit tests for clue storage functionality.
 """
 
-__revision__ = '$Id: test_clues_file.py,v 1.2 2005/08/26 11:44:26 rwx Exp $'
+__revision__ = '$Id: test_clues_file.py,v 1.3 2005/08/26 12:06:15 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,8 +25,8 @@ __revision__ = '$Id: test_clues_file.py,v 1.2 2005/08/26 11:44:26 rwx Exp $'
 import os
 import unittest
 
-import hlbd.clues.file
-from hlbd.clues.Clue import Clue
+import Halberd.clues.file
+from Halberd.clues.Clue import Clue
 
 
 class TestStorage(unittest.TestCase):
@@ -59,8 +59,8 @@ class TestStorage(unittest.TestCase):
 
     def testSimpleSaveAndLoad(self):
         try:
-            hlbd.clues.file.save(self.filename, [self.clue])
-            clues = hlbd.clues.file.load(self.filename)
+            Halberd.clues.file.save(self.filename, [self.clue])
+            clues = Halberd.clues.file.load(self.filename)
         finally:
             os.unlink(self.filename)
 

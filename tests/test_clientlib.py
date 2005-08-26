@@ -1,9 +1,9 @@
 # -*- coding: iso-8859-1 -*-
 
-"""Unit tests for hlbd.clientlib
+"""Unit tests for Halberd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.6 2005/08/26 11:44:26 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.7 2005/08/26 12:06:15 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -25,7 +25,7 @@ __revision__ = '$Id: test_clientlib.py,v 1.6 2005/08/26 11:44:26 rwx Exp $'
 import unittest
 import urlparse
 
-import hlbd.clientlib as clientlib
+import Halberd.clientlib as clientlib
 
 
 class TestHTTPClient(unittest.TestCase):
@@ -92,7 +92,7 @@ class TestHTTPClient(unittest.TestCase):
 
     def testIncorrectReading(self):
         """Check for Issue60
-        Incorrect reading procedure in hlbd.clientlib.HTTPClient._getReply
+        Incorrect reading procedure in Halberd.clientlib.HTTPClient._getReply
         """
         self.client.bufsize = 1
         self.client.timeout = 10

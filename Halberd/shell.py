@@ -7,7 +7,7 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.10 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: shell.py,v 1.11 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -28,12 +28,12 @@ __revision__ = '$Id: shell.py,v 1.10 2005/08/26 11:44:23 rwx Exp $'
 
 import sys
 
-import hlbd.crew
-import hlbd.logger
-import hlbd.reportlib
-import hlbd.clues.file
-import hlbd.clues.analysis as analysis
-from hlbd.RPCServer import RPCServer
+import Halberd.crew
+import Halberd.logger
+import Halberd.reportlib
+import Halberd.clues.file
+import Halberd.clues.analysis as analysis
+from Halberd.RPCServer import RPCServer
 
 
 class ScanError(Exception):
@@ -54,7 +54,7 @@ class BaseStrategy:
     """
     def __init__(self, scantask):
         self.task = scantask
-        self.logger = hlbd.logger.getLogger()
+        self.logger = Halberd.logger.getLogger()
 
     def execute(self):
         """Executes the strategy.
@@ -72,7 +72,7 @@ class BaseStrategy:
 
         self.task.clues = []
         self.task.analyzed = []
-        crew = hlbd.crew.WorkCrew(self.task)
+        crew = Halberd.crew.WorkCrew(self.task)
         self.task.clues = crew.scan()
 
     def _analyze(self):
@@ -98,11 +98,11 @@ class UniScanStrategy(BaseStrategy):
             # The user passed a specific address as a parameter.
             self.addrs = [self.task.addr]
         else:
-            host = hlbd.util.hostname(self.task.url)
+            host = Halberd.util.hostname(self.task.url)
             self.logger.info('looking up host %s... ', host)
 
             try:
-                self.addrs = hlbd.util.addresses(host)
+                self.addrs = Halberd.util.addresses(host)
             except KeyboardInterrupt:
                 raise ScanError, 'interrupted by the user'
 
@@ -121,13 +121,13 @@ class UniScanStrategy(BaseStrategy):
         """Scans, analyzes and presents results coming a single target.
         """
         if self.task.save:
-            cluedir = hlbd.clues.file.ClueDir(self.task.save)
+            cluedir = Halberd.clues.file.ClueDir(self.task.save)
 
         for self.task.addr in self.addrs:
             self._scan()
 
             self._analyze()
-            hlbd.reportlib.report(self.task)
+            Halberd.reportlib.report(self.task)
 
             if self.task.save:
                 cluedir.save(self.task.url,
@@ -160,14 +160,14 @@ class MultiScanStrategy(BaseStrategy):
             # Strip end of line character and whitespaces.
             url = url[:-1].strip()
 
-            host = hlbd.util.hostname(url)
+            host = Halberd.util.hostname(url)
             if not host:
                 self.logger.warn('unable to extract hostname from %s', host)
                 continue
 
             self.logger.info('looking up host %s... ', host)
             try:
-                addrs = hlbd.util.addresses(host)
+                addrs = Halberd.util.addresses(host)
             except KeyboardInterrupt:
                 raise ScanError, 'interrupted by the user'
             self.logger.info('host lookup done.')
@@ -178,7 +178,7 @@ class MultiScanStrategy(BaseStrategy):
     def execute(self):
         """Launch a multiple URL scan.
         """
-        cluedir = hlbd.clues.file.ClueDir(self.task.save)
+        cluedir = Halberd.clues.file.ClueDir(self.task.save)
 
         for url, addr in self._targets(self.urlfp):
             self.task.url = url
@@ -190,7 +190,7 @@ class MultiScanStrategy(BaseStrategy):
 
             self._analyze()
 
-            hlbd.reportlib.report(self.task)
+            Halberd.reportlib.report(self.task)
 
 class RPCServerStrategy(BaseStrategy):
     """Distributed scanner server strategy.
@@ -218,10 +218,10 @@ class ClueReaderStrategy(BaseStrategy):
     def execute(self):
         """Reads and interprets clues.
         """
-        self.task.clues = hlbd.clues.file.load(self.task.cluefile)
+        self.task.clues = Halberd.clues.file.load(self.task.cluefile)
         self._analyze()
         self.task.url = self.task.cluefile
-        hlbd.reportlib.report(self.task)
+        Halberd.reportlib.report(self.task)
     
 
 # vim: ts=4 sw=4 et

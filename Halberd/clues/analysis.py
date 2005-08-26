@@ -3,7 +3,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.20 2005/08/26 11:44:24 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.21 2005/08/26 12:06:14 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -24,10 +24,10 @@ __revision__ = '$Id: analysis.py,v 1.20 2005/08/26 11:44:24 rwx Exp $'
 
 import copy
 
-import hlbd.logger
+import Halberd.logger
 
 
-logger = hlbd.logger.getLogger()
+logger = Halberd.logger.getLogger()
 
 
 # TODO - Test fuzzy clustering and k-means against this naive hierarchical
@@ -86,7 +86,7 @@ def ignore_changing_fields(clues):
     @param clues: Sequence of clues.
     @type clues: C{list} or C{tuple}
     """
-    from hlbd.clues.Clue import Clue
+    from Halberd.clues.Clue import Clue
 
     different = diff_fields(clues)
 
@@ -523,13 +523,13 @@ def reanalyze(clues, analyzed, threshold):
 def _test():
     import doctest
 
-    import hlbd.clues.Clue
-    import hlbd.clues.analysis
+    import Halberd.clues.Clue
+    import Halberd.clues.analysis
 
-    globs = hlbd.clues.analysis.__dict__
-    globs.update(hlbd.clues.Clue.__dict__)
+    globs = Halberd.clues.analysis.__dict__
+    globs.update(Halberd.clues.Clue.__dict__)
 
-    return doctest.testmod(m=hlbd.clues.analysis, name='analysis', globs=globs)
+    return doctest.testmod(m=Halberd.clues.analysis, name='analysis', globs=globs)
 
 if __name__ == '__main__':
     _test()

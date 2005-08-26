@@ -5,7 +5,7 @@
 This module allows halberd to easily log certain events.
 """
 
-__revision__ = '$Id: logger.py,v 1.4 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: logger.py,v 1.5 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -43,7 +43,7 @@ def getLogger():
     global _logger
 
     if _logger is None:
-        _logger = logging.getLogger('hlbd')
+        _logger = logging.getLogger('Halberd')
         handler = logging.StreamHandler(sys.stdout)
         handler.setFormatter(logging.Formatter(_logfmt))
         _logger.addHandler(handler)

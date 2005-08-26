@@ -21,8 +21,8 @@
 import os
 from distutils.core import setup, Command
 
-import hlbd.ScanTask
-from hlbd.version import version
+import Halberd.ScanTask
+from Halberd.version import version
 
 
 class test(Command):
@@ -102,8 +102,8 @@ setup(
     author = 'Juan M. Bello Rivas',
     author_email = 'rwx+halberd@synnergy.net',
     url = 'http://www.synnergy.net/~rwx/halberd',
-    packages = ['hlbd', 'hlbd.clues'],
-    package_dir = {'hlbd': 'hlbd'},
+    packages = ['Halberd', 'Halberd.clues'],
+    package_dir = {'Halberd': 'Halberd'},
     scripts = ['halberd.py'],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},

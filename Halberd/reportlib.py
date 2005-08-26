@@ -3,7 +3,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.17 2005/08/26 11:44:23 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.18 2005/08/26 12:06:12 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -24,8 +24,8 @@ __revision__ = '$Id: reportlib.py,v 1.17 2005/08/26 11:44:23 rwx Exp $'
 
 import sys
 
-import hlbd.logger
-import hlbd.clues.analysis as analysis
+import Halberd.logger
+import Halberd.clues.analysis as analysis
 
 
 def report(scantask):
@@ -38,7 +38,7 @@ def report(scantask):
 
     clues = scantask.analyzed
     hits = analysis.hits(clues)
-    logger = hlbd.logger.getLogger()
+    logger = Halberd.logger.getLogger()
 
     # xxx This could be passed by the caller in order to avoid recomputation in
     # case the clues needed a re-analysis.

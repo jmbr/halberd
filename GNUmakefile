@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.16 2005/08/26 11:44:21 rwx Exp $
+# $Id: GNUmakefile,v 1.17 2005/08/26 12:06:11 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -22,7 +22,7 @@
 
 
 srcdir := .
-hlbddir := $(srcdir)/hlbd
+modulesdir := $(srcdir)/Halberd
 docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
 testdir := $(srcdir)/tests
@@ -42,13 +42,13 @@ MKDIR := /bin/mkdir
 SETUP := $(PYTHON) $(srcdir)/setup.py
 
 
-versionfile := $(hlbddir)/version.py
+versionfile := $(modulesdir)/version.py
 
 SCRIPTS := halberd.py
-MODULES := $(filter-out $(hlbddir)/version.py, \
-		   $(wildcard $(hlbddir)/*.py)) \
-		   $(wildcard $(hlbddir)/clues/*.py) \
-		   $(wildcard $(hlbddir)/shell/*.py)
+MODULES := $(filter-out $(modulesdir)/version.py, \
+		   $(wildcard $(modulesdir)/*.py)) \
+		   $(wildcard $(modulesdir)/clues/*.py) \
+		   $(wildcard $(modulesdir)/shell/*.py)
 
 SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES := $(wildcard $(testdir)/*.py)
@@ -81,8 +81,8 @@ dist: setversion doc ChangeLog
 
 check: $(ALL_SOURCES)
 	$(SETUP) test
-	PYTHONPATH=$(hlbddir):$(hlbddir)/clues:$$PYTHONPATH \
-	$(PYTHON) $(hlbddir)/clues/analysis.py
+	PYTHONPATH=$(modulesdir):$(modulesdir)/clues:$$PYTHONPATH \
+	$(PYTHON) $(modulesdir)/clues/analysis.py
 
 install: build
 	$(RM) -r $(tmpdir)
