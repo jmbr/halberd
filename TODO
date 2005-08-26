@@ -3,11 +3,14 @@ TODO
 
 The following is a list of pending items:
 
-- 'halberd.py' should be renamed to 'halberd' and 'hlbd' to 'Halberd'
+- Review Halberd.cluster.analysis
 
-- Review hlbd.cluster.analysis (maybe implement a different clustering
-  algorithm, rewrite the auxiliary functions as recursive functions and
-  formally verify them).
+- Test different clustering algorithms: fuzzy clustering is implemented in
+  Matlab, k-means clustering is available in Scipy.  These algorithms should be
+  tried to see which one provides the best answers.
+
+- Rewrite Halberd.clues.analysis' auxiliary functions as recursive functions
+  and formally verify them (think of automated theorem proving as well).
 
 - Write a man page (perhaps in XML).
 
