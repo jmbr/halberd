@@ -12,7 +12,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.15 2005/08/26 12:06:12 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.16 2005/08/27 12:13:44 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -43,16 +43,16 @@ default_timeout = 2
 default_bufsize = 1024
 
 default_template = """\
-HEAD %(request)s HTTP/1.1\r\n\
-Host: %(hostname)s\r\n\
+GET %(request)s HTTP/1.1\r\n\
+Host: %(hostname)s%(port)s\r\n\
 Pragma: no-cache\r\n\
 Cache-control: no-cache\r\n\
-User-Agent: Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)\r\n\
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.7.7) Gecko/20050414 Firefox/1.0.3\r\n\
 Accept: image/gif, image/x-xbitmap, image/jpeg, image/pjpeg,\
  application/x-shockwave-flash, */*\r\n\
-Accept-Language: en-us, en;q=0.50\r\n\
-Accept-Encoding: gzip, deflate, compress;q=0.9\r\n\
-Accept-Charset: ISO-8859-1, utf-8;q=0.66, *;q=0.66\r\n\
+Accept-Language: en-us,en;q=0.5\r\n\
+Accept-Encoding: gzip,deflate\r\n\
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\r\n\
 Keep-Alive: 300\r\n\
 Connection: keep-alive\r\n\r\n\
 """
@@ -169,7 +169,7 @@ class HTTPClient:
         # NOTE: address and hostname may not be the same. The caller is
         # responsible for checking that.
             
-        req = self._fillTemplate(hostname, url, params, query, fragment)
+        req = self._fillTemplate(hostname, port, url, params, query, fragment)
 
         self._connect((address, port))
 
@@ -196,11 +196,14 @@ class HTTPClient:
 
         return hostname, port
 
-    def _fillTemplate(self, hostname, url, params='', query='', fragment=''):
+    def _fillTemplate(self, hostname, port, url, params='', query='', fragment=''):
         """Fills the request template with relevant information.
 
         @param hostname: Target host to reach.
         @type hostname: C{str}
+
+        @param port: Remote port.
+        @type hostname: C{int}
 
         @param url: URL to use as source.
         @type url: C{str}
@@ -216,7 +219,12 @@ class HTTPClient:
         if fragment:
             urlstr += '#' + fragment
 
-        values = {'request': urlstr, 'hostname': hostname}
+        if port == self.default_port:
+            p = ''
+        else:
+            p = ':' + str(port)
+
+        values = {'request': urlstr, 'hostname': hostname, 'port': p}
 
         return self.template % values
 
