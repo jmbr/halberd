@@ -3,7 +3,7 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.18 2005/08/26 12:06:12 rwx Exp $'
+__revision__ = '$Id: reportlib.py,v 1.19 2005/08/27 13:44:53 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -62,7 +62,7 @@ def report(scantask):
 
         out.write('difference: %d seconds\n' % clue.diff)
 
-        out.write('successful requests: %d hits (%.2f%% of the traffic)\n' \
+        out.write('successful requests: %d hits (%.2f%%)\n' \
                   % (clue.getCount(), clue.getCount() * 100 / float(hits)))
 
         if info['contloc']:
@@ -85,7 +85,9 @@ def report(scantask):
                 idx += 1
 
         if scantask.debug:
-            out.write('headers:\n  %s\n' % clue.headers)
+            import pprint
+            out.write('headers:\n')
+            pprint.pprint(clue.headers, out, indent=2)
 
 
 # vim: ts=4 sw=4 et
