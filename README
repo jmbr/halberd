@@ -21,7 +21,7 @@ Installing halberd is a very simple task. It suffices to write::
 
     # python setup.py install
 
-Python version 2.3 or above is needed plus its threading and MD5 or
+Python version 2.4 or above is needed plus its threading and MD5 or
 SHA1 modules. It is advisable to have python's SSL networking capabilities
 enabled, this is needed to scan through HTTPS.
 
@@ -60,4 +60,4 @@ And follow with::
     $ halberd.py login.passport.net
 
 
-:Version: $Id: README,v 1.9 2005/08/26 11:44:21 rwx Exp $
+:Version: $Id: README,v 1.10 2005/08/27 11:58:53 rwx Exp $
