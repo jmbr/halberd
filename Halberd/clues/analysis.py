@@ -3,7 +3,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.21 2005/08/26 12:06:14 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.22 2005/08/27 01:36:05 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -111,6 +111,7 @@ def ignore_changing_fields(clues):
     return clues
 
 
+# XXX - Unzip is part of the official Python 2.4 distribution.
 def unzip(seq):
     """Inverse of zip.
 
@@ -157,7 +158,10 @@ def decorate_and_sort(clues):
     @rtype: C{list}
     """
 
-    # XXX Fix this, in Python 2.3 there's a cmp parameter to sort which makes
+    # TODO - Time decorate_and_sort() against sort(key = lambda x: ...) and see
+    # which one works faster.
+
+    # XXX - Fix this, in Python 2.3 there's a cmp parameter to sort which makes
     # this two functions (decorate_and_sort and undecorate useless.
     # Also, in Python 2.4 there's a `key' keyword parameter to sort that replaces the
     # decorate_and_sort idiom.
@@ -299,7 +303,7 @@ def classify(seq, *classifiers):
     applying the classifiers to the items in the specified sequence.
     @rtype: C{dict}
     """
-    # XXX Printing a dictionary in a doctest string is a very bad idea.
+    # XXX - Printing a dictionary in a doctest string is a very bad idea.
     classified = {}
 
     for item in seq:
@@ -339,33 +343,23 @@ def sections(classified, sects=None):
 
     return sects
 
-def deltas(diffs):
+def deltas(xs):
     """Computes the differences between the elements of a sequence of integers.
 
-    >>> list(deltas([-1, 0, 1]))
-    [None, 1, 1]
-    >>> list(deltas([1, 1, 3, 2, 3, 4, 6, 2]))
-    [None, 0, 2, -1, 1, 1, 2, -4]
-    >>> list(deltas(range(10)))
-    [None, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    >>> fib = [1, 1, 2, 3, 5, 8, 13]
+    >>> deltas(fib)
+    [0, 1, 1, 2, 3, 5]
 
-    @param diffs: A sequence of integers.
-    @type diffs: C{list} or C{tuple}
+    @param xs: A sequence of integers.
+    @type xs: C{list}
 
-    @return: A generator which yields the difference between the consecutive
-    elements of L{diffs}. For the first element it yields None as there's no
-    previous item available to compute the delta.
-    @rtype: C{int}
+    @return: A list of differences between consecutive elements of L{xs}.
+    @rtype: C{list}
     """
-    prev = None
-    for diff in diffs:
-        if prev is None:
-            prev = diff
-            yield None
-        else:
-            delta = diff - prev
-            prev = diff
-            yield delta
+    if len(xs) < 2:
+        return []
+    else:
+        return [xs[1] - xs[0]] + deltas(xs[1:])
 
 def slices(seq, indexes):
     """Returns slices of a given sequence separated by the specified indexes.
@@ -422,7 +416,7 @@ def filter_proxies(clues, maxdelta=3):
         # We find the indexes of those clues which differ from the rest in
         # more than maxdelta seconds.
         indexes = [idx for idx, delta in enumerate(deltas(diffs)) \
-                       if delta is not None and abs(delta) > maxdelta]
+                       if abs(delta) > maxdelta]
 
         for piece in slices(cur_clues, indexes):
             results.append(merge(cur_clues[piece]))
@@ -525,6 +519,10 @@ def _test():
 
     import Halberd.clues.Clue
     import Halberd.clues.analysis
+
+    # Due to the above imports , this test must be executed from the top level
+    # source directory:
+    #     python Halberd/clues/analysis.py
 
     globs = Halberd.clues.analysis.__dict__
     globs.update(Halberd.clues.Clue.__dict__)
