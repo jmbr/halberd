@@ -12,7 +12,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.16 2005/08/27 12:13:44 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.17 2005/08/27 12:20:49 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -42,6 +42,8 @@ default_timeout = 2
 
 default_bufsize = 1024
 
+# WARNING - Changing the HTTP request method in the following template will
+# require updating tests/test_clientlib.py accordingly.
 default_template = """\
 GET %(request)s HTTP/1.1\r\n\
 Host: %(hostname)s%(port)s\r\n\
