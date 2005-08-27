@@ -3,7 +3,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.22 2005/08/27 01:36:05 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.23 2005/08/27 11:41:49 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -111,21 +111,6 @@ def ignore_changing_fields(clues):
     return clues
 
 
-# XXX - Unzip is part of the official Python 2.4 distribution.
-def unzip(seq):
-    """Inverse of zip.
-
-    >>> unzip([('a', 1), ('b', 2), ('c', 3)])
-    (('a', 'b', 'c'), (1, 2, 3))
-
-    @param seq: A sequence to unzip.
-    @type seq: C{list} or C{tuple}
-
-    @return: Unzipped sequence
-    @rtype: C{tuple}
-    """
-    return tuple(zip(*seq))
-
 def get_digest(clue):
     """Returns the specified clue's digest.
 
@@ -136,49 +121,6 @@ def get_digest(clue):
     @rtype: C{str}
     """
     return clue.info['digest']
-
-def decorate_and_sort(clues):
-    """Sorts a list of clues by their time difference.
-
-    Decorates a sequence of clues with their time difference and sorts those
-    clues (application of the schwartzian transform).
-
-    See also L{undecorate}
-
-    >>> a, b, c = Clue(), Clue(), Clue()
-    >>> a.diff, b.diff, c.diff = range(1, 4)
-    >>> clues = undecorate(decorate_and_sort([c, b, a]))
-    >>> (clues[0] == a, clues[1] == b, clues[2] == c)
-    (True, True, True)
-
-    @param clues: Sequence of clues to sort.
-    @type clues: C{list}
-
-    @return: Decorated (with time diff.) sequence of clues.
-    @rtype: C{list}
-    """
-
-    # TODO - Time decorate_and_sort() against sort(key = lambda x: ...) and see
-    # which one works faster.
-
-    # XXX - Fix this, in Python 2.3 there's a cmp parameter to sort which makes
-    # this two functions (decorate_and_sort and undecorate useless.
-    # Also, in Python 2.4 there's a `key' keyword parameter to sort that replaces the
-    # decorate_and_sort idiom.
-    decorated = [(clue.diff, clue) for clue in clues]
-    decorated.sort()
-    return decorated
-
-def undecorate(decorated):
-    """Undecorate a list.
-
-    @param decorated: A decorated sequence
-    @type decorated: C{list} or C{tuple}
-
-    @return: A sequence without decorative fields.
-    @rtype: C{list}
-    """
-    return unzip(decorated)[-1]
 
 def clusters(clues, step=3):
     """Finds clusters of clues.
@@ -212,7 +154,7 @@ def clusters(clues, step=3):
         return ()
 
     # Sort the clues by their time difference.
-    clues = undecorate(decorate_and_sort(clues))
+    clues.sort(key=lambda x: x.diff)
 
     invrange = lambda num: [(num - x) for x in range(num)]
 
@@ -346,8 +288,9 @@ def sections(classified, sects=None):
 def deltas(xs):
     """Computes the differences between the elements of a sequence of integers.
 
-    >>> fib = [1, 1, 2, 3, 5, 8, 13]
-    >>> deltas(fib)
+    >>> deltas([-1, 0, 1])
+    [1, 1]
+    >>> deltas([1, 1, 2, 3, 5, 8, 13])
     [0, 1, 1, 2, 3, 5]
 
     @param xs: A sequence of integers.
@@ -361,33 +304,36 @@ def deltas(xs):
     else:
         return [xs[1] - xs[0]] + deltas(xs[1:])
 
-def slices(seq, indexes):
-    """Returns slices of a given sequence separated by the specified indexes.
+def slices(start, xs):
+    """Returns slices of a given sequence separated by the specified indices.
 
     If we wanted to get the slices necessary to split range(20) in
     sub-sequences of 5 items each we'd do:
 
     >>> seq = range(20) 
-    >>> indexes = (5, 10, 15)
-    >>> for piece in slices(seq, indexes):
+    >>> indices = [5, 10, 15]
+    >>> for piece in slices(0, indices):
     ...     print seq[piece]
     [0, 1, 2, 3, 4]
     [5, 6, 7, 8, 9]
     [10, 11, 12, 13, 14]
     [15, 16, 17, 18, 19]
 
-    @param seq: Sequence to split in slices.
-    @type seq: Any (mutable) sequence which provides de __len__ method.
+    @param start: Index of the first element of the sequence we want to
+    partition.
+    @type start: C{int}.
 
-    @return: A generator of C{slice} objects suitable for splitting the given
-    sequence.
-    @rtype: C{slice}
+    @param xs: Sequence of indexes where 'cuts' must be made.
+    @param xs: C{list}
+
+    @return: A sequence of C{slice} objects suitable for splitting a list as
+    specified.
+    @rtype: C{list} of C{slice}
     """
-    start, end = 0, len(seq)
-    for idx in indexes:
-        yield slice(start, idx)
-        start = idx
-    yield slice(start, end)
+    if xs == []:
+        # The last slice includes all the remaining items in the sequence.
+        return [slice(start, None)]
+    return [slice(start, xs[0])] + slices(xs[0], xs[1:])
 
 def filter_proxies(clues, maxdelta=3):
     """Detect and merge clues pointing to a proxy cache on the remote end.
@@ -399,8 +345,8 @@ def filter_proxies(clues, maxdelta=3):
     difference and the previous one.
     @type maxdelta: C{int}
 
-    @return: Sequence of clues where all irrelevant clues pointing out to proxy
-    caches have been filtered out.
+    @return: Sequence where all irrelevant clues pointing out to proxy caches
+    have been filtered out.
     @rtype: C{list}
     """
     results = []
@@ -410,15 +356,22 @@ def filter_proxies(clues, maxdelta=3):
     classified = classify(clues, get_rtime, get_digest)
 
     subsections = sections(classified)
-    for section in subsections:
-        diffs, cur_clues = unzip(decorate_and_sort(section))
+    for cur_clues in subsections:
+        if len(cur_clues) == 1:
+            results.append(cur_clues[0])
+            continue
 
-        # We find the indexes of those clues which differ from the rest in
+        cur_clues.sort(key=lambda x: x.diff)
+        diffs = [c.diff for c in cur_clues]
+
+        # We find the indices of those clues which differ from the rest in
         # more than maxdelta seconds.
-        indexes = [idx for idx, delta in enumerate(deltas(diffs)) \
+        indices = [idx for idx, delta in enumerate(deltas(diffs))
                        if abs(delta) > maxdelta]
 
-        for piece in slices(cur_clues, indexes):
+        for piece in slices(0, indices):
+            if cur_clues[piece] == []:
+                break
             results.append(merge(cur_clues[piece]))
 
     return results
@@ -481,6 +434,7 @@ def analyze(clues):
 
     return results
 
+# TODO - reanalyze should be called from this module and not from Halberd.shell.
 def reanalyze(clues, analyzed, threshold):
     """Identify and ignore changing header fields.
 
@@ -522,7 +476,7 @@ def _test():
 
     # Due to the above imports , this test must be executed from the top level
     # source directory:
-    #     python Halberd/clues/analysis.py
+    #     python Halberd/clues/analysis.py -v
 
     globs = Halberd.clues.analysis.__dict__
     globs.update(Halberd.clues.Clue.__dict__)
