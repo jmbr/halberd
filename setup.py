@@ -88,7 +88,7 @@ Development Status :: 4 - Beta
 Environment :: Console
 Intended Audience :: Information Technology
 Intended Audience :: System Administrators
-License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)
+License :: OSI Approved :: GNU General Public License (GPL)
 Natural Language :: English
 Operating System :: OS Independent
 Programming Language :: Python
