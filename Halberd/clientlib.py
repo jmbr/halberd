@@ -12,7 +12,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.17 2005/08/27 12:20:49 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.18 2005/08/27 13:14:46 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -34,6 +34,8 @@ __revision__ = '$Id: clientlib.py,v 1.17 2005/08/27 12:20:49 rwx Exp $'
 import time
 import socket
 import urlparse
+
+from itertools import takewhile
 
 import Halberd.ScanTask
 
@@ -141,6 +143,7 @@ class HTTPClient:
 
         # Remove HTTP response and leave only the MIME headers.
         headers = headers.splitlines()[1:]
+        headers = list(takewhile(lambda x: x != '', headers))
         headers.append('\r\n')
         headers = '\r\n'.join(headers)
 
