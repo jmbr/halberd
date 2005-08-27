@@ -3,7 +3,7 @@
 """Unit tests for Halberd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.7 2005/08/26 12:06:15 rwx Exp $'
+__revision__ = '$Id: test_clientlib.py,v 1.8 2005/08/27 12:21:42 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -27,6 +27,10 @@ import urlparse
 
 import Halberd.clientlib as clientlib
 
+# TODO - Implement an HTTPServer so the test suite doesn't need to connect to
+# external hosts.
+# This HTTPServer must be bound only to localhost (for security reasons).
+# TODO - Think about something similar for HTTPS.
 
 class TestHTTPClient(unittest.TestCase):
 
@@ -48,24 +52,24 @@ class TestHTTPClient(unittest.TestCase):
             scheme, netloc, url, params, query, fragment = \
                 urlparse.urlparse(url)
             hostname, port = self.client._getHostAndPort(netloc)
-            return self.client._fillTemplate(hostname, url,
+            return self.client._fillTemplate(hostname, port, url,
                                              params, query, fragment)
 
-        req = get_request('http://www.real-iti.com:23/test?blop=777')
+        req = get_request('http://www.example.com:23/test?blop=777')
         self.failUnless(req.splitlines()[:2] == \
-                        ['HEAD /test?blop=777 HTTP/1.1',
-                         'Host: www.real-iti.com'])
+                        ['GET /test?blop=777 HTTP/1.1',
+                         'Host: www.example.com:23'])
 
-        req = get_request('http://www.synnergy.net/~rwx/test;blop?q=something')
+        req = get_request('http://www.example.com/test;blop?q=something')
         self.failUnless(req.splitlines()[:2] == \
-                        ['HEAD /~rwx/test;blop?q=something HTTP/1.1',
-                         'Host: www.synnergy.net'])
+                        ['GET /test;blop?q=something HTTP/1.1',
+                         'Host: www.example.com'])
 
         req = get_request('http://localhost:8080')
-        self.failUnless(req.splitlines()[0] == 'HEAD / HTTP/1.1')
+        self.failUnless(req.splitlines()[0] == 'GET / HTTP/1.1')
 
     def testAntiCache(self):
-        req = self.client._fillTemplate('localhost', '/index.html')
+        req = self.client._fillTemplate('localhost', 80, '/index.html')
         self.failUnless(req.splitlines()[2:4] == \
                         ['Pragma: no-cache', 'Cache-control: no-cache'])
 
