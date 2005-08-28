@@ -12,7 +12,7 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.18 2005/08/27 13:14:46 rwx Exp $'
+__revision__ = '$Id: clientlib.py,v 1.19 2005/08/28 09:18:01 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -208,7 +208,7 @@ class HTTPClient:
         @type hostname: C{str}
 
         @param port: Remote port.
-        @type hostname: C{int}
+        @type port: C{int}
 
         @param url: URL to use as source.
         @type url: C{str}

@@ -3,7 +3,7 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.23 2005/08/27 11:41:49 rwx Exp $'
+__revision__ = '$Id: analysis.py,v 1.24 2005/08/28 09:17:05 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -324,7 +324,7 @@ def slices(start, xs):
     @type start: C{int}.
 
     @param xs: Sequence of indexes where 'cuts' must be made.
-    @param xs: C{list}
+    @type xs: C{list}
 
     @return: A sequence of C{slice} objects suitable for splitting a list as
     specified.
@@ -474,7 +474,7 @@ def _test():
     import Halberd.clues.Clue
     import Halberd.clues.analysis
 
-    # Due to the above imports , this test must be executed from the top level
+    # Due to the above imports, this test must be executed from the top level
     # source directory:
     #     python Halberd/clues/analysis.py -v
 
