@@ -93,7 +93,7 @@ check: $(ALL_SOURCES)
 install: build
 	$(RM) -r $(tmpdir)
 	$(MKDIR) $(tmpdir)
-	$(SETUP) install --root $(tmpdir)
+	$(SETUP) install --prefix $$HOME
 
 distclean: clobber
 	$(RM) $(srcdir)/MANIFEST
