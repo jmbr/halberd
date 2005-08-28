@@ -1,0 +1,27 @@
+Installation
+============
+
+Prerequisites
+-------------
+
+You need Python version 2.4 or above and the threading and MD5 (or SHA1)
+modules should be enabled.  If you want to scan through HTTPS you will also
+need a Python interpreter configured with support for SSL sockets.
+
+Platforms
+---------
+
+halberd should work in every machine satisfying the prerequisites mentioned
+above.  The program has been successfully built and tested on Linux, Windows
+2000 and Mac OS X.
+
+Steps
+-----
+
+Installing halberd is a very simple task.  It suffices to write:
+
+    # python setup.py install
+
+For further installation options check the output of the following command:
+
+    python setup.py install --help
