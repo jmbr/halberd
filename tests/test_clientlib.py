@@ -85,22 +85,22 @@ class TestHTTPClient(unittest.TestCase):
             return
 
     def testSendRequestToRemote(self):
-        self.client._putRequest('212.204.249.161', 'http://www.synnergy.net')
+        self.client._putRequest('66.35.250.203', 'http://www.sourceforge.net')
         timestamp, headers = self.client._getReply()
         self.failUnless(headers and headers.startswith('HTTP/'))
 
     def testGetHeaders(self):
-        addr, url = '212.204.249.161', 'http://www.synnergy.net'
+        addr, url = '66.35.250.203', 'http://www.sourceforge.net'
         reply = self.client.getHeaders(addr, url)
         self.failUnless(reply != (None, None))
 
     def testIncorrectReading(self):
-        """Check for Issue60
+        """Check for bug in _getReply (issue 60)
         Incorrect reading procedure in Halberd.clientlib.HTTPClient._getReply
         """
         self.client.bufsize = 1
         self.client.timeout = 10
-        addr, url = '127.0.0.1', 'http://localhost:8000'
+        addr, url = '127.0.0.1', 'http://localhost'
         self.client._putRequest(addr, url)
         try:
             timestamp, headers = self.client._getReply()
@@ -122,17 +122,17 @@ class TestHTTPSClient(unittest.TestCase):
                              ('secure', 777))
 
     def testConnect(self):
-        clientlib.HTTPSClient()._connect(('www.sf.net', 443))
+        clientlib.HTTPSClient()._connect(('www.sourceforge.net', 443))
 
     def testInvalidConnect(self):
         self.failUnlessRaises(clientlib.HTTPSError,
                               clientlib.HTTPSClient()._connect,
-                              ('localhost', 8000))
+                              ('localhost', 80))
 
         # XXX For better testing a keyfile and a certificate should be used.
 
     def testSendRequestToRemote(self):
-        self.client._putRequest('207.171.182.16', 'https://www.sf.net')
+        self.client._putRequest('66.35.250.203', 'https://www.sourceforge.net')
         timestamp, headers = self.client._getReply()
         self.failUnless(headers != None and headers.startswith('HTTP/'))
 
