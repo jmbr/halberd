@@ -15,4 +15,4 @@ include README
 include THANKS
 include MANIFEST.in
 include GNUmakefile
-include TODO
+#include TODO
