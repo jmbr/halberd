@@ -3,7 +3,7 @@ TODO
 
 The following is a list of pending items:
 
-- Review Halberd.cluster.analysis
+- Determine whether the results from scanning google.com are real or not.
 
 - Test different clustering algorithms: fuzzy clustering is implemented in
   Matlab, k-means clustering is available in Scipy.  These algorithms should be
@@ -12,20 +12,24 @@ The following is a list of pending items:
 - Rewrite Halberd.clues.analysis' auxiliary functions as recursive functions
   and formally verify them (think of automated theorem proving as well).
 
-- Take into account Python 2.4's improvements and determine whether to use them
-  or not.
-
 - Write a man page (perhaps in XML).
 
 - Write a good user's guide.
 
+- Review README and write an INSTALL document.
+
+- Modify the test suite so it won't fail on different machines than mine.
+
 - Improve API documentation.
 
-- Test extensively and determine whether 'Development Status' should be raised
-  to 'Production/Stable' in setup.py
+- Possibly remove the RPC functionality and make two branches: a 'stable' one
+without RPC and a 'development' one.
 
 - Release the program (securityfocus, freshmeat, reality tunnels and maybe
   notify the authors of hacking exposed).
+
+- Test extensively and determine whether 'Development Status' should be raised
+  to 'Production/Stable' in setup.py
 
 - Implement SSL detection feature.
 
@@ -34,8 +38,6 @@ The following is a list of pending items:
   reaching web servers).
 
 - Implement read/write locks.
-
-- Write user documentation.
 
 - Write more test cases... much more!
 
