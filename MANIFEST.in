@@ -16,4 +16,4 @@ include README
 include INSTALL
 #include MANIFEST.in
 include GNUmakefile
-#include TODO
+include TODO
