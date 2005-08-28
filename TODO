@@ -3,7 +3,13 @@ TODO
 
 The following is a list of pending items:
 
+- Install Roundup to manage issues and to-do items and replace this file with
+  one suitable for the public.
+
 - Determine whether the results from scanning google.com are real or not.
+
+- Add some code to avoid throttling on the server's side (it can be something
+  simple as setting a delay parameter).
 
 - Test different clustering algorithms: fuzzy clustering is implemented in
   Matlab, k-means clustering is available in Scipy.  These algorithms should be
