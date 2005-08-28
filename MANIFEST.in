@@ -1,7 +1,7 @@
 include setup.py
-include halberd.py
+include scripts/halberd
 
-recursive-include hlbd *.py
+recursive-include Halberd *.py
 
 include tests/*.py
 recursive-include tests/data *.clu
@@ -12,7 +12,7 @@ recursive-include doc/api *
 include AUTHORS
 include ChangeLog
 include README
-include THANKS
-include MANIFEST.in
+#include THANKS
+#include MANIFEST.in
 include GNUmakefile
 #include TODO

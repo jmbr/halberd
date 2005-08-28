@@ -1,4 +1,4 @@
-# $Id: GNUmakefile,v 1.18 2005/08/26 12:14:01 rwx Exp $
+# $Id: GNUmakefile,v 1.19 2005/08/28 10:48:07 rwx Exp $
 
 # ============================================================================
 # This makefile is intended for developers. End users should rely on setup.py.
@@ -22,6 +22,7 @@
 
 
 srcdir := .
+scriptsdir := $(srcdir)/scripts
 modulesdir := $(srcdir)/Halberd
 docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
@@ -44,7 +45,7 @@ SETUP := $(PYTHON) $(srcdir)/setup.py
 
 versionfile := $(modulesdir)/version.py
 
-SCRIPTS := halberd
+SCRIPTS := $(scriptsdir)/halberd
 MODULES := $(filter-out $(modulesdir)/version.py, \
 		   $(wildcard $(modulesdir)/*.py)) \
 		   $(wildcard $(modulesdir)/clues/*.py) \
@@ -62,6 +63,11 @@ rest2html = $(PYTHON) -c \
 	"from docutils.core import publish_cmdline; \
 	publish_cmdline(writer_name='html')"
 
+
+all:
+	@echo "============================================================================"
+	@echo "This makefile is intended for developers. End users should rely on setup.py."
+	@echo "============================================================================"
 
 clean:
 	$(RM) tags

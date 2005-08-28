@@ -105,7 +105,7 @@ setup(
     url = 'http://www.synnergy.net/~rwx/halberd',
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
-    scripts = ['halberd'],
+    scripts = [os.path.join('scripts', 'halberd')],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
