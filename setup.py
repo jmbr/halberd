@@ -76,10 +76,9 @@ class test(Command):
         sys.path = old_path[:]
 
 
-long_description = """\
-halberd is a tool for discovering and bypassing HTTP load balancers. It is \
-useful in testing load balancer configurations and \
-auditing web servers and web applications."""
+long_description = \
+r"""halberd is a tool for discovering HTTP load balancers. It is aimed at
+testing load balancer configurations and auditing web applications."""
 
 # Trove classifiers. The complete list can be grabbed from:
 # http://www.python.org/pypi?:action=list_classifiers
