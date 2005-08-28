@@ -35,7 +35,7 @@ PYTHON := /usr/bin/python
 PYTHON_COUNT := /usr/local/bin/python_count
 EPYDOC := /usr/bin/epydoc
 CTAGS := /usr/local/bin/ctags
-CVS2CL := $(HOME)/bin/cvs2cl.pl
+DARCS := /usr/local/bin/darcs
 SHTOOLIZE := /usr/local/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
 RM := /bin/rm -f
@@ -123,8 +123,9 @@ incversion: shtool
 shtool:
 	$(SHTOOLIZE) -o $@ version
 
+.PHONY: ChangeLog
 ChangeLog: $(ALL_SOURCES)
-	$(CVS2CL)
+	$(DARCS) changes --human-readable > ChangeLog
 
 count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
