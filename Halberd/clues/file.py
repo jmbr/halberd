@@ -4,7 +4,8 @@
 
 Provides functionality needed to store clues on disk.
 """
-__revision__ = '$Id: file.py,v 1.6 2005/08/26 12:06:14 rwx Exp $'
+
+__revision__ = '$Id: file.py,v 1.7 2005/08/28 09:17:40 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
