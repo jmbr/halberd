@@ -102,8 +102,7 @@ distclean: clobber
 	$(RM) -r $(apidocdir)
 	$(RM) -r $(srcdir)/dist
 
-doc: $(apidocdir)/index.html \
-	$(docdir)/default.css $(docdir)/overview.html
+doc: $(apidocdir)/index.html $(docdir)/overview.html
 
 $(apidocdir)/index.html: $(MODULES)
 	$(EPYDOC) -o $(apidocdir) $^
