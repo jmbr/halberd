@@ -29,7 +29,6 @@ import Halberd.logger
 import Halberd.reportlib
 import Halberd.clues.file
 import Halberd.clues.analysis as analysis
-from Halberd.RPCServer import RPCServer
 
 
 class ScanError(Exception):
@@ -187,21 +186,6 @@ class MultiScanStrategy(BaseStrategy):
             self._analyze()
 
             Halberd.reportlib.report(self.task)
-
-class RPCServerStrategy(BaseStrategy):
-    """Distributed scanner server strategy.
-
-    Turns the program into an RPC server.
-    """
-    def __init__(self, scantask):
-        BaseStrategy.__init__(self, scantask)
-
-        self.rpcserver = RPCServer(scantask.rpc_serv_addr)
-    
-    def execute(self):
-        """Listen for scanning requests and serve them.
-        """
-        return self.rpcserver.serve_forever()
 
 class ClueReaderStrategy(BaseStrategy):
     """Clue reader strategy.

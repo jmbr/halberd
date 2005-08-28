@@ -28,9 +28,6 @@ The following is a list of pending items:
 
 - Improve API documentation.
 
-- Possibly remove the RPC functionality and make two branches: a 'stable' one
-without RPC and a 'development' one.
-
 - Release the program (Security Focus, Freshmeat, PyPI, Reality tunnels, etc.)
 
 - Test extensively and determine whether 'Development Status' should be raised
@@ -45,5 +42,3 @@ without RPC and a 'development' one.
 - Implement read/write locks.
 
 - Write more test cases... much more!
-
-- Replace RPC protocol by a more secure one.

@@ -10,9 +10,6 @@ This module takes care of reading and writing configuration files.
 
 @var default_proxy_port: Default TCP port to listen when acting as a proxy.
 @type default_proxy_port: C{int}
-
-@var default_rpc_port: Default TCP port to listen when acting as an RPC server.
-@type default_rpc_port: C{int}
 """
 
 # Copyright (C) 2004, 2005, 2006 Juan M. Bello Rivas <jmbr+halberd@superadditive.com>
@@ -37,7 +34,6 @@ import ConfigParser
 
 
 default_proxy_port = 8080
-default_rpc_port = 2323
 
 default_conf = r"""
 # ============================================================================
@@ -48,17 +44,6 @@ default_conf = r"""
 
 address:
 port: 8080
-
-[rpcserver]
-
-address:
-port: 2323
-
-[rpcclient]
-
-# Example:
-#   servers: 10.10.10.1:2323, 10.10.10.2:2323, 172.26.0.77:2323
-servers:
 
 [ssl]
 
@@ -121,7 +106,6 @@ class ConfReader:
         assert self.__conf, 'The configuration file is not open'
 
         proxy_serv_addr = ()
-        rpc_serv_addr = ()
 
         # The orthodox way of doing this is via ConfigParser.get*() but those
         # methods lack the convenience of dict.get. While another approach
@@ -135,16 +119,6 @@ class ConfReader:
         if self.__dict.has_key('proxy'):
             proxy_serv_addr = self._getAddr('proxy', default_proxy_port)
 
-        if self.__dict.has_key('rpcserver'):
-            rpc_serv_addr = self._getAddr('rpcserver', default_rpc_port)
-
-        try:
-            rpc_servers = self.__dict['rpcclient']['servers']
-            rpc_servers = [server.strip() for server in rpc_servers.split(',')\
-                                          if server]
-        except KeyError:
-            rpc_servers = []
-
         keyfile = self.__dict['ssl'].get('keyfile', None)
         certfile = self.__dict['ssl'].get('certfile', None)
 
@@ -153,7 +127,7 @@ class ConfReader:
         if certfile == '':
             certfile = None
 
-        return rpc_servers, rpc_serv_addr, proxy_serv_addr, keyfile, certfile
+        return proxy_serv_addr, keyfile, certfile
 
     def writeDefault(self, conf_file):
         """Write a bare-bones configuration file

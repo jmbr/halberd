@@ -86,19 +86,9 @@ class ScanTask:
     @ivar addr: Address of the target web server.
     @type addr: C{str}
 
-    @ivar rpc_servers: List of addresses were scanning agents are listening.
-    @type rpc_servers: C{list}
-
-    @ivar rpc_serv_addr: Address + port where to listen when launching halberd
-    as an agent scanner.
-    @type rpc_serv_addr: C{tuple}
-
     @ivar proxy_serv_addr: Address + port where to listen when operating as a
     proxy.
     @type proxy_serv_addr: C{tuple}
-
-    @ivar isDistributed: Indicates whether the scan should be distributed or not.
-    @type isDistributed: C{bool}
 
     @ivar out: File where to write reports. If it's not set, stdout will be
     used.
@@ -132,12 +122,7 @@ class ScanTask:
         self.url = ''
         self.addr = ''
 
-        self.rpc_servers = []
-        self.rpc_serv_addr = ()
-
         self.proxy_serv_addr = ()
-
-        self.isDistributed = False
 
         self.save = ''
 
@@ -180,9 +165,9 @@ class ScanTask:
             raise ConfError, 'invalid configuration file %s\n' % self.conf_file
 
         confvals = reader.parse()
-        self.rpc_servers, self.rpc_serv_addr = confvals[:2]
-        self.proxy_serv_addr = confvals[2]
-        self.keyfile, self.certfile = confvals[3:]
+        print confvals
+        self.proxy_serv_addr = confvals[0]
+        self.keyfile, self.certfile = confvals[1:]
 
         reader.close()
 

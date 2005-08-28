@@ -24,7 +24,6 @@ __all__ = [
     'clientlib',
     'clues',
     'reportlib',
-    'RPCServer',
     'conflib',
     'util',
     'shell',

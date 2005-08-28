@@ -80,11 +80,6 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
                       help='save clues to the specified directory',
                       metavar='DIR', default='')
 
-    parser.add_option('-s', '--server', action='store_true', dest='rpc_server',
-                      help='run as scan server')
-    parser.add_option('-c', '--client', action='store_true', dest='rpc_client',
-                      help='run as scan cilent')
-
     parser.add_option('', '--config', action='store', dest='confname',
                       help='use alternative configuration file',
                       metavar='FILE',
@@ -133,15 +128,10 @@ def scannerFactory(opts, args):
         Halberd.logger.setDebug()
 
     scantask.readConf()
-    if opts.rpc_client:
-        scantask.isDistributed = True
 
     if opts.cluefile:
         # Read and analyze clues.
         scanner = Halberd.shell.ClueReaderStrategy
-    elif opts.rpc_server:
-        # Act as a scan server.
-        scanner = Halberd.shell.RPCServerStrategy
     elif opts.urlfile:
         # MultiScan
         scantask.urlfile = opts.urlfile

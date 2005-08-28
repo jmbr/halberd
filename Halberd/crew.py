@@ -41,26 +41,17 @@ of what they do:
 
     - Scanner: Performs a load-balancer scan from the current machine.
 
-    - RPCScanner: Instructs a remote halberd RPC server to scan the
-    specified target.
-
 The following is a diagram showing the way it works::
 
-                                      .--> Manager -----.
-                                      |                 |
-                                      +--> Scanner -----+
-        .----------.   .----------.   |                 |   .-------.
- IN --> | ScanTask |->-| WorkCrew |---+--> Scanner -----+->-| Clues |--> OUT
-        `----------'   `----------'   |                 |   `-------'
-                                      +--> RPCScanner --+
-                                      |                 |
-                                      `--> RPCScanner --'
-
-RPC protocol
-------------
-
-Our RPC protocol is very simple and designed to avoid hassle on the
-programmer's side.
+                                     .--> Manager --.
+                                     |              |
+                                     +--> Scanner --+
+        .----------.   .----------.  |              |   .-------.
+ IN --> | ScanTask |->-| WorkCrew |--+--> Scanner --+->-| Clues |--> OUT
+        `----------'   `----------'  |              |   `-------'
+                                     +--> Scanner --+
+                                     |              |
+                                     `--> Scanner --'
 """
 
 # Copyright (C) 2004, 2005, 2006 Juan M. Bello Rivas <jmbr+halberd@superadditive.com>
@@ -232,18 +223,6 @@ class WorkCrew:
             worker = Scanner(self.state, self.task)
             self.workers.append(worker)
 
-    def _initRemote(self):
-        """Initializes scanners in remote RPC servers.
-        """
-        if not self.task.isDistributed:
-            return
-
-        for server in self.task.rpc_servers:
-            worker = RPCScanner(self.state, self.task)
-            worker.setServer(server)
-            print 'scanning through RPC server', str(worker.rpc_serv_addr)
-            self.workers.append(worker)
-
     def scan(self):
         """Perform a parallel load-balancer scan.
         """
@@ -251,7 +230,6 @@ class WorkCrew:
         self._setupSigHandler()
 
         self._initLocal()
-        self._initRemote()
 
         for worker in self.workers:
             worker.start()
@@ -397,102 +375,6 @@ class Scanner(BaseScanner):
 
         return clue
 
-class RPCScanner(BaseScanner):
-    """Scans the target host through an RPC server.
-    """
-    sock = None
-    bufsize = 1024
-
-    # Amount of seconds to wait for an RPC server's reply.
-    addtime = 10
-
-    def __init__(self, state, scantask):
-        BaseScanner.__init__(self, state, scantask)
-        self.setTimeout(self.task.scantime + self.addtime)
-        self.rpc_serv_addr = None
-
-    def setServer(self, addr):
-        host, port = addr.split(':')
-        port = int(port)
-        self.rpc_serv_addr = (host, port)
-
-    def setTimeout(self, secs):
-        BaseScanner.setTimeout(self, secs)
-        # Storing the timeout is useful for socket.settimeout
-        self.__timeout = secs
-
-    def _sendRequest(self):
-        # xxx - Explain the protocol.
-        request = base64.encodestring(pickle.dumps(self.task)) + '\n\n'
-
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.settimeout(self.__timeout)
-        self.sock.connect(self.rpc_serv_addr)
-        self.sock.sendall(request)
-
-    def _getReply(self):
-        data = ''
-        while True:
-            if self.hasExpired():
-                break
-
-            chunk = self.sock.recv(self.bufsize)
-
-            if not chunk:
-                break
-            data += chunk
-
-        self.sock.close()
-
-        localts = utctime()
-        remotets, clues = pickle.loads(data)
-
-        return (remotets - localts), clues
-
-    def _normalizeClues(self, clues, delta):
-        """Adapts clues coming from an RPC server.
-
-        @param clues: Sequence of clues to be processed.
-        @type clues: C{list} or C{tuple}
-        
-        @param delta: Time difference between the local clock and the RPC
-        server's.
-        @type delta: C{float}
-        """
-        self.logger.debug('normalizing clues...')
-        for clue in clues:
-            clue._local -= delta
-            clue._calcDiff()
-        self.logger.debug('clue normalization finished')
-        return clues
-
-    def run(self):
-        """RPC client.
-
-        Instructs RPC server to perform a scan and assimilates clues coming
-        from remote scanners.
-        """
-        try:
-            self._sendRequest()
-            delta, clues = self._getReply()
-        except (socket.error, socket.timeout), msg:
-            self.error('%s %s' % (str(self.rpc_serv_addr), msg))
-            return
-        except EOFError:
-            self.error('%s %s' % (str(self.rpc_serv_addr), 'closed connection'))
-            return
-
-        clues = self._normalizeClues(clues, delta)
-        for clue in clues:
-            self.state.insertClue(clue)
-
-    def error(self, msg):
-        """Displays an error condition.
-        """
-        method, lineno = self.logger.findCaller()
-        print
-        self.logger.error('%s:%d [%s]: %s', method, lineno, self.getName(), msg)
-        
 
 class Manager(BaseScanner):
     """Performs management tasks during the scan.
