@@ -165,7 +165,6 @@ class ScanTask:
             raise ConfError, 'invalid configuration file %s\n' % self.conf_file
 
         confvals = reader.parse()
-        print confvals
         self.proxy_serv_addr = confvals[0]
         self.keyfile, self.certfile = confvals[1:]
 
