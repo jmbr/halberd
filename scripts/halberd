@@ -4,7 +4,7 @@
 """Command line interface.
 """
 
-__revision__ = '$Id: halberd,v 1.34 2005/08/27 01:05:19 rwx Exp $'
+__revision__ = '$Id: halberd,v 1.35 2005/08/28 09:18:26 rwx Exp $'
 
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
@@ -60,7 +60,7 @@ def make_parser():
                       help='read URLs from FILE', metavar='FILE')
 
     parser.add_option('-o', '--out', action='store', dest='output',
-                      help='write output to the specified file',
+                      help='write report to the specified file',
                       metavar='FILE', default='')
 
     parser.add_option('-a', '--address', action='store', dest='addr',
@@ -72,7 +72,7 @@ def make_parser():
                       metavar='FILE', default='')
     parser.add_option('-w', '--write', action='store', dest='save',
                       help='save clues to the specified directory',
-                      metavar='FILE', default='')
+                      metavar='DIR', default='')
 
     parser.add_option('-s', '--server', action='store_true', dest='rpc_server',
                       help='run as scan server')
@@ -80,7 +80,8 @@ def make_parser():
                       help='run as scan cilent')
 
     parser.add_option('', '--config', action='store', dest='confname',
-                      help='use configuration file', metavar='FILE',
+                      help='use alternative configuration file',
+                      metavar='FILE',
                       default=Halberd.ScanTask.default_conf_file)
 
     return parser
@@ -159,7 +160,6 @@ def main(argv):
 
     if opts.verbose:
         print version.version.v_gnu
-        print 'HTTP load balancer detector'
         print
 
     try:
