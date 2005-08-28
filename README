@@ -10,43 +10,13 @@ halberd -- HTTP load balancer detector
 Overview
 --------
 
-halberd is a tool for discovering and bypassing HTTP load balancers. It is
-useful in testing load balancer configurations as well as auditing web servers
-and web applications.
+halberd is a tool for discovering HTTP load balancers. It is useful in testing
+load balancer configurations as well as auditing web applications.
 
 Installation
 ------------
 
-Installing halberd is a very simple task. It suffices to write::
-
-    # python setup.py install
-
-Python version 2.4 or above is needed plus its threading and MD5 or
-SHA1 modules. It is advisable to have python's SSL networking capabilities
-enabled, this is needed to scan through HTTPS.
-
-A configuration file is stored in a directory named .halberd hanging from the
-user's home directory. Its name is halberd.cfg and it holds information
-relevant to halberd's behavior when acting as a distributed client or server,
-for SSL networking, etc. So if you're going to use some of halberd's more
-advanced features you should change the values there.
-
-Platforms
----------
-
-halberd should work in every machine providing the dependencies specified in
-the Installation section. It has been successfully built and tested on:
-
-* RedHat Linux 9.0
-* Windows 2000 Server
-* Mac OS X 10.2
-
-Documentation
--------------
-
-Full API documentation can be found in doc/api. An overview of what halberd
-does is located at doc/overview.txt. A user guide and a set of slides are being
-written.
+Follow the installation instructions written in INSTALL.
 
 Getting started
 ---------------
@@ -57,4 +27,21 @@ You could start by trying::
 
 And follow with::
 
-    $ halberd.py login.passport.net
+    $ halberd.py www.example.com
+
+A configuration file is stored in a directory named .halberd hanging from the
+user's home directory (that is: $HOME in Unix/Linux systems).  This file, named
+halberd.cfg, contains configurable run-time settings you can tweak.
+
+Documentation
+-------------
+
+Full API documentation can be found in doc/api. An overview of what halberd
+does can be found at doc/overview.txt.
+
+TODO - Write user's guide.
+
+Feedback and bug reports
+------------------------
+
+Send bug reports and comments to jmbr+halberd@acm.org
