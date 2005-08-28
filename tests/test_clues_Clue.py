@@ -3,8 +3,6 @@
 """Unit test for Halberd.clues.Clue
 """
 
-__revision__ = '$Id: test_clues_Clue.py,v 1.4 2005/08/26 12:06:15 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

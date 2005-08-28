@@ -7,8 +7,6 @@ Strategies are different ways in which target scans may be done. We provide
 basic functionality so more complex stuff can be built upon this.
 """
 
-__revision__ = '$Id: shell.py,v 1.11 2005/08/26 12:06:12 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

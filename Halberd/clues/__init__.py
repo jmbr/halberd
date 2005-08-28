@@ -6,8 +6,6 @@ This package contains modules implements functionality related to creation,
 analysis and storage of clues.
 """
 
-__revision__ = '$Id: __init__.py,v 1.5 2005/08/26 11:44:24 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -6,8 +6,6 @@
 @type table: C{str}
 """
 
-__revision__ = '$Id: util.py,v 1.3 2005/08/26 11:44:23 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

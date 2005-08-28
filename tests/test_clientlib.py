@@ -3,8 +3,6 @@
 """Unit tests for Halberd.clientlib
 """
 
-__revision__ = '$Id: test_clientlib.py,v 1.8 2005/08/27 12:21:42 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

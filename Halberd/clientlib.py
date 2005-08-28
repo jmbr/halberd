@@ -12,8 +12,6 @@
 @type default_template: C{str}
 """
 
-__revision__ = '$Id: clientlib.py,v 1.19 2005/08/28 09:18:01 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

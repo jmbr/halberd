@@ -8,8 +8,6 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-__revision__ = '$Id: Clue.py,v 1.11 2005/08/26 12:06:14 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -3,8 +3,6 @@
 """Output module.
 """
 
-__revision__ = '$Id: reportlib.py,v 1.19 2005/08/27 13:44:53 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -5,8 +5,6 @@
 Provides functionality needed to store clues on disk.
 """
 
-__revision__ = '$Id: file.py,v 1.7 2005/08/28 09:17:40 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

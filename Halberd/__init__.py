@@ -3,8 +3,6 @@
 """HTTP load balancer detector module.
 """
 
-__revision__ = '$Id: __init__.py,v 1.7 2005/08/26 11:44:23 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

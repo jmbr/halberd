@@ -3,8 +3,6 @@
 """Utilities for clue analysis.
 """
 
-__revision__ = '$Id: analysis.py,v 1.24 2005/08/28 09:17:05 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

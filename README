@@ -58,6 +58,3 @@ You could start by trying::
 And follow with::
 
     $ halberd.py login.passport.net
-
-
-:Version: $Id: README,v 1.10 2005/08/27 11:58:53 rwx Exp $

@@ -138,5 +138,3 @@ vulnerabilities.
 The common use cases and the inner workings of the tool will be explained.
 Attendees will learn how to use all of halberd's features as well as its inner
 workings.
-
-:Version: $Id: overview.txt,v 1.3 2004/03/07 10:27:54 rwx Exp $

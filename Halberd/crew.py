@@ -63,8 +63,6 @@ Our RPC protocol is very simple and designed to avoid hassle on the
 programmer's side.
 """
 
-__revision__ = '$Id: crew.py,v 1.6 2005/08/26 12:06:12 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify

@@ -15,8 +15,6 @@ This module takes care of reading and writing configuration files.
 @type default_rpc_port: C{int}
 """
 
-__revision__ = '$Id: conflib.py,v 1.11 2005/08/26 11:44:23 rwx Exp $'
-
 # Copyright (C) 2004, 2005 Juan M. Bello Rivas <rwx@synnergy.net>
 #
 # This program is free software; you can redistribute it and/or modify
