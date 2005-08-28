@@ -25,8 +25,7 @@ The following is a list of pending items:
 - Possibly remove the RPC functionality and make two branches: a 'stable' one
 without RPC and a 'development' one.
 
-- Release the program (securityfocus, freshmeat, reality tunnels and maybe
-  notify the authors of hacking exposed).
+- Release the program (Security Focus, Freshmeat, PyPI, Reality tunnels, etc.)
 
 - Test extensively and determine whether 'Development Status' should be raised
   to 'Production/Stable' in setup.py
