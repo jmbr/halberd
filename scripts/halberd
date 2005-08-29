@@ -34,8 +34,16 @@ def make_parser():
     """
     import optparse
 
-    parser = optparse.OptionParser(usage='%prog [options] url',
-                                   version=version.version.v_gnu)
+    notice = version.version.v_gnu + '\n\n' + \
+r"""Copyright (C) 2004, 2005 Juan M. Bello Rivas <jmbr@acm.org>
+
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
+
+    parser = optparse.OptionParser(usage='%prog [OPTION]... URL',
+                                   version=notice)
+    parser.set_description("Discover web servers behind HTTP load balancers.")
+
     parser.add_option('-v', '--verbose', action='store_true', dest='verbose',
                       help='explain what is being done', default=True)
     parser.add_option('-q', '--quiet', action='store_false', dest='verbose',

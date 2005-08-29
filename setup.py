@@ -105,6 +105,8 @@ setup(
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
     scripts = [os.path.join('scripts', 'halberd')],
+    data_files = [(os.path.join('man', 'man1'), \
+                  [os.path.join('man', 'man1', 'halberd.1')])],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )

@@ -24,6 +24,7 @@ scriptsdir := $(srcdir)/scripts
 modulesdir := $(srcdir)/Halberd
 docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
+mandir := $(srcdir)/man
 testdir := $(srcdir)/tests
 
 
@@ -37,6 +38,7 @@ SHTOOL := $(srcdir)/shtool
 RM := /bin/rm -f
 MKDIR := /bin/mkdir
 SETUP := $(PYTHON) $(srcdir)/setup.py
+HELP2MAN := ~/bin/hacked-help2man
 
 
 versionfile := $(modulesdir)/version.py
@@ -93,16 +95,20 @@ distclean: clobber
 	$(RM) $(srcdir)/MANIFEST
 	$(RM) $(srcdir)/ChangeLog
 	$(RM) $(docdir)/*.html
+	$(RM) $(mandir)/man1/halberd.1
 	$(RM) -r $(apidocdir)
 	$(RM) -r $(srcdir)/dist
 
-doc: $(apidocdir)/index.html $(docdir)/overview.html
+doc: $(apidocdir)/index.html $(docdir)/overview.html $(mandir)/man1/halberd.1
 
 $(apidocdir)/index.html: $(MODULES)
 	$(EPYDOC) -o $(apidocdir) $^
 
 $(docdir)/overview.html: $(docdir)/overview.txt
 	$(rest2html) $^ $@
+
+$(mandir)/man1/halberd.1:
+	$(HELP2MAN) --include $(srcdir)/help2man.cfg --no-info $(scriptsdir)/halberd --output $@
 
 tags: $(ALL_SOURCES)
 	$(CTAGS) $^
