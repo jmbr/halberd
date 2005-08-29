@@ -25,8 +25,6 @@ modulesdir := $(srcdir)/Halberd
 docdir := $(srcdir)/doc
 apidocdir := $(srcdir)/doc/api
 testdir := $(srcdir)/tests
-tmpdir := $(srcdir)/tmp
-sandboxdir := $(srcdir)/sandbox
 
 
 PYTHON := /usr/bin/python
@@ -46,17 +44,17 @@ versionfile := $(modulesdir)/version.py
 SCRIPTS := $(scriptsdir)/halberd
 MODULES := $(filter-out $(modulesdir)/version.py, \
 		   $(wildcard $(modulesdir)/*.py)) \
-		   $(wildcard $(modulesdir)/clues/*.py) \
-		   $(wildcard $(modulesdir)/shell/*.py)
+		   $(wildcard $(modulesdir)/clues/*.py)
 
 SOURCES := $(SCRIPTS) $(MODULES)
 TEST_SOURCES := $(wildcard $(testdir)/*.py)
 ALL_SOURCES := $(SOURCES) $(TEST_SOURCES)
 
-ALL_DIRS := $(sort $(dir $(ALL_SOURCES)) $(sandboxdir)/)
+ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
 
 
 remove = $(RM) $(addsuffix $(strip $(1)), $(2))
+
 rest2html = $(PYTHON) -c \
 	"from docutils.core import publish_cmdline; \
 	publish_cmdline(writer_name='html')"
@@ -89,8 +87,6 @@ check: $(ALL_SOURCES)
 	$(PYTHON) $(modulesdir)/clues/analysis.py
 
 install: build
-	$(RM) -r $(tmpdir)
-	$(MKDIR) $(tmpdir)
 	$(SETUP) install --prefix $$HOME
 
 distclean: clobber
@@ -121,7 +117,6 @@ incversion: shtool
 shtool:
 	$(SHTOOLIZE) -o $@ version
 
-.PHONY: ChangeLog
 ChangeLog: $(ALL_SOURCES)
 	$(DARCS) changes --human-readable > ChangeLog
 
@@ -129,7 +124,7 @@ count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
 
 
-.PHONY: clean clobber distclean dist setversion incversion check count install
+.PHONY: clean clobber distclean dist setversion incversion check count install ChangeLog
 
 
 # vim: noexpandtab
