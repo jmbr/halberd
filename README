@@ -21,11 +21,11 @@ Follow the installation instructions written in INSTALL.
 Getting started
 ---------------
 
-You could start by trying::
+You could begin with:
 
     $ halberd.py --help
 
-And follow with::
+and:
 
     $ halberd.py www.example.com
 
