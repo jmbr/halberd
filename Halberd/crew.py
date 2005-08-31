@@ -85,15 +85,11 @@ import time
 import math
 import copy
 import signal
-import base64
-import pickle
-import socket
 import threading
 
 import Halberd.logger
 import Halberd.clues.Clue
 import Halberd.clientlib as clientlib
-from Halberd.util import utctime
 
 
 __all__ = ['WorkCrew']

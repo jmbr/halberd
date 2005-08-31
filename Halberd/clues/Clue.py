@@ -121,7 +121,6 @@ class Clue:
         @return: Normalized string.
         @rtype: C{str}
         """
-        import Halberd.util
         normal = name.translate(Halberd.util.table).lower()
         while normal[0].isdigit():
             normal = normal[1:]

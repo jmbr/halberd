@@ -41,7 +41,6 @@ clue reanalysis.
 
 
 import os
-import sys
 
 import Halberd.conflib
 
@@ -161,8 +160,6 @@ class ScanTask:
         @raise ConfError: If there's some problem creating or reading the
         configuration file.
         """
-        import Halberd.conflib
-
         # xxx - Move this into Halberd.conflib as a higher level function.
 
         reader = Halberd.conflib.ConfReader()
@@ -175,7 +172,7 @@ class ScanTask:
                     os.mkdir(default_conf_dir)
                     reader.writeDefault(default_conf_file)
                     reader.open(default_conf_file)
-                except (OSError, IOError), msg:
+                except (OSError, IOError):
                     raise ConfError, 'unable to create a default conf. file'
             else:
                 raise ConfError, 'unable to open configuration file %s\n'

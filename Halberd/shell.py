@@ -24,8 +24,6 @@ basic functionality so more complex stuff can be built upon this.
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-import sys
-
 import Halberd.crew
 import Halberd.logger
 import Halberd.reportlib
