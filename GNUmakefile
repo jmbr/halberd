@@ -100,6 +100,7 @@ distclean: clobber
 	$(RM) -r $(srcdir)/dist
 
 doc: $(apidocdir)/index.html $(docdir)/overview.html $(mandir)/man1/halberd.1
+	$(MAKE) -C $(docdir)
 
 $(apidocdir)/index.html: $(MODULES)
 	$(EPYDOC) -o $(apidocdir) $^

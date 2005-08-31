@@ -7,6 +7,7 @@ include tests/*.py
 recursive-include tests/data *.clu
 
 include man/man1/halberd.1
+include doc/GNUmakefile doc/manual.tex
 include doc/*.txt doc/*.html doc/*.css
 recursive-include doc/api *
 
