@@ -26,6 +26,9 @@ manual.dvi: manual.tex
 	$(LATEX) $^
 	$(LATEX) $^
 
-.PHONY: clean
+.PHONY: clean clobber
 clean:
-	-rm -f *~ *.aux *.log *.dvi *.toc *.pdf *.ps
+	rm -f *.aux *.log *.dvi *.toc *.pdf *.ps
+
+clobber: clean
+	rm -f *~ *.bak

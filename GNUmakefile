@@ -72,10 +72,12 @@ clean:
 	$(RM) -r $(srcdir)/build
 	$(call remove, *.pyc, $(ALL_DIRS))
 	$(call remove, *.pyo, $(ALL_DIRS))
+	$(MAKE) -C doc clean
 
 clobber: clean
 	$(RM) *.bak
 	$(call remove, *~, $(ALL_DIRS) $(docdir)/)
+	$(MAKE) -C doc clobber
 
 build: $(SOURCES)
 	$(SETUP) build
