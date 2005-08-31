@@ -30,6 +30,7 @@ testdir := $(srcdir)/tests
 
 PYTHON := /usr/bin/python
 PYTHON_COUNT := /usr/local/bin/python_count
+PYLINT := /usr/bin/pylint
 EPYDOC := /usr/bin/epydoc
 CTAGS := /usr/local/bin/ctags
 DARCS := /usr/local/bin/darcs
@@ -82,7 +83,7 @@ clobber: clean
 build: $(SOURCES)
 	$(SETUP) build
 
-dist: setversion doc ChangeLog
+dist: lint setversion doc ChangeLog
 	$(SETUP) sdist
 
 check: $(ALL_SOURCES)
@@ -126,6 +127,9 @@ incversion: shtool
 shtool:
 	$(SHTOOLIZE) -o $@ version
 
+lint:
+	$(PYLINT) --required-attributes= --additional-builtins=map,filter --method-rgx='.*' --function-rgx='.*' $(ALL_SOURCES)
+
 ChangeLog: $(ALL_SOURCES)
 	$(DARCS) changes --human-readable > ChangeLog
 
@@ -133,7 +137,7 @@ count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
 
 
-.PHONY: clean clobber distclean dist setversion incversion check count install ChangeLog
+.PHONY: clean clobber distclean dist setversion incversion check count install lint ChangeLog 
 
 
 # vim: noexpandtab
