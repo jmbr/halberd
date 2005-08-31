@@ -88,7 +88,7 @@ check: $(ALL_SOURCES)
 	PYTHONPATH=$(modulesdir):$(modulesdir)/clues:$$PYTHONPATH \
 	$(PYTHON) $(modulesdir)/clues/analysis.py
 
-install: build
+install: build doc
 	$(SETUP) install --prefix $$HOME
 
 distclean: clobber
