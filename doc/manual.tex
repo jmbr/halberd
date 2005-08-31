@@ -12,7 +12,49 @@
 
 \chapter{Overview}
 
+In order to cope with heavy loads, web site administrators often install load
+balancer devices.  These machines hide several web servers behind a virtual IP
+(VIP from here on) taking HTTP requests and redirecting them to the real web
+servers according to several criteria in order to share the traffic between all
+the real servers.
+
+There are a few ways to map the servers behind the VIP and to reach them
+individually.
+
 halberd is a tool for discovering HTTP load balancers. It is useful in testing
 load balancer configurations as well as auditing web applications.
 
+\chapter{Motivation}
+
+Identifying and being able to reach all real servers individually (effectively
+bypassing the load balancer) is very important for an attacker trying to break
+into a site because it is often the case that there are configuration
+differences ranging from slight:
+
+\begin{itemize}
+  \item server software versions,
+  \item server modules
+\end{itemize}
+
+to the extreme:
+
+\begin{itemize}
+  \item different platforms
+  \item server software.
+\end{itemize}
+
+For an attacker this information is crucial because he might find vulnerable
+configurations that otherwise (without mapping the real servers) could have
+gone unnoticed.
+
+But someone trying to break into a website doesn't have server software as its
+only target. He will try to subvert dynamic server pages in several ways.  By
+identifying all the real servers and scanning them individually for
+vulnerabilities he might find bugs affecting only one or a few of the web
+servers. Even if all machines are running the same server software halberd can
+detect them and this can lead to more through vulnerability scans on the
+application level.
+
 \end{document}
+
+% vim: ts=2 sw=2 et ft=tex
