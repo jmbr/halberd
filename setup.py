@@ -19,6 +19,8 @@
 
 
 import os
+D = os.path.join
+
 from distutils.core import setup, Command
 
 import Halberd.ScanTask
@@ -58,7 +60,7 @@ class test(Command):
         # extend sys.path
         sys.path.insert(0, self.build_purelib)
         sys.path.insert(0, self.build_platlib)
-        sys.path.insert(0, os.path.join(os.getcwd(), self.test_dir))
+        sys.path.insert(0, D(os.getcwd(), self.test_dir))
 
         modules = [test[:-3] for test in os.listdir(self.test_dir) \
                      if test.startswith('test_') and test.endswith('.py')]
@@ -104,9 +106,9 @@ setup(
     url = 'http://halberd.sourceforge.net',
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
-    scripts = [os.path.join('scripts', 'halberd')],
-    data_files = [(os.path.join('man', 'man1'), \
-                  [os.path.join('man', 'man1', 'halberd.1')])],
+    scripts = [D('scripts', 'halberd')],
+    data_files = [(D('man', 'man1'), \
+                  [D('man', 'man1', 'halberd.1')])],
     classifiers = classifiers.splitlines(),
     cmdclass = {'test': test},
 )
