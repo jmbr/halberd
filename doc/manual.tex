@@ -4,13 +4,21 @@
 \usepackage[latin1]{inputenc}
 \begin{document}
 
-\title{Halberd\\{\Large \it User's guide}}
+\title{\Large \bf halberd user's guide}
 \author{Juan M. Bello Rivas}
+\date{}
 \maketitle
 
 \tableofcontents
 
-\chapter{Overview}
+% 1. Explain the problem being solved.
+% 2. Present the concepts, not just the features.
+% 3. Give'em more than they deserve.
+% 4. Make it enjoyable to read.
+
+\chapter{Introduction}
+
+\section{Motivation}
 
 In order to cope with heavy loads, web site administrators often install load
 balancer devices.  These machines hide several web servers behind a virtual IP
@@ -23,8 +31,6 @@ individually.
 
 halberd is a tool for discovering HTTP load balancers. It is useful in testing
 load balancer configurations as well as auditing web applications.
-
-\chapter{Motivation}
 
 Identifying and being able to reach all real servers individually (effectively
 bypassing the load balancer) is very important for an attacker trying to break
@@ -54,6 +60,22 @@ vulnerabilities he might find bugs affecting only one or a few of the web
 servers. Even if all machines are running the same server software halberd can
 detect them and this can lead to more through vulnerability scans on the
 application level.
+
+\section{Concepts}
+
+TODO Explain what a VIP is, time differences, clues, etc.
+
+\chapter{Installation}
+
+TODO Write about prerrequisites, tested platforms, etc.
+
+\chapter{Operation}
+
+\section{Command-line options}
+
+TODO Explain all the options and their annoyances.
+
+\section{CLU file format}
 
 \end{document}
 
