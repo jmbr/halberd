@@ -1,8 +1,17 @@
 Information for halberd-hackers
 ===============================
 
-* You need a patched version of GNU help2man to produce the manual page
-halberd.1  Apply this patch and do a make doc to create the man page.
+Required packages
+-----------------
+
+* GNU shtool (http://www.gnu.org/software/shtool/) must be installed in order
+to update Halberd/version.py.
+
+* Docutils (http://docutils.sourceforge.net/) is needed for processing some of
+the files in the doc directory.
+
+* Patched version of GNU help2man to produce the manual page halberd.1  Apply
+this patch and do a make doc to create the man page.
 
 --- help2man-1.35.1/help2man    2004-11-25 11:19:54.000000000 +0100
 +++ help2man-1.35.1/hacked-help2man     2005-08-29 05:12:02.000000000 +0200
@@ -23,4 +32,3 @@ halberd.1  Apply this patch and do a make doc to create the man page.
 +my $PAT_OPTIONS                = _('options');
  my $PAT_EXAMPLES       = _('Examples');
  my $PAT_FREE_SOFTWARE  = _('This +is +free +software');
-
