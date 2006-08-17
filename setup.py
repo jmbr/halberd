@@ -103,7 +103,7 @@ setup(
     long_description = long_description,
     author = 'Juan M. Bello Rivas',
     author_email = 'jmbr+halberd@superadditive.com',
-    url = 'http://halberd.sourceforge.net',
+    url = 'http://halberd.superadditive.com/',
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
     scripts = [D('scripts', 'halberd')],
