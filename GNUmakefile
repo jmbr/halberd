@@ -58,10 +58,6 @@ ALL_DIRS := $(sort $(dir $(ALL_SOURCES)))
 
 remove = $(RM) $(addsuffix $(strip $(1)), $(2))
 
-rest2html = $(PYTHON) -c \
-	"from docutils.core import publish_cmdline; \
-	publish_cmdline(writer_name='html')"
-
 
 all:
 	@echo "============================================================================"
@@ -102,14 +98,11 @@ distclean: clobber
 	$(RM) -r $(apidocdir)
 	$(RM) -r $(srcdir)/dist
 
-doc: $(apidocdir)/index.html $(docdir)/overview.html $(mandir)/man1/halberd.1
+doc: $(apidocdir)/index.html $(mandir)/man1/halberd.1
 	$(MAKE) -C $(docdir)
 
 $(apidocdir)/index.html: $(MODULES)
 	$(EPYDOC) -o $(apidocdir) $^
-
-$(docdir)/overview.html: $(docdir)/overview.txt
-	$(rest2html) $^ $@
 
 $(mandir)/man1/halberd.1:
 	$(HELP2MAN) --include $(srcdir)/help2man.cfg --no-info $(scriptsdir)/halberd --output $@

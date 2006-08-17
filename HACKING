@@ -7,9 +7,6 @@ Required packages
 * GNU shtool (http://www.gnu.org/software/shtool/) must be installed in order
 to update Halberd/version.py.
 
-* Docutils (http://docutils.sourceforge.net/) is needed for processing some of
-the files in the doc directory.
-
 * Patched version of GNU help2man to produce the manual page halberd.1  Apply
 this patch and do a make doc to create the man page.
 

@@ -1,5 +1,5 @@
 ##
-##  Halberd/version.py -- Version Information for halberd (syntax: Python)
+##  ./Halberd/version.py -- Version Information for halberd (syntax: Python)
 ##  [automatically generated and maintained by GNU shtool]
 ##
 
