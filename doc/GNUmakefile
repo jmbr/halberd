@@ -16,7 +16,8 @@
 
 
 LATEX := /usr/bin/latex
-DVIPS := /usr/bin/dvips
+DVIPDF := /usr/bin/dvipdf
+LATEX2HTML := /usr/bin/latex2html
 
 manual.pdf: manual.dvi
 	$(DVIPDF) $^ $@
@@ -25,9 +26,14 @@ manual.dvi: manual.tex
 	$(LATEX) $^
 	$(LATEX) $^
 
+manual: manual.tex
+	rm -rf manual
+	$(LATEX2HTML) -local_icons -dir $@ -mkdir $^
+
 .PHONY: clean clobber
 clean:
-	rm -f *.aux *.log *.dvi *.toc *.pdf *.ps
+	rm -rf manual
+	rm -f *.aux *.log *.dvi *.toc *.pdf
 
 clobber: clean
 	rm -f *~ *.bak
