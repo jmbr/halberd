@@ -83,7 +83,7 @@ clobber: clean
 build: $(SOURCES)
 	$(SETUP) build
 
-dist: lint setversion doc ChangeLog
+dist: distclean lint setversion doc ChangeLog
 	$(SETUP) sdist
 
 check: $(ALL_SOURCES)
