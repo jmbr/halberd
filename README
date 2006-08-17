@@ -1,17 +1,11 @@
 halberd -- HTTP load balancer detector
 ======================================
 
-    The halberd, a weapon based on the spear, was developed by combining the
-    merits of the spear and dagger-axe in the Yin and Shang period (1600-1100
-    B.C.). It can be used to hook-cut, peck and pierce the opponent making it a
-    more powerful weapon than the dagger-axe and spear.
-    -- Essentials of Chinese Wushu by Wu Bin, Li Xingdong and Yu Gongbao
-
 Overview
 --------
 
-halberd is a tool for discovering HTTP load balancers. It is useful in testing
-load balancer configurations as well as auditing web applications.
+halberd discovers HTTP load balancers. It is useful for testing load balancer
+configurations and for web application auditing purposes.
 
 Installation
 ------------
@@ -36,10 +30,8 @@ halberd.cfg, contains configurable run-time settings you can tweak.
 Documentation
 -------------
 
-Full API documentation can be found in doc/api. An overview of what halberd
-does can be found at doc/overview.txt.
-
-TODO - Write user's guide.
+The user's guide is located in doc/manual.pdf
+Full API documentation can be found in doc/api.
 
 Feedback and bug reports
 ------------------------

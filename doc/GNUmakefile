@@ -18,9 +18,8 @@
 LATEX := /usr/bin/latex
 DVIPS := /usr/bin/dvips
 
-
-manual.ps: manual.dvi
-	$(DVIPS) $^ -o $@
+manual.pdf: manual.dvi
+	$(DVIPDF) $^ $@
 
 manual.dvi: manual.tex
 	$(LATEX) $^

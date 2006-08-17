@@ -7,25 +7,24 @@ HALBERD. HTTP load balancer detector.
 Introduction.
 -------------
 
-In order to cope with heavy loads, web site administrators often install load
-balancer devices. These machines hide several web servers behind a virtual IP
-taking HTTP requests and redirecting them to the real web servers according to
-several criteria in order to share the traffic between all the real servers.
+To cope with heavy traffic loads, web site administrators often install load
+balancer devices. These machines hide (possibly) many real web servers behind
+a virtual IP. They receive HTTP requests and redirect them to the real web
+servers in order to share the traffic between them.
 
-There are a few ways to map the servers behind the VIP and to reach them
-individually. halberd, a tool performing these tasks, will be introduced.
+halberd is a tool aimed at discovering real servers behind virtual IPs.
 
 Motivation.
 -----------
 
 Identifying and being able to reach all real servers individually (effectively
-bypassing the load balancer) is very important for an attacker trying to break
+bypassing the load balancer) is very important for an auditor trying to break
 into a site because it is often the case that there are configuration
 differences ranging from slight (different revision of the server software,
 different server modules, ...) to the extreme (completely different platforms
 and server software).
 
-For an attacker this information is crucial because he might find vulnerable
+For an auditor this information is crucial because he might find vulnerable
 configurations that otherwise (without mapping the real servers) could have
 gone unnoticed. For example::
 
@@ -47,7 +46,7 @@ gone unnoticed. For example::
         Server: Netscape-Enterprise/6.0
 
 But someone trying to break into a website doesn't have server software as its
-only target. He will try to subvert dynamic server pages in several ways.  By
+only target.  He will try to subvert dynamic server pages in several ways.  By
 identifying all the real servers and scanning them individually for
 vulnerabilities he might find bugs affecting only one or a few of the web
 servers. Even if all machines are running the same server software halberd can
