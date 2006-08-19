@@ -10,10 +10,9 @@ include man/man1/halberd.1
 include doc/GNUmakefile doc/manual.tex
 recursive-include doc/api *
 
+#include MANIFEST.in
 include AUTHORS
 include ChangeLog
 include README
 include INSTALL
-#include MANIFEST.in
 include GNUmakefile
-include TODO
