@@ -451,17 +451,26 @@ def reanalyze(clues, analyzed, threshold):
     field inspection.
     @type threshold: C{float}
     """
+    def ratio():
+        return len(analyzed) / float(len(clues))
+
     assert len(clues) > 0
 
-    ratio = len(analyzed) / float(len(clues))
-    if ratio >= threshold:
-        logger.debug('clue-to-realserver ratio is high (%.3f)', ratio)
+    r = ratio()
+    if r >= threshold:
+        logger.debug('clue-to-realserver ratio is high (%.3f)', r)
         logger.debug('reanalyzing clues...')
 
         ignore_changing_fields(clues)
         analyzed = analyze(clues)
 
         logger.debug('clue reanalysis done.')
+
+    # Check again to see if we solved the problem.
+    if ratio() >= threshold:
+        logger.warn(
+'''The following results might be incorrect.  A possible explanation could be
+because the remote host keeps changing its server version string.''')
 
     return analyzed
 
