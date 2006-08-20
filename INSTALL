@@ -11,17 +11,20 @@ interpreter configured with support for SSL sockets.
 Platforms
 ---------
 
-halberd should work in every machine satisfying the prerequisites mentioned
-above.  The program has been successfully built and tested on Linux, Windows
+Halberd should work in every machine satisfying the prerequisites mentioned
+above.  The program has been successfully built and tested on GNU/Linux, Windows
 2000 and Mac OS X.
 
 Steps
 -----
 
-Installing halberd is a very simple task.  It suffices to write:
+Installing halberd is a very simple task.  It suffices to write (perhaps as
+root):
 
-    # python setup.py install
+    python setup.py install
 
-For further installation options check the output of the following command:
+It is recommended that you read the output of:
 
     python setup.py install --help
+
+in case you want to fine tune the installation process.

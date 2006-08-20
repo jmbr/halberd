@@ -4,8 +4,8 @@ halberd -- HTTP load balancer detector
 Overview
 --------
 
-halberd discovers HTTP load balancers. It is useful for testing load balancer
-configurations and for web application auditing purposes.
+Halberd discovers HTTP load balancers. It is useful for web application
+security auditing and for load balancer configuration testing.
 
 Installation
 ------------
@@ -31,7 +31,7 @@ Documentation
 -------------
 
 The user's guide is located in doc/manual.pdf
-Full API documentation can be found in doc/api.
+Full API documentation can be found in doc/api
 
 Feedback and bug reports
 ------------------------
