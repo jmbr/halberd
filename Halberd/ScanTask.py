@@ -45,7 +45,7 @@ import os
 import Halberd.conflib
 
 
-default_scantime = 30
+default_scantime = 15
 
 default_parallelism = 4
 
