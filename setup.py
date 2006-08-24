@@ -79,14 +79,15 @@ class test(Command):
 
 
 long_description = \
-r"""halberd is a tool for discovering HTTP load balancers. It is aimed at
-testing load balancer configurations and auditing web applications."""
+r"""Halberd discovers HTTP load balancers. It is useful for web application security auditing
+and for load balancer configuration testing."""
 
 # Trove classifiers. The complete list can be grabbed from:
 # http://www.python.org/pypi?:action=list_classifiers
 classifiers = """\
 Development Status :: 4 - Beta
 Environment :: Console
+Intended Audience :: Developers
 Intended Audience :: Information Technology
 Intended Audience :: System Administrators
 License :: OSI Approved :: GNU General Public License (GPL)
@@ -102,7 +103,7 @@ setup(
     description = 'HTTP load balancer detector',
     long_description = long_description,
     author = 'Juan M. Bello Rivas',
-    author_email = 'jmbr+halberd@superadditive.com',
+    author_email = 'jmbr@superadditive.com',
     url = 'http://halberd.superadditive.com/',
     packages = ['Halberd', 'Halberd.clues'],
     package_dir = {'Halberd': 'Halberd'},
