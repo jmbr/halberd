@@ -12,7 +12,8 @@ recursive-include doc/api *
 
 #include MANIFEST.in
 include AUTHORS
-include ChangeLog
 include README
 include INSTALL
+include NEWS
+include ChangeLog
 include GNUmakefile
