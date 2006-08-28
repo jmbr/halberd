@@ -65,7 +65,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."""
     parser.add_option('-u', '--urlfile', action='store', dest='urlfile',
                       help='read URLs from FILE', metavar='FILE')
 
-    parser.add_option('-o', '--out', action='store', dest='output',
+    parser.add_option('-o', '--out', action='store', dest='out',
                       help='write report to the specified file',
                       metavar='FILE', default='')
 
@@ -119,7 +119,7 @@ def scannerFactory(opts, args):
     scantask.conf_file = opts.confname
     scantask.cluefile = opts.cluefile
     scantask.save = opts.save
-    scantask.output = opts.output
+    scantask.out = opts.out
 
     # Set logging level.
     if not scantask.verbose:
