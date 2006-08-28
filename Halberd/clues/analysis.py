@@ -466,8 +466,9 @@ def reanalyze(clues, analyzed, threshold):
 
         logger.debug('clue reanalysis done.')
 
-    # Check again to see if we solved the problem.
-    if ratio() >= threshold:
+    # Check again to see if we solved the problem but only warn the user if
+    # there's a significant amount of evidence.
+    if ratio() >= threshold and len(clues) > 10:
         logger.warn(
 '''The following results might be incorrect.  A possible explanation could be
 because the remote host keeps changing its server version string.''')
