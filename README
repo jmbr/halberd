@@ -17,11 +17,11 @@ Getting started
 
 You could begin with:
 
-    $ halberd.py --help
+    $ halberd --help
 
 and:
 
-    $ halberd.py www.example.com
+    $ halberd www.example.com
 
 A configuration file is stored in a directory named .halberd hanging from the
 user's home directory (that is: $HOME in Unix/Linux systems).  This file, named
