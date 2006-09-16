@@ -151,8 +151,7 @@ def clusters(clues, step=3):
                 return tuple(clues[:num])
         return ()
 
-    # Sort the clues by their time difference.
-    clues.sort(key=lambda x: x.diff)
+    clues = sort_clues(clues)
 
     invrange = lambda num: [(num - x) for x in range(num)]
 
@@ -333,6 +332,16 @@ def slices(start, xs):
         return [slice(start, None)]
     return [slice(start, xs[0])] + slices(xs[0], xs[1:])
 
+def sort_clues(clues):
+    """Sorts clues according to their time difference.
+    """
+    # This can be accomplished in newer (>= 2.4) Python versions using:
+    #  clues.sort(key=lambda x: x.diff)
+    tmps = [(x.diff, x) for x in clues]
+    tmps.sort()
+    return [x[1] for x in tmps]
+
+
 def filter_proxies(clues, maxdelta=3):
     """Detect and merge clues pointing to a proxy cache on the remote end.
 
@@ -359,7 +368,8 @@ def filter_proxies(clues, maxdelta=3):
             results.append(cur_clues[0])
             continue
 
-        cur_clues.sort(key=lambda x: x.diff)
+        cur_clues = sort_clues(cur_clues)
+
         diffs = [c.diff for c in cur_clues]
 
         # We find the indices of those clues which differ from the rest in
