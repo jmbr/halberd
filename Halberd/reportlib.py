@@ -85,7 +85,7 @@ def report(scantask):
         if scantask.debug:
             import pprint
             out.write('headers:\n')
-            pprint.pprint(clue.headers, out, indent=2)
+            pprint.pprint(clue.headers, out)
 
 
 # vim: ts=4 sw=4 et
