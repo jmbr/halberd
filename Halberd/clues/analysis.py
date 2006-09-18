@@ -480,9 +480,9 @@ def reanalyze(clues, analyzed, threshold):
     # there's a significant amount of evidence.
     if ratio() >= threshold and len(clues) > 10:
         logger.warn(
-'''The following results might be incorrect.  It could be
-because the remote host keeps changing its server version string or because
-halberd didn't have enough samples.''')
+'''The following results might be incorrect.  It could be because the remote
+host keeps changing its server version string or because halberd didn't have
+enough samples.''')
 
     return analyzed
 
