@@ -11,6 +11,7 @@ include doc/GNUmakefile doc/manual.tex
 recursive-include doc/api *
 
 #include MANIFEST.in
+include LICENSE
 include AUTHORS
 include README
 include INSTALL
