@@ -58,7 +58,7 @@ default_ratio_threshold = 0.6
 default_out = None
 
 
-class ConfException(Exception):
+class ConfError(Exception):
     """Error with configuration file(s)
     """
     def __init__(self, msg):
