@@ -14,6 +14,7 @@ recursive-include doc/api *
 include LICENSE
 include AUTHORS
 include README
+include THANKS
 include INSTALL
 include NEWS
 include ChangeLog
