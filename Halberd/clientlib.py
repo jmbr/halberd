@@ -69,6 +69,9 @@ class HTTPError(Exception):
     def __str__(self):
         return str(self.msg)
 
+    def __deepcopy__(self, memo):
+        return self
+
 class HTTPSError(HTTPError):
     """Generic HTTPS exception"""
 

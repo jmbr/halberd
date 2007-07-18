@@ -171,7 +171,7 @@ class ScanState:
         """Returns the reason of the error condition.
         """
         self.__mutex.acquire()
-        # Since whe don't know what the nature of __error will be we need to
+        # Since we don't know what the nature of __error will be, we need to
         # provide a clean copy of it to the caller so that no possible
         # references or changes to __error can affect the object we return.
         err = copy.deepcopy(self.__error)
