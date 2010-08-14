@@ -8,7 +8,7 @@ Their importance comes from the fact that they're the datastructure we use to
 detect real servers behind HTTP load balancer devices.
 """
 
-# Copyright (C) 2004, 2005, 2006 Juan M. Bello Rivas <jmbr@superadditive.com>
+# Copyright (C) 2004, 2005, 2006, 2010  Juan M. Bello Rivas <jmbr@superadditive.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

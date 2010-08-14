@@ -3,7 +3,7 @@
 """Unit tests for Halberd.clientlib
 """
 
-# Copyright (C) 2004, 2005, 2006 Juan M. Bello Rivas <jmbr@superadditive.com>
+# Copyright (C) 2004, 2005, 2006, 2010  Juan M. Bello Rivas <jmbr@superadditive.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
