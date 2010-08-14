@@ -28,11 +28,7 @@ detect real servers behind HTTP load balancer devices.
 import time
 import types
 import rfc822
-
-try:
-    from sha import new as hashfn
-except ImportError:
-    from md5 import new as hashfn
+import hashlib
 
 import Halberd.util
 
@@ -132,7 +128,7 @@ class Clue:
         """Updates header fingerprint.
         """
         assert self.__tmphdrs != None
-        fingerprint = hashfn(self.__tmphdrs)
+        fingerprint = hashlib.sha1(self.__tmphdrs)
         self.__tmphdrs = None
         self.info['digest'] = fingerprint.hexdigest()
 
