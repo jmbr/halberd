@@ -23,7 +23,6 @@ D = os.path.join
 
 from distutils.core import setup, Command
 
-import Halberd.ScanTask
 from Halberd.version import version
 
 

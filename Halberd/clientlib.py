@@ -35,8 +35,6 @@ import urlparse
 
 from itertools import takewhile
 
-import Halberd.ScanTask
-
 
 default_timeout = 2
 
