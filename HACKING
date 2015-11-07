@@ -1,31 +1,13 @@
-Information for halberd-hackers
+Information for Halberd hackers
 ===============================
 
 Required packages
 -----------------
 
-* GNU shtool (http://www.gnu.org/software/shtool/) must be installed in order
-to update Halberd/version.py.
+* GNU shtool (http://www.gnu.org/software/shtool/) must be installed in order to update Halberd/version.py.
 
-* Patched version of GNU help2man to produce the manual page halberd.1  Apply
-this patch and do a make doc to create the man page.
+* GNU Portability Library (https://www.gnu.org/software/gnulib/) is used to create the file ChangeLog.
 
---- help2man-1.35.1/help2man    2004-11-25 11:19:54.000000000 +0100
-+++ help2man-1.35.1/hacked-help2man     2005-08-29 05:12:02.000000000 +0200
-@@ -316,7 +316,7 @@
- }
+* Epydoc (http://epydoc.sourceforge.net/) is used to generate the API documentation.
 
- # Extract usage clause(s) [if any] for SYNOPSIS.
--my $PAT_USAGE = _('Usage');
-+my $PAT_USAGE = _('usage');
- my $PAT_USAGE_CONT = _('or');
- if ($help_text =~ s/^($PAT_USAGE):( +(\S+))(.*)((?:\n(?: {6}\1| *($PAT_USAGE_CONT): +\S).*)*)//om)
- {
-@@ -371,7 +371,7 @@
-
- my $PAT_BUGS           = _('Report +bugs|Email +bug +reports +to');
- my $PAT_AUTHOR         = _('Written +by');
--my $PAT_OPTIONS                = _('Options');
-+my $PAT_OPTIONS                = _('options');
- my $PAT_EXAMPLES       = _('Examples');
- my $PAT_FREE_SOFTWARE  = _('This +is +free +software');
+* help2man (https://www.gnu.org/software/help2man/) is needed to generate man pages.

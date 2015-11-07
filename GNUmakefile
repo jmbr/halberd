@@ -33,13 +33,13 @@ PYTHON_COUNT := /usr/local/bin/python_count
 PYLINT := /usr/bin/pylint
 EPYDOC := /usr/bin/epydoc
 CTAGS := ctags
-DARCS := /usr/bin/darcs
-SHTOOLIZE := /usr/local/bin/shtoolize
+GITLOG_TO_CHANGELOG := /usr/share/gnulib/build-aux/gitlog-to-changelog
+SHTOOLIZE := /usr/bin/shtoolize
 SHTOOL := $(srcdir)/shtool
 RM := /bin/rm -f
 MKDIR := /bin/mkdir
 SETUP := $(PYTHON) $(srcdir)/setup.py
-HELP2MAN := ~/bin/hacked-help2man
+HELP2MAN := help2man
 
 
 versionfile := $(modulesdir)/version.py
@@ -79,7 +79,7 @@ clobber: clean
 build: $(SOURCES)
 	$(SETUP) build
 
-dist: distclean lint setversion doc ChangeLog
+dist: distclean setversion doc ChangeLog
 	$(SETUP) sdist
 
 check: $(ALL_SOURCES)
@@ -124,7 +124,7 @@ lint:
 	$(PYLINT) --required-attributes= --additional-builtins=map,filter --method-rgx='.*' --function-rgx='.*' $(ALL_SOURCES)
 
 ChangeLog: $(ALL_SOURCES)
-	$(DARCS) changes --human-readable > ChangeLog
+	$(GITLOG_TO_CHANGELOG) > ChangeLog
 
 count: $(ALL_SOURCES)
 	@$(PYTHON_COUNT) $^
